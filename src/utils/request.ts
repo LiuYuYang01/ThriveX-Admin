@@ -4,7 +4,8 @@ import { useUserStore } from "@/stores";
 
 // 配置项目API域名
 // 最新调整：在本地 .env 文件配置你的后端API地址
-export const baseURL = import.meta.env.VITE_PROJECT_API;
+// export const baseURL = import.meta.env.VITE_PROJECT_API;
+export const baseURL = "http://175.178.213.12/api";
 
 // 创建 axios 实例
 export const instance = axios.create({
