@@ -24,9 +24,13 @@ FROM nginx:alpine
 
 # 复制构建输出到 Nginx 的默认静态文件目录
 COPY --from=builder /thrive/dist /usr/share/nginx/html
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # 暴露端口
 EXPOSE 80
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 # 启动 Nginx
 CMD ["nginx", "-g", "daemon off;"]

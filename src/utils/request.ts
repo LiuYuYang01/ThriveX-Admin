@@ -1,10 +1,11 @@
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import { Modal, notification } from "antd";
 import { useUserStore } from "@/stores";
+import { getEnvVar } from "@/utils/envHelper";
 
 // 配置项目API域名
 // 最新调整：在本地 .env 文件配置你的后端API地址
-export const baseURL = import.meta.env.VITE_PROJECT_API;
+export const baseURL = getEnvVar('VITE_PROJECT_API')
 
 // 创建 axios 实例
 export const instance = axios.create({

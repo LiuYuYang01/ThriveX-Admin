@@ -6,6 +6,7 @@ import CardDataStats from "@/components/CardDataStats"
 
 import { AiOutlineEye, AiOutlineMeh, AiOutlineStock, AiOutlineFieldTime } from "react-icons/ai";
 import dayjs from 'dayjs';
+import {getEnvVar} from "@/utils/envHelper";
 
 export default () => {
     const [loading, setLoading] = useState(false)
@@ -34,8 +35,8 @@ export default () => {
         try {
             setLoading(true)
 
-            const siteId = import.meta.env.VITE_BAIDU_TONGJI_SITE_ID;
-            const token = import.meta.env.VITE_BAIDU_TONGJI_ACCESS_TOKEN;
+            const siteId = getEnvVar('VITE_BAIDU_TONGJI_SITE_ID');
+            const token = getEnvVar('VITE_BAIDU_TONGJI_ACCESS_TOKEN');
 
             const response = await fetch(`/baidu/rest/2.0/tongji/report/getData?access_token=${token}&site_id=${siteId}&start_date=${date}&end_date=${date}&metrics=pv_count%2Cip_count%2Cbounce_ratio%2Cavg_visit_time&method=overview%2FgetTimeTrendRpt`);
             const data = await response.json();
