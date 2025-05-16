@@ -193,7 +193,6 @@ export default () => {
                 onClose={() => setIsMaterialModalOpen(false)}
                 onSelect={(url) => {
                     setImageList([...imageList, ...url]);
-                    setIsMaterialModalOpen(false);
                 }}
             />
         </div>
