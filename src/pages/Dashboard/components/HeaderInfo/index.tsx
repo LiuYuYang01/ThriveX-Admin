@@ -1,7 +1,7 @@
 import { useUserStore } from '@/stores';
 import { FaDownload } from "react-icons/fa6";
 import useVersionData from '@/hooks/useVersionData';
-
+import { getEnvVar } from '@/utils/envHelper';
 
 const HeaderInfo = () => {
     const { user } = useUserStore();
@@ -28,12 +28,12 @@ const HeaderInfo = () => {
             {/* 项目版本号 */}
             <div className='hidden md:flex md:flex-col space-y-1 xl:mr-30'>
                 {
-                    version.tag_name === import.meta.env.VITE_VERSION
+                    version.tag_name === getEnvVar('VITE_VERSION')
                         ? <p>🎉 当前版本为：<b className='inline-block px-2 text-white bg-green-600 rounded-md'>{version.tag_name} 最新版</b></p>
                         : (
                             <>
                                 <div className='flex space-x-4'>
-                                    <p>当前版本：<b className='inline-block px-2 text-white bg-blue-400 rounded-md'>{import.meta.env.VITE_VERSION}</b></p>
+                                    <p>当前版本：<b className='inline-block px-2 text-white bg-blue-400 rounded-md'>{getEnvVar('VITE_VERSION')}</b></p>
                                     <p>最新版本：<b className='inline-block px-2 text-white bg-red-500 rounded-md'>{version.tag_name}</b></p>
                                 </div>
 

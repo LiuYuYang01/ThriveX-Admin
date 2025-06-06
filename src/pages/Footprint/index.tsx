@@ -10,6 +10,7 @@ import dayjs from 'dayjs';
 import axios from 'axios';
 import { CloudUploadOutlined } from '@ant-design/icons';
 import Material from '@/components/Material';
+import { getEnvVar } from '@/utils/envHelper';
 
 export default () => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -23,6 +24,7 @@ export default () => {
   const [footprint, setFootprint] = useState<Footprint>({} as Footprint);
   const [isMethod, setIsMethod] = useState<'create' | 'edit'>('create');
   const [form] = Form.useForm();
+
 
   const columns = [
     {
@@ -211,7 +213,7 @@ export default () => {
       const { data } = await axios.get('https://restapi.amap.com/v3/geocode/geo', {
         params: {
           address,
-          key: import.meta.env.VITE_GAODE_WEB_API
+          key: getEnvVar('VITE_GAODE_WEB_API')
         }
       });
 

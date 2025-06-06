@@ -3,6 +3,7 @@ import { Spin } from 'antd';
 import { ApexOptions } from 'apexcharts';
 import ReactApexChart from 'react-apexcharts';
 import dayjs from 'dayjs';
+import { getEnvVar } from '@/utils/envHelper';
 
 interface Result {
     timeSpan: string[];
@@ -150,8 +151,8 @@ export default () => {
         try {
             setLoading(true)
 
-            const siteId = import.meta.env.VITE_BAIDU_TONGJI_SITE_ID;
-            const token = import.meta.env.VITE_BAIDU_TONGJI_ACCESS_TOKEN;
+            const siteId = getEnvVar('VITE_BAIDU_TONGJI_SITE_ID');
+            const token = getEnvVar('VITE_BAIDU_TONGJI_ACCESS_TOKEN');
 
             const response = await fetch(`/baidu/rest/2.0/tongji/report/getData?access_token=${token}&site_id=${siteId}&start_date=${startDate}&end_date=${endDate}&metrics=pv_count%2Cip_count&method=overview%2FgetTimeTrendRpt`);
             const data = await response.json();

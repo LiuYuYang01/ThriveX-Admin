@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import dayjs from 'dayjs';
 import { Spin } from 'antd';
+import { getEnvVar } from '@/utils/envHelper';
 
 interface ChartThreeState {
   series: number[];
@@ -64,8 +65,8 @@ export default () => {
     setLoading(true)
 
     try {
-      const siteId = import.meta.env.VITE_BAIDU_TONGJI_SITE_ID;
-      const token = import.meta.env.VITE_BAIDU_TONGJI_ACCESS_TOKEN;
+      const siteId = getEnvVar('VITE_BAIDU_TONGJI_SITE_ID');
+      const token = getEnvVar('VITE_BAIDU_TONGJI_ACCESS_TOKEN');
 
       const response = await fetch(`/baidu/rest/2.0/tongji/report/getData?access_token=${token}&site_id=${siteId}&start_date=${date}&end_date=${date}&metrics=new_visitor_count%2Cnew_visitor_ratio&method=trend%2Ftime%2Fa&gran=day&area=`);
       const data = await response.json();
