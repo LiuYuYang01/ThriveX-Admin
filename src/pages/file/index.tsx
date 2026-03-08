@@ -318,7 +318,7 @@ export default () => {
           </div>
         </div>
 
-        <Divider orientation="center">图片预览</Divider>
+        <Divider>图片预览</Divider>
         <Image
           src={file.url}
           className="rounded-md object-cover object-center"
@@ -347,7 +347,7 @@ export default () => {
           }}
         />
 
-        <Divider orientation="center">图片操作</Divider>
+        <Divider>图片操作</Divider>
         <Button type="primary" loading={downloadLoading} onClick={() => onDownloadImage(file)} className="w-full mb-2">
           下载图片
         </Button>
