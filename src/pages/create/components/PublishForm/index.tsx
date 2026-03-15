@@ -93,7 +93,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
 
   const getCateList = async () => {
     const { data } = await getCateListAPI();
-    setCateList(data.filter((item) => item.type === 'cate') as Cate[]);
+    setCateList(data.result.filter((item) => item.type === 'cate') as Cate[]);
   };
 
   const getTagList = async () => {

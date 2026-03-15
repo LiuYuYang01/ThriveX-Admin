@@ -11,3 +11,7 @@ export interface Cate {
 
   parent_id?: number[];
 }
+
+export interface CateFilterQueryParams extends Page {
+  pattern?: 'list' | 'tree';
+}

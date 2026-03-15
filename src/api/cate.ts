@@ -1,5 +1,5 @@
 import Request from '@/utils/request'
-import { Cate } from '@/types/app/cate'
+import { Cate, CateFilterQueryParams } from '@/types/app/cate'
 
 // 新增分类
 export const addCateDataAPI = (data: Cate) => Request('POST', '/cate', { data })
@@ -14,4 +14,4 @@ export const editCateDataAPI = (data: Cate) => Request('PATCH', '/cate', { data 
 export const getCateDataAPI = (id?: number) => Request<Cate>('GET', `/cate/${id}`)
 
 // 获取分类列表
-export const getCateListAPI = (params?: QueryData) => Request<Paginate<Cate[]>>('GET', `/cate`, { params })
+export const getCateListAPI = (params?: CateFilterQueryParams) => Request<Paginate<Cate[]>>('GET', `/cate`, { params })

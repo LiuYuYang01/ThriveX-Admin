@@ -33,8 +33,8 @@ export default () => {
       }
 
       const { data } = await getCateListAPI();
-      data.sort((a, b) => a.order - b.order);
-      setList(data);
+      data.result.sort((a: Cate, b: Cate) => a.order - b.order);
+      setList(data.result);
       isFirstLoadRef.current = false;
     } catch (error) {
       console.error(error);

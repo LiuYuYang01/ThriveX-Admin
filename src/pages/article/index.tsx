@@ -378,9 +378,7 @@ export default () => {
 
   const getCateList = async () => {
     const { data } = await getCateListAPI();
-    // 临时写法：完善后端后在优化这块
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setCateList((data as any).filter((item: any) => item.type === 'cate'));
+    setCateList(data.result.filter((item: ArticleCate) => item.type === 'cate'));
   };
 
   const getTagList = async () => {
@@ -556,8 +554,7 @@ export default () => {
 
   // 导出全部时拉取所有文章
   const loadAllArticles = async (): Promise<Article[]> => {
-    // 临时写法：后续会优化这块 { page: 1, size: 999999999 }
-    const { data } = await getArticlePagingAPI({ page: 1, size: 999999999 });
+    const { data } = await getArticlePagingAPI();
     return data.result;
   };
 
