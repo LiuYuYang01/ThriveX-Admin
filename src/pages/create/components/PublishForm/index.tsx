@@ -74,7 +74,9 @@ const PublishForm = ({ data, closeModel }: Props) => {
       }
     });
 
-    const tagIds = data.tagList!.map((item) => item.id);
+    console.log(data,data.tagList);
+    
+    const tagIds = data?.tagList!.map((item: Tag) => item.id);
 
     const formValues = {
       ...data,
@@ -93,7 +95,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
 
   const getCateList = async () => {
     const { data } = await getCateListAPI();
-    setCateList(data.result.filter((item) => item.type === 'cate') as Cate[]);
+    setCateList(data.result.filter((item: Cate) => item.type === 'cate'));
   };
 
   const getTagList = async () => {

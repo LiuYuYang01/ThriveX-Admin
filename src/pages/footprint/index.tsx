@@ -1,271 +1,203 @@
-import { useState, useEffect, useRef } from 'react';
-import { Table, Button, Tag, notification, Popconfirm, Form, Input, DatePicker, Modal, Spin, message, Tooltip, Space, Divider } from 'antd';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Button, DatePicker, Divider, Form, Input, message, Modal, notification, Popconfirm, Space, Spin, Table, Tag, Tooltip } from 'antd';
+import type { ColumnType } from 'antd/es/table';
+import axios from 'axios';
+import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
+import { ClearOutlined, CloudUploadOutlined, DeleteOutlined, FormOutlined, SearchOutlined } from '@ant-design/icons';
 import { GiPositionMarker } from 'react-icons/gi';
 import { IoSearch } from 'react-icons/io5';
-import dayjs from 'dayjs';
-import axios from 'axios';
-import { CloudUploadOutlined, DeleteOutlined, FormOutlined, SearchOutlined, ClearOutlined } from '@ant-design/icons';
 
-import Title from '@/components/Title';
-import Material from '@/components/Material';
-import { delFootprintDataAPI, getFootprintListAPI, addFootprintDataAPI, editFootprintDataAPI, getFootprintDataAPI } from '@/api/footprint';
+import { addFootprintDataAPI, delFootprintDataAPI, editFootprintDataAPI, getFootprintDataAPI, getFootprintListAPI } from '@/api/footprint';
 import { getEnvConfigDataAPI } from '@/api/config';
+import Material from '@/components/Material';
+import Title from '@/components/Title';
 import type { FilterForm, Footprint } from '@/types/app/footprint';
-import { ColumnType } from 'antd/es/table';
+
+type ListQuery = { key?: string; startDate?: string; endDate?: string };
 
 export default () => {
-  const [loading, setLoading] = useState<boolean>(false);
-  const [initialLoading, setInitialLoading] = useState<boolean>(true);
-  const [searchLoading, setSearchLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
-  const [editLoading, setEditLoading] = useState(false);
-  const isFirstLoadRef = useRef<boolean>(true);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const isFirstLoadRef = useRef(true);
+  const detailRequestSeqRef = useRef(0);
 
-  const [gaodeApKey, setGaodeApKey] = useState<string>('');
+  const [gaodeApKey, setGaodeApKey] = useState('');
   const [footprintList, setFootprintList] = useState<Footprint[]>([]);
+
   const [isModelOpen, setIsModelOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [editingId, setEditingId] = useState<number | null>(null);
+
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
-  const [footprint, setFootprint] = useState<Footprint>({} as Footprint);
-  const [isMethod, setIsMethod] = useState<'create' | 'edit'>('create');
+  const [listQuery, setListQuery] = useState<ListQuery>({});
+
   const [form] = Form.useForm();
-
   const [filterForm] = Form.useForm();
-
-  const onFilterReset = () => {
-    filterForm.resetFields();
-    getFootprintList();
-  };
-
-  const columns: ColumnType<Footprint>[] = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      align: 'center',
-      width: 80,
-      render: (text: number) => <span className="text-gray-400 dark:text-gray-500 font-mono">#{text}</span>,
-    },
-    {
-      title: '标题',
-      dataIndex: 'title',
-      key: 'title',
-      width: 180,
-      render: (text: string) => <span className="text-gray-700 dark:text-gray-200 font-medium">{text || '-'}</span>,
-    },
-    {
-      title: '地址',
-      dataIndex: 'address',
-      key: 'address',
-      width: 220,
-      ellipsis: true,
-      render: (text: string) => (
-        <div>
-          {text ? (
-            <Tooltip title={text}>
-              <div className="max-w-[220px] truncate text-gray-700 dark:text-gray-200 hover:text-primary cursor-pointer">
-                {text}
-              </div>
-            </Tooltip>
-          ) : (
-            <span className="text-gray-300 dark:text-gray-500 italic">暂无地址</span>
-          )}
-        </div>
-      ),
-    },
-    {
-      title: '内容',
-      dataIndex: 'content',
-      key: 'content',
-      width: 320,
-      render: (value: string) => (
-        <div>
-          {value ? (
-            <Tooltip title={value}>
-              <div className="max-w-[320px] truncate text-gray-700 dark:text-gray-200 hover:text-primary cursor-pointer">
-                {value}
-              </div>
-            </Tooltip>
-          ) : (
-            <span className="text-gray-300 dark:text-gray-500 italic">暂无内容</span>
-          )}
-        </div>
-      ),
-    },
-    {
-      title: '坐标',
-      dataIndex: 'position',
-      key: 'position',
-      align: 'center',
-      width: 160,
-      render: (value: string) => <Tag className="m-0!">{value || '-'}</Tag>,
-    },
-    {
-      title: '发布时间',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      width: 140,
-      render: (text: string) => (
-        <div className="flex flex-col">
-          <span className="text-gray-700 dark:text-gray-200 font-medium">{dayjs(+text).format('YYYY-MM-DD')}</span>
-          <span className="text-gray-400 dark:text-gray-500 text-xs">{dayjs(+text).format('HH:mm:ss')}</span>
-        </div>
-      ),
-    },
-    {
-      title: '操作',
-      key: 'action',
-      fixed: 'right',
-      align: 'center',
-      width: 130,
-      render: (_: string, record: Footprint) => (
-        <Space split={<Divider type="vertical" />}>
-          <Tooltip title="编辑">
-            <Button type="text" onClick={() => editFootprintData(record.id!)} icon={<FormOutlined className="text-primary" />} />
-          </Tooltip>
-
-          <Tooltip title="删除">
-            <Popconfirm title="警告" description="你确定要删除吗" okText="确定" cancelText="取消" onConfirm={() => delFootprintData(record.id!)}>
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
-          </Tooltip>
-        </Space>
-      ),
-    },
-  ];
 
   const { RangePicker } = DatePicker;
 
-  // 获取高德地图秘钥
-  const getEnvConfigData = async () => {
+  const getEnvConfigData = useCallback(async () => {
     const { data } = await getEnvConfigDataAPI('gaode_coordinate');
     setGaodeApKey((data.value as { key: string }).key);
-  };
+  }, []);
 
-  const getFootprintList = async () => {
-    try {
-      // 如果是第一次加载，使用 initialLoading
-      if (isFirstLoadRef.current) {
-        setInitialLoading(true);
-      } else {
-        setLoading(true);
+  const getFootprintList = useCallback(
+    async (query?: ListQuery) => {
+      const finalQuery = query ?? listQuery;
+      try {
+        if (isFirstLoadRef.current) setInitialLoading(true);
+        else setLoading(true);
+
+        const { data } = await getFootprintListAPI({ query: finalQuery });
+        setFootprintList(data as Footprint[]);
+        isFirstLoadRef.current = false;
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setInitialLoading(false);
+        setLoading(false);
       }
-
-      const { data } = await getFootprintListAPI();
-      setFootprintList(data as Footprint[]);
-      isFirstLoadRef.current = false;
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setInitialLoading(false);
-      setLoading(false);
-    }
-  };
+    },
+    [listQuery],
+  );
 
   useEffect(() => {
     getEnvConfigData();
-    getFootprintList();
-  }, []);
+    getFootprintList({});
+  }, [getEnvConfigData, getFootprintList]);
 
-  const reset = () => {
-    setIsMethod('create');
-    form.resetFields();
-    setFootprint({} as Footprint);
+  const closeModal = useCallback(() => {
+    detailRequestSeqRef.current += 1; // 使未完成的编辑请求失效，避免回填
     setIsModelOpen(false);
-  };
-
-  const delFootprintData = async (id: number) => {
-    try {
-      setLoading(true);
-      await delFootprintDataAPI(id);
-      notification.success({ message: '🎉 删除足迹成功' });
-      getFootprintList();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addFootprintData = () => {
-    setIsMethod('create');
-    setIsModelOpen(true);
+    setModalMode('create');
+    setEditingId(null);
+    setDetailLoading(false);
     form.resetFields();
-    setFootprint({} as Footprint);
-  };
+  }, [form]);
 
-  const editFootprintData = async (id: number) => {
-    try {
-      setEditLoading(true);
+  const openCreate = useCallback(() => {
+    detailRequestSeqRef.current += 1; // 使未完成的编辑请求失效，避免回填
+    setModalMode('create');
+    setEditingId(null);
+    setIsModelOpen(true);
+    setDetailLoading(false);
+    form.resetFields();
+  }, [form]);
 
-      setIsMethod('edit');
+  const openEdit = useCallback(
+    (id: number) => {
+      setModalMode('edit');
+      setEditingId(id);
       setIsModelOpen(true);
+      setDetailLoading(true);
+      form.resetFields(); // 先清空，避免看到旧值闪一下
+    },
+    [form],
+  );
 
-      const { data } = await getFootprintDataAPI(id);
+  useEffect(() => {
+    const run = async () => {
+      if (!isModelOpen || modalMode !== 'edit' || !editingId) return;
+      const reqSeq = (detailRequestSeqRef.current += 1);
+      try {
+        setDetailLoading(true);
+        const { data } = await getFootprintDataAPI(editingId);
+        if (reqSeq !== detailRequestSeqRef.current) return;
 
-      data.images = (data.images as string[]).join('\n');
-      data.createTime = dayjs(+data.createTime);
+        const normalized: Partial<Footprint> = {
+          ...data,
+          images: Array.isArray(data.images) ? (data.images as string[]).join('\n') : (data.images as string),
+          createTime: data.createTime ? dayjs(+data.createTime) : undefined,
+        };
 
-      setFootprint(data);
-      form.setFieldsValue(data);
+        form.setFieldsValue(normalized);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (reqSeq === detailRequestSeqRef.current) setDetailLoading(false);
+      }
+    };
 
-      setEditLoading(false);
-    } catch (error) {
-      console.error(error);
-      setEditLoading(false);
-    }
-  };
+    run();
+  }, [editingId, form, isModelOpen, modalMode]);
 
-  const onSubmit = async () => {
+  const onFilterReset = useCallback(() => {
+    filterForm.resetFields();
+    setListQuery({});
+    getFootprintList({});
+  }, [filterForm, getFootprintList]);
+
+  const onFilterSubmit = useCallback(
+    async (values: FilterForm) => {
+      const query: ListQuery = {
+        key: values.address,
+        startDate: values.createTime?.[0]?.valueOf()?.toString(),
+        endDate: values.createTime?.[1]?.valueOf()?.toString(),
+      };
+      setListQuery(query);
+      await getFootprintList(query);
+    },
+    [getFootprintList],
+  );
+
+  const delFootprintData = useCallback(
+    async (id: number) => {
+      try {
+        setLoading(true);
+        await delFootprintDataAPI(id);
+        notification.success({ message: '🎉 删除足迹成功' });
+        await getFootprintList();
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [getFootprintList],
+  );
+
+  const onSubmit = useCallback(async () => {
     try {
       setBtnLoading(true);
-      await form.validateFields().then(async (values: Footprint) => {
-        values.createTime = values.createTime.valueOf();
-        values.images = values.images ? (values.images as string).split('\n') : [];
+      const values = (await form.validateFields()) as Footprint;
 
-        if (isMethod === 'edit') {
-          await editFootprintDataAPI({ ...footprint, ...values });
-          message.success('🎉 修改足迹成功');
-        } else {
-          await addFootprintDataAPI({ ...footprint, ...values });
-          message.success('🎉 新增足迹成功');
-        }
+      const payload: Footprint = {
+        ...(values as Footprint),
+        createTime: (values.createTime as Dayjs | undefined)?.valueOf?.() ?? values.createTime,
+        images: values.images ? (values.images as string).split('\n').map((s) => s.trim()).filter(Boolean) : [],
+      };
 
-        getFootprintList();
-        reset();
-      });
+      if (modalMode === 'edit') {
+        if (!editingId) throw new Error('缺少 editingId');
+        await editFootprintDataAPI({ ...payload, id: editingId } as Footprint);
+        message.success('🎉 修改足迹成功');
+      } else {
+        await addFootprintDataAPI(payload);
+        message.success('🎉 新增足迹成功');
+      }
+
+      await getFootprintList();
+      closeModal();
     } catch (error) {
       console.error(error);
     } finally {
       setBtnLoading(false);
     }
-  };
+  }, [closeModal, editingId, form, getFootprintList, modalMode]);
 
-  const closeModel = () => reset();
-
-  const onFilterSubmit = async (values: FilterForm) => {
+  const getGeocode = useCallback(async () => {
     try {
-      setLoading(true);
-      const query = {
-        key: values.address,
-        startDate: values.createTime?.[0]?.valueOf()?.toString(),
-        endDate: values.createTime?.[1]?.valueOf()?.toString(),
-      };
-      const { data } = await getFootprintListAPI({ query });
-      setFootprintList(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 通过详细地址获取纬度
-  const getGeocode = async () => {
-    try {
-      setSearchLoading(true);
-
       const address = form.getFieldValue('address');
+      if (!address) {
+        message.warning('请先输入地址');
+        return;
+      }
 
+      setSearchLoading(true);
       const { data } = await axios.get('https://restapi.amap.com/v3/geocode/geo', {
         params: {
           address,
@@ -273,24 +205,121 @@ export default () => {
         },
       });
 
+      if (data?.infocode === '10001') {
+        message.error('请确保高德API密钥正确');
+        return;
+      }
+
       if (data.geocodes.length > 0) {
         const location = data.geocodes[0].location;
         form.setFieldValue('position', location);
-
-        // 立即触发校验
         form.validateFields(['position']);
-
-        setSearchLoading(false);
-        return data.geocodes[0].location;
-      } else {
-        setSearchLoading(false);
-        message.warning('未找到该地址的经纬度');
+        return location;
       }
+
+      message.warning('未找到该地址的经纬度');
     } catch (error) {
       console.error(error);
+    } finally {
       setSearchLoading(false);
     }
-  };
+  }, [form, gaodeApKey]);
+
+  const columns: ColumnType<Footprint>[] = useMemo(
+    () => [
+      {
+        title: 'ID',
+        dataIndex: 'id',
+        key: 'id',
+        align: 'center',
+        width: 80,
+        render: (text: number) => <span className="text-gray-400 dark:text-gray-500 font-mono">#{text}</span>,
+      },
+      {
+        title: '标题',
+        dataIndex: 'title',
+        key: 'title',
+        width: 180,
+        render: (text: string) => <span className="text-gray-700 dark:text-gray-200 font-medium">{text || '-'}</span>,
+      },
+      {
+        title: '地址',
+        dataIndex: 'address',
+        key: 'address',
+        width: 220,
+        ellipsis: true,
+        render: (text: string) => (
+          <div>
+            {text ? (
+              <Tooltip title={text}>
+                <div className="max-w-[220px] truncate text-gray-700 dark:text-gray-200 hover:text-primary cursor-pointer">{text}</div>
+              </Tooltip>
+            ) : (
+              <span className="text-gray-300 dark:text-gray-500 italic">暂无地址</span>
+            )}
+          </div>
+        ),
+      },
+      {
+        title: '内容',
+        dataIndex: 'content',
+        key: 'content',
+        width: 320,
+        render: (value: string) => (
+          <div>
+            {value ? (
+              <Tooltip title={value}>
+                <div className="max-w-[320px] truncate text-gray-700 dark:text-gray-200 hover:text-primary cursor-pointer">{value}</div>
+              </Tooltip>
+            ) : (
+              <span className="text-gray-300 dark:text-gray-500 italic">暂无内容</span>
+            )}
+          </div>
+        ),
+      },
+      {
+        title: '坐标',
+        dataIndex: 'position',
+        key: 'position',
+        align: 'center',
+        width: 160,
+        render: (value: string) => <Tag className="m-0!">{value || '-'}</Tag>,
+      },
+      {
+        title: '发布时间',
+        dataIndex: 'createTime',
+        key: 'createTime',
+        width: 140,
+        render: (text: string) => (
+          <div className="flex flex-col">
+            <span className="text-gray-700 dark:text-gray-200 font-medium">{dayjs(+text).format('YYYY-MM-DD')}</span>
+            <span className="text-gray-400 dark:text-gray-500 text-xs">{dayjs(+text).format('HH:mm:ss')}</span>
+          </div>
+        ),
+      },
+      {
+        title: '操作',
+        key: 'action',
+        fixed: 'right',
+        align: 'center',
+        width: 130,
+        render: (_: string, record: Footprint) => (
+          <Space split={<Divider type="vertical" />}>
+            <Tooltip title="编辑">
+              <Button type="text" onClick={() => openEdit(record.id!)} icon={<FormOutlined className="text-primary" />} />
+            </Tooltip>
+
+            <Tooltip title="删除">
+              <Popconfirm title="警告" description="你确定要删除吗" okText="确定" cancelText="取消" onConfirm={() => delFootprintData(record.id!)}>
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </Tooltip>
+          </Space>
+        ),
+      },
+    ],
+    [delFootprintData, openEdit],
+  );
 
   // 初始加载时显示骨架屏（与 article 一致）
   if (initialLoading) {
@@ -329,7 +358,7 @@ export default () => {
   return (
     <div className="mx-auto">
       <Title value="足迹管理">
-        <Button type="primary" onClick={addFootprintData}>
+        <Button type="primary" onClick={openCreate}>
           新增足迹
         </Button>
       </Title>
@@ -384,9 +413,9 @@ export default () => {
         />
       </div>
 
-      <Modal loading={editLoading} title={isMethod === 'edit' ? '编辑足迹' : '新增足迹'} open={isModelOpen} onCancel={closeModel} destroyOnClose footer={null}>
-        <Spin spinning={searchLoading}>
-          <Form form={form} layout="vertical" initialValues={footprint} size="large" preserve={false} className="mt-6">
+      <Modal title={modalMode === 'edit' ? '编辑足迹' : '新增足迹'} open={isModelOpen} onCancel={closeModal} destroyOnClose footer={null}>
+        <Spin spinning={detailLoading || searchLoading}>
+          <Form form={form} layout="vertical" size="large" preserve={false} className="mt-6">
             <Form.Item label="标题" name="title" rules={[{ required: true, message: '标题不能为空' }]}>
               <Input placeholder="请输入标题" />
             </Form.Item>

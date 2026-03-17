@@ -130,6 +130,7 @@ export default () => {
           message.success('🎉 编辑标签成功');
         } else {
           await addTagDataAPI(values);
+          
           message.success('🎉 新增标签成功');
         }
 
