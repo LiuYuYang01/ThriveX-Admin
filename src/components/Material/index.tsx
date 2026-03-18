@@ -78,7 +78,7 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
   const getFileList = async (dir: string, isLoadMore = false) => {
     // 防止重复加载
     if (loadingRef.current) return;
-    
+
     try {
       loadingRef.current = true;
       setLoading(true);
@@ -160,7 +160,7 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
     setIsUploadModalOpen(false);
     if (onSelect) onSelect(urls);
     reset();
-    setTimeout(onClose, 0);
+    onClose();
   };
 
   // 确认选择
@@ -183,16 +183,17 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
       width={1200}
       open={open}
       onCancel={onCancelSelect}
+      destroyOnHidden
       footer={
         dirName
           ? [
-              <Button key="cancel" onClick={onCancelSelect}>
-                取消
-              </Button>,
-              <Button key="confirm" type="primary" onClick={onHandleSelect} disabled={selectedFiles.length === 0}>
-                选择 ({selectedFiles.length})
-              </Button>,
-            ]
+            <Button key="cancel" onClick={onCancelSelect}>
+              取消
+            </Button>,
+            <Button key="confirm" type="primary" onClick={onHandleSelect} disabled={selectedFiles.length === 0}>
+              选择 ({selectedFiles.length})
+            </Button>,
+          ]
           : null
       }
       zIndex={1100}
