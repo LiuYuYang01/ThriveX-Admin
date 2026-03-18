@@ -1,6 +1,4 @@
 interface ImportMetaEnv {
-  readonly VITE_VERSION: string;
-
   readonly VITE_PROJECT_API: string;
 
   readonly VITE_BAIDU_TONGJI_SITE_ID: string;

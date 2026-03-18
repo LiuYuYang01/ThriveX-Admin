@@ -7,7 +7,6 @@ import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug
 import { TbBrandAirtable } from 'react-icons/tb';
 
 import logo from '/logo.png';
-import useVersionData from '@/hooks/useVersionData';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -31,7 +30,6 @@ interface SubMenuItem {
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const location = useLocation();
-  const version = useVersionData();
   const { pathname } = location;
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
 
@@ -76,17 +74,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   // 版本数据加载完成后，取消初始加载状态
   useEffect(() => {
-    // 如果版本数据已加载（有 tag_name）或等待一段时间后，取消骨架屏
-    if (version.tag_name) {
-      setInitialLoading(false);
-    } else {
-      // 如果版本数据未加载，等待最多 1 秒后显示内容
-      const timer = setTimeout(() => {
-        setInitialLoading(false);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [version]);
+    setInitialLoading(false);
+  }, []);
 
   const [isSideBarTheme] = useState<'dark' | 'light'>('light');
 
@@ -241,7 +230,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           name: (
             <div className="flex items-center w-full justify-between">
               <span>更新日志</span>
-              <div className="flex items-center gap-1">{version.tag_name === import.meta.env.VITE_VERSION ? <span className={`text-xs text-white px-2 py-0.5 rounded-lg bg-green-500`}>最新版</span> : <span className={`text-xs text-white px-2 py-0.5 rounded-lg bg-red-400`}>有新版本</span>}</div>
+              <div className="flex items-center gap-1"/>
             </div>
           ),
         },

@@ -1,24 +1,11 @@
 import { useState, useEffect } from 'react';
-import { App } from 'antd';
 import Header from '../components/Header/index';
 import Sidebar from '../components/Sidebar/index';
-import useVersionData from '@/hooks/useVersionData';
 import { useConfigStore } from '@/stores';
 
 export default ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const version = useVersionData();
   const colorMode = useConfigStore((state) => state.colorMode);
-  const { notification } = App.useApp();
-
-  useEffect(() => {
-    if (version.tag_name && version.tag_name !== import.meta.env.VITE_VERSION) {
-      notification.success({
-        message: '系统升级',
-        description: `请更新到 ${version.tag_name} 版本，以获得最佳体验`,
-      });
-    }
-  }, [version, notification]);
 
   useEffect(() => {
     const className = 'dark';
