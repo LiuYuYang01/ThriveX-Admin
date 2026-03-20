@@ -86,8 +86,5 @@
       "esbuild",
       "sharp"
     ]
-  },
-  "optionalDependencies": {
-    "@codemod.com/cli-darwin-arm64": "1.5.4"
   }
 }
