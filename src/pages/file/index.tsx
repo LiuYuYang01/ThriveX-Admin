@@ -1,362 +1,468 @@
-import { useEffect, useState, useRef } from 'react';
-import { Image, Card, Space, Spin, message, Popconfirm, Button, Drawer, Divider, Skeleton } from 'antd';
-import { PiKeyReturnFill } from 'react-icons/pi';
-import { DeleteOutlined, DownloadOutlined, RotateLeftOutlined, RotateRightOutlined, SwapOutlined, UndoOutlined, ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';
-import Masonry from 'react-masonry-css';
-
-import Title from '@/components/Title';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeftOutlined, CloudUploadOutlined, DeleteOutlined, EditOutlined, EyeOutlined, FolderAddOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, Card, Empty, Form, Image, Input, Modal, Popconfirm, Space, Spin, Tooltip, message } from 'antd';
+import dayjs from 'dayjs';
+import { createDirAPI, deleteDirAPI, delFileDataAPI, getFileDataAPI, getFileTreeAPI, renameDirAPI } from '@/api/file';
 import FileUpload from '@/components/FileUpload';
-import { delFileDataAPI, getDirListAPI, getFileListAPI } from '@/api/file';
-import { File, FileDir } from '@/types/app/file';
-import fileSvg from './image/file.svg';
+import Title from '@/components/Title';
+import { FileInfo, FileTreeData, FileTreeNode } from '@/types/app/file';
 import errorImg from './image/error.png';
+import fileSvg from './image/file.svg';
 import './index.scss';
 
-// Masonry布局的响应式断点配置
-const breakpointColumnsObj = {
-  default: 4,
-  1100: 3,
-  700: 2,
-  500: 1,
-};
+/** 从整棵树推断根目录前缀（如 static/）；多根目录时返回空串，由虚拟根列表展示全部 result */
+function inferRootPathFromTree(data: FileTreeData | null): string {
+  if (!data) return '';
+  if (data.dir) {
+    const d = String(data.dir).trim().replace(/\/+$/, '');
+    if (d) return `${d}/`;
+  }
+  const roots = data.result || [];
+  if (roots.length !== 1) return '';
+  const first = roots[0];
+  if (first?.path) {
+    const seg = first.path.replace(/\/+$/, '').split('/').filter(Boolean)[0];
+    if (seg) return `${seg}/`;
+  }
+  return '';
+}
+
+function normalizePathForRoot(path: string, root: string): string {
+  const cleaned = path.trim().replace(/^\/+/, '').replace(/\/+/g, '/');
+  const rootSeg = root.replace(/\/$/, '');
+  if (!rootSeg) {
+    if (!cleaned) return '';
+    return cleaned.endsWith('/') ? cleaned : `${cleaned}/`;
+  }
+  if (!cleaned) return root;
+  const withRoot = cleaned === rootSeg || cleaned.startsWith(`${rootSeg}/`) ? cleaned : `${rootSeg}/${cleaned}`;
+  return withRoot.endsWith('/') ? withRoot : `${withRoot}/`;
+}
+
+function findNodeInTree(list: FileTreeNode[], targetPath: string, root: string): FileTreeNode | null {
+  const target = normalizePathForRoot(targetPath, root);
+  for (const node of list) {
+    if (normalizePathForRoot(node.path, root) === target) return node;
+    const found = findNodeInTree(node.children, targetPath, root);
+    if (found) return found;
+  }
+  return null;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
 
 export default () => {
-  // 加载状态
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState<boolean>(true);
-  const isFirstLoadRef = useRef<boolean>(true);
-  // 按钮加载状态
-  const [btnLoading, setBtnLoading] = useState(false);
-  // 下载加载状态
-  const [downloadLoading, setDownloadLoading] = useState(false);
-  // 当前页码
-  const [page, setPage] = useState(1);
-  // 是否还有更多数据
-  const [hasMore, setHasMore] = useState(true);
-  // 防止重复加载的引用
-  const loadingRef = useRef(false);
+  const [treeData, setTreeData] = useState<FileTreeData | null>(null);
+  const [currentPath, setCurrentPath] = useState('');
+  const [keyword, setKeyword] = useState('');
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<FileTreeNode | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [fileInfo, setFileInfo] = useState<FileInfo | null>(null);
+  const [createForm] = Form.useForm<{ name: string }>();
+  const [renameForm] = Form.useForm<{ name: string }>();
 
-  // 弹窗状态
-  const [openUploadModalOpen, setOpenUploadModalOpen] = useState(false);
-  const [openFileInfoDrawer, setOpenFileInfoDrawer] = useState(false);
-  const [openFilePreviewDrawer, setOpenFilePreviewDrawer] = useState(false);
+  const rootPath = useMemo(() => inferRootPathFromTree(treeData), [treeData]);
 
-  // 目录和文件列表数据
-  const [dirList, setDirList] = useState<FileDir[]>([]);
-  const [fileList, setFileList] = useState<File[]>([]);
+  const normalizePath = (path: string) => normalizePathForRoot(path, rootPath);
+  const trimSlash = (path: string) => normalizePathForRoot(path, rootPath).replace(/\/$/, '');
 
-  // 当前选中的目录和文件
-  const [dirName, setDirName] = useState('');
-  const [file, setFile] = useState<File>({} as File);
+  const findNode = (list: FileTreeNode[], targetPath: string): FileTreeNode | null =>
+    findNodeInTree(list, targetPath, rootPath);
 
-  /**
-   * 获取目录列表
-   */
-  const getDirList = async () => {
+  /** 仅请求接口拉取整棵树；目录点击、面包屑、返回上一级不调用 */
+  const fetchTree = async (keepPath?: string) => {
     try {
-      // 如果是第一次加载，使用 initialLoading
-      if (isFirstLoadRef.current) {
-        setInitialLoading(true);
-      } else {
-        setLoading(true);
-      }
+      setLoading(true);
+      const { data } = await getFileTreeAPI();
+      setTreeData(data);
 
-      const { data } = await getDirListAPI();
-
-      const dirList = ['default', 'equipment', 'record', 'article', 'footprint', 'swiper', 'album'];
-      dirList.forEach((dir) => {
-        if (!data.some((item: FileDir) => item.name === dir)) {
-          data.push({ name: dir, path: '' });
-        }
-      });
-
-      setDirList(data);
-      isFirstLoadRef.current = false;
+      const rp = inferRootPathFromTree(data);
+      const targetPath = keepPath !== undefined ? normalizePathForRoot(keepPath, rp) : rp;
+      const exists =
+        rp === ''
+          ? targetPath === '' || !!findNodeInTree(data.result, targetPath, '')
+          : !targetPath || targetPath === rp || !!findNodeInTree(data.result, targetPath, rp);
+      setCurrentPath(exists ? targetPath : rp === '' ? '' : rp);
     } catch (error) {
       console.error(error);
     } finally {
-      setInitialLoading(false);
       setLoading(false);
     }
   };
 
-  /**
-   * 获取指定目录的文件列表
-   * @param dir 目录名称
-   * @param isLoadMore 是否为加载更多
-   */
-  const getFileList = async (dir: string, isLoadMore = false) => {
-    // 防止重复加载
-    if (loadingRef.current) return;
-    try {
-      loadingRef.current = true;
-      setLoading(true);
-
-      // 请求文件列表数据，如果是加载更多则页码+1
-      const { data } = await getFileListAPI(dir, { pageNum: isLoadMore ? page + 1 : 1, pageSize: 15 });
-
-      // 根据是否是加载更多来决定是替换还是追加数据
-      if (!isLoadMore) {
-        setFileList(data.result);
-        setPage(1);
-      } else {
-        setFileList((prev) => [...prev, ...data.result]);
-        setPage((prev) => prev + 1);
-      }
-
-      // 判断是否还有更多数据
-      setHasMore(data.result.length === 15);
-
-      setLoading(false);
-      loadingRef.current = false;
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-      loadingRef.current = false;
+  const navigateTo = (path: string) => {
+    if (!treeData) return;
+    const targetPath = normalizePath(path);
+    if (!rootPath) {
+      const exists = targetPath === '' || !!findNode(treeData.result, targetPath);
+      setCurrentPath(exists ? targetPath : '');
+      return;
     }
+    const exists = targetPath === rootPath || !!findNode(treeData.result, targetPath);
+    setCurrentPath(exists ? targetPath : rootPath);
   };
 
-  /**
-   * 删除图片
-   * @param data 要删除的文件数据
-   */
-  const onDeleteImage = async (data: File) => {
-    try {
-      setBtnLoading(true);
-      await delFileDataAPI(data.url);
-      await getFileList(dirName);
-      message.success('🎉 删除图片成功');
-      setFile({} as File);
-      setOpenFileInfoDrawer(false);
-      setOpenFilePreviewDrawer(false);
-      setBtnLoading(false);
-    } catch (error) {
-      console.error(error);
-      setBtnLoading(false);
-    }
-  };
-
-  /**
-   * 下载图片
-   * @param data 要下载的文件数据
-   */
-  const onDownloadImage = (data: File) => {
-    try {
-      setDownloadLoading(true);
-      fetch(data.url)
-        .then((response) => response.blob())
-        .then((blob) => {
-          const url = URL.createObjectURL(new Blob([blob]));
-          const link = document.createElement<'a'>('a');
-          link.href = url;
-          link.download = data.name;
-          document.body.appendChild(link);
-          link.click();
-          URL.revokeObjectURL(url);
-          link.remove();
-        });
-      setDownloadLoading(false);
-    } catch (error) {
-      console.error(error);
-      setDownloadLoading(false);
-    }
-  };
-
-  /**
-   * 处理滚动事件，实现下拉加载更多
-   * @param e 滚动事件对象
-   */
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    // 当滚动到底部（距离底部小于50px）且还有更多数据时，触发加载更多
-    if (scrollHeight - scrollTop - clientHeight < 50 && hasMore && !loading) {
-      getFileList(dirName, true);
-    }
-  };
-
-  /**
-   * 打开目录
-   * @param dir 目录名称
-   */
-  const openDir = (dir: string) => {
-    setDirName(dir);
-    getFileList(dir);
-  };
-
-  // 组件挂载时获取目录列表
   useEffect(() => {
-    getDirList();
+    fetchTree();
   }, []);
 
-  /**
-   * 查看文件信息
-   * @param record 文件数据
-   */
-  const viewOpenFileInfo = (record: File) => {
-    setOpenFileInfoDrawer(true);
-    setFile(record);
+  const rootNode = useMemo(() => {
+    if (!treeData || !rootPath) return null;
+    return treeData.result.find((node) => normalizePathForRoot(node.path, rootPath) === rootPath) || null;
+  }, [treeData, rootPath]);
+
+  const currentNode = useMemo(() => {
+    if (!treeData) return null;
+    // 多根：虚拟根层展示全部 result 作为一级目录
+    if (!rootPath) {
+      if (currentPath === '') {
+        return {
+          type: 'dir' as const,
+          name: 'root',
+          path: '',
+          children: treeData.result,
+          files: [],
+          fileCount: treeData.total,
+          totalSize: 0,
+        };
+      }
+      return findNodeInTree(treeData.result, currentPath, '');
+    }
+    if (currentPath === rootPath) {
+      if (rootNode) return rootNode;
+      return {
+        type: 'dir' as const,
+        name: rootPath.replace(/\/$/, '') || 'root',
+        path: rootPath,
+        children: treeData.result,
+        files: [],
+        fileCount: treeData.total,
+        totalSize: 0,
+      };
+    }
+    return findNodeInTree(treeData.result, currentPath, rootPath);
+  }, [treeData, currentPath, rootNode, rootPath]);
+
+  const dirList = useMemo(() => {
+    const list = currentNode?.children || [];
+    if (!keyword.trim()) return list;
+    return list.filter((item) => item.name.toLowerCase().includes(keyword.toLowerCase()));
+  }, [currentNode, keyword]);
+
+  const fileList = useMemo(() => {
+    const list = currentNode?.files || [];
+    if (!keyword.trim()) return list;
+    return list.filter((item) => item.name.toLowerCase().includes(keyword.toLowerCase()));
+  }, [currentNode, keyword]);
+
+  const breadcrumbs = useMemo(() => {
+    const trimmed = trimSlash(currentPath);
+    if (!trimmed) {
+      if (!rootPath) return [{ label: '根目录', path: '' }];
+      return [{ label: rootPath.replace(/\/$/, '') || 'root', path: rootPath }];
+    }
+    const parts = trimmed.split('/');
+    const items: { label: string; path: string }[] = [];
+    if (!rootPath) {
+      items.push({ label: '根目录', path: '' });
+    }
+    parts.forEach((_, index) => {
+      const path = normalizePath(parts.slice(0, index + 1).join('/'));
+      items.push({ label: parts[index], path });
+    });
+    return items;
+  }, [currentPath, rootPath]);
+
+  const goBack = () => {
+    if (!treeData) return;
+    if (!rootPath) {
+      if (currentPath === '') return;
+      const cleaned = trimSlash(currentPath);
+      const parts = cleaned.split('/');
+      if (parts.length <= 1) {
+        setCurrentPath('');
+        return;
+      }
+      navigateTo(normalizePath(parts.slice(0, -1).join('/')));
+      return;
+    }
+    if (currentPath === rootPath) return;
+    const parentPath = normalizePath(currentPath.split('/').slice(0, -2).join('/'));
+    navigateTo(parentPath || rootPath);
   };
 
-  // 初始加载时显示骨架屏
-  if (initialLoading) {
-    return (
-      <div>
-        {/* Title 骨架屏 */}
-        <Card className="[&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5! mb-2">
-          <Skeleton.Input active size="large" style={{ width: 150, height: 32 }} />
-        </Card>
+  const atMultiRootHome = !rootPath && currentPath === '';
 
-        <Card className="FilePage border-stroke mt-2 min-h-[calc(100vh-160px)] [&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5!">
-          {/* 操作栏骨架屏 */}
-          <div className="flex justify-between my-4 px-4">
-            <Skeleton.Button active size="default" style={{ width: 100, height: 32 }} />
-          </div>
+  const onCreateDir = async () => {
+    try {
+      const { name } = await createForm.validateFields();
+      const dir = `${trimSlash(currentPath)}/${name.trim()}`;
+      await createDirAPI({ dir });
+      message.success('🎉 新建目录成功');
+      setCreateOpen(false);
+      createForm.resetFields();
+      fetchTree(currentPath);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-          {/* 目录/文件列表骨架屏 */}
-          <div className="flex flex-wrap justify-start md:justify-normal">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-              <div key={item} className="w-20 flex flex-col items-center mx-8 my-2">
-                <Skeleton.Avatar active size={80} shape="square" />
-                <Skeleton.Input active size="small" style={{ width: 50, height: 25, marginTop: 8 }} />
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-    );
-  }
+  const openRenameDir = (target: FileTreeNode) => {
+    setRenameTarget(target);
+    renameForm.setFieldValue('name', target.name);
+    setRenameOpen(true);
+  };
+
+  const onRenameDir = async () => {
+    if (!renameTarget) return;
+    try {
+      const { name } = await renameForm.validateFields();
+      const parentDir = renameTarget.path.split('/').slice(0, -2).join('/');
+      const toDir = `${parentDir}/${name.trim()}`.replace(/^\/+/, '');
+      await renameDirAPI({
+        fromDir: trimSlash(renameTarget.path),
+        toDir,
+      });
+      message.success('🎉 目录重命名成功');
+      setRenameOpen(false);
+      setRenameTarget(null);
+      renameForm.resetFields();
+      fetchTree(currentPath);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const onDeleteDir = async (dirPath: string) => {
+    try {
+      await deleteDirAPI(trimSlash(dirPath));
+      message.success('🎉 删除目录成功');
+      fetchTree(currentPath);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const onDeleteFile = async (filePath: string) => {
+    try {
+      await delFileDataAPI(filePath);
+      message.success('🎉 删除文件成功');
+      fetchTree(currentPath);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const onOpenFileDetail = async (filePath: string) => {
+    try {
+      setDetailLoading(true);
+      setDetailOpen(true);
+      const { data } = await getFileDataAPI(filePath);
+      setFileInfo(data);
+    } catch (error) {
+      console.error(error);
+      setDetailOpen(false);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   return (
-    <div>
-      <Title value="文件管理" />
+    <div className="FilePage">
+      <Title value="文件管理">
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={() => fetchTree(currentPath)}>
+            刷新
+          </Button>
+          <Button icon={<FolderAddOutlined />} disabled={atMultiRootHome} onClick={() => setCreateOpen(true)}>
+            新建目录
+          </Button>
+          <Button type="primary" icon={<CloudUploadOutlined />} disabled={atMultiRootHome} onClick={() => setUploadOpen(true)}>
+            上传文件
+          </Button>
+        </Space>
+      </Title>
 
-      <Card className="FilePage border-stroke mt-2 min-h-[calc(100vh-160px)]">
-        <div className="flex justify-between mb-4 px-4">
-          {!fileList.length && !dirName ? (
-            <PiKeyReturnFill className="text-4xl text-[#E0DFDF] cursor-pointer" />
-          ) : (
-            <PiKeyReturnFill
-              className="text-4xl text-primary cursor-pointer"
-              onClick={() => {
-                setFileList([]);
-                setDirName('');
-              }}
-            />
-          )}
-
-          {dirName && (
-            <Button type="primary" onClick={() => setOpenUploadModalOpen(true)}>
-              上传文件
+      <Card className="rounded-2xl!">
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+          <Space>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              disabled={(!rootPath && currentPath === '') || (Boolean(rootPath) && currentPath === rootPath)}
+              onClick={goBack}
+            >
+              返回上一级
             </Button>
-          )}
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {breadcrumbs.map((item, index) => (
+                <span key={item.path}>
+                  <span className="cursor-pointer hover:text-primary" onClick={() => navigateTo(item.path)}>
+                    {item.label}
+                  </span>
+                  {index < breadcrumbs.length - 1 ? ' / ' : ''}
+                </span>
+              ))}
+            </div>
+          </Space>
+          <Input allowClear placeholder="搜索当前目录文件/目录" className="w-72" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
         </div>
 
-        {/* 文件列表 */}
         <Spin spinning={loading}>
-          <div className={`flex flex-wrap ${dirName ? 'justify-center!' : 'justify-start!'} md:justify-normal overflow-y-auto max-h-[calc(100vh-300px)]`} onScroll={handleScroll}>
-            {fileList.length || (!fileList.length && dirName) ? (
-              <Masonry breakpointCols={breakpointColumnsObj} className="masonry-grid" columnClassName="masonry-grid_column">
-                {fileList.map((item, index) => (
-                  <div key={index} className={`group relative overflow-hidden rounded-md cursor-pointer mb-4 border-2 border-stroke dark:border-transparent hover:border-primary! p-1 ${file.url === item.url ? 'border-primary' : 'border-gray-100'}`} onClick={() => viewOpenFileInfo(item)}>
-                    <Image src={item.url} className="w-full rounded-md" loading="lazy" preview={false} fallback={errorImg} />
+          {dirList.length === 0 && fileList.length === 0 ? (
+            <Empty description="当前目录暂无内容" className="py-16" />
+          ) : (
+            <>
+              {dirList.length > 0 && (
+                <section className="file-section file-section--dirs">
+                  <header className="file-section__head">
+                    <span className="file-section__title">目录</span>
+                    <span className="file-section__count">{dirList.length}</span>
+                  </header>
+                  <div className="folder-grid">
+                    {dirList.map((dir) => (
+                      <div key={dir.path} className="folder-item">
+                        <div className="cursor-pointer text-center" onClick={() => navigateTo(dir.path)}>
+                          <img src={fileSvg} alt={dir.name} className="mx-auto mb-2 w-18 h-14 object-contain" />
+                          <Tooltip title={dir.name}>
+                            <p className="folder-item__name line-clamp-2">{dir.name}</p>
+                          </Tooltip>
+                        </div>
+                        <div className="folder-actions">
+                          <Tooltip title="重命名目录">
+                            <Button type="text" size="small" icon={<EditOutlined />} onClick={() => openRenameDir(dir)} />
+                          </Tooltip>
+                          <Popconfirm title="确认删除该目录及其所有文件？" okText="确定" cancelText="取消" onConfirm={() => onDeleteDir(dir.path)}>
+                            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+                          </Popconfirm>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </Masonry>
-            ) : (
-              dirList.map((item, index) => (
-                <div key={index} className="group w-20 flex flex-col items-center cursor-pointer mx-4 my-2" onClick={() => openDir(item.name)}>
-                  <img src={fileSvg} alt="" />
-                  <p className="group-hover:text-primary transition-colors">{item.name}</p>
-                </div>
-              ))
-            )}
-          </div>
+                </section>
+              )}
+
+              {fileList.length > 0 && (
+                <section className={`file-section ${dirList.length > 0 ? 'file-section--after-dirs' : ''}`}>
+                  <header className="file-section__head">
+                    <span className="file-section__title">文件</span>
+                    <span className="file-section__count">{fileList.length}</span>
+                  </header>
+                  <div className="file-grid">
+                    {fileList.map((file) => (
+                      <div key={file.path} className="file-card">
+                        <div className="file-card__thumb">
+                          <Image src={file.url} fallback={errorImg} preview={false} />
+                        </div>
+                        <div className="file-card__body">
+                          <Tooltip title={file.name} placement="topLeft">
+                            <p className="file-card__name">{file.name}</p>
+                          </Tooltip>
+                          <p className="file-card__size">{formatFileSize(file.size)}</p>
+                        </div>
+                        <div className="file-actions">
+                          <Tooltip title="查看详情">
+                            <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => onOpenFileDetail(file.path)} />
+                          </Tooltip>
+                          <Popconfirm title="确认删除该文件？" okText="确定" cancelText="取消" onConfirm={() => onDeleteFile(file.path)}>
+                            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+                          </Popconfirm>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
+          )}
         </Spin>
       </Card>
 
-      {/* 文件上传弹窗 */}
-      <FileUpload multiple dir={dirName} open={openUploadModalOpen} onSuccess={() => getFileList(dirName)} onCancel={() => setOpenUploadModalOpen(false)} />
-
-      {/* 文件信息抽屉 */}
-      <Drawer
-        width={600}
-        title="图片信息"
-        placement="right"
-        open={openFileInfoDrawer}
-        onClose={() => {
-          setOpenFileInfoDrawer(false);
-          setFile({} as File);
+      <FileUpload
+        multiple
+        dir={trimSlash(currentPath)}
+        open={uploadOpen}
+        onCancel={() => setUploadOpen(false)}
+        onSuccess={() => {
+          setUploadOpen(false);
+          fetchTree(currentPath);
         }}
-      >
-        <div className="flex flex-col">
-          <div className="flex">
-            <span className="min-w-20 font-bold">文件名称</span>
-            <span className="text-[#333] dark:text-white">{file.name}</span>
-          </div>
+      />
 
-          <div className="flex">
-            <span className="min-w-20 font-bold">文件类型</span>
-            <span className="text-[#333] dark:text-white">{file.type}</span>
-          </div>
+      <Modal title="新建目录" open={createOpen} onOk={onCreateDir} onCancel={() => setCreateOpen(false)} destroyOnHidden>
+        <Form form={createForm} layout="vertical">
+          <Form.Item
+            label="目录名称"
+            name="name"
+            rules={[
+              { required: true, message: '请输入目录名称' },
+              { pattern: /^[^/\\]+$/, message: '目录名不能包含 / 或 \\' },
+            ]}
+          >
+            <Input placeholder="例如：article" maxLength={64} />
+          </Form.Item>
+        </Form>
+      </Modal>
 
-          <div className="flex">
-            <span className="min-w-20 font-bold">文件大小</span>
-            <span className="text-[#333] dark:text-white">{(file.size / 1048576).toFixed(2)}MB</span>
-          </div>
+      <Modal title="重命名目录" open={renameOpen} onOk={onRenameDir} onCancel={() => setRenameOpen(false)} destroyOnHidden>
+        <Form form={renameForm} layout="vertical">
+          <Form.Item
+            label="目录名称"
+            name="name"
+            rules={[
+              { required: true, message: '请输入目录名称' },
+              { pattern: /^[^/\\]+$/, message: '目录名不能包含 / 或 \\' },
+            ]}
+          >
+            <Input placeholder="请输入新目录名" maxLength={64} />
+          </Form.Item>
+        </Form>
+      </Modal>
 
-          <div className="flex">
-            <span className="min-w-20  font-bold">文件链接</span>
-            <span
-              className="text-[#333] dark:text-white hover:text-primary cursor-pointer transition"
-              onClick={async () => {
-                await navigator.clipboard.writeText(file.url);
-                message.success('🎉 复制成功');
-              }}
-            >
-              {file.url}
-            </span>
-          </div>
-        </div>
-
-        <Divider>图片预览</Divider>
-        <Image
-          src={file.url}
-          className="rounded-md object-cover object-center"
-          fallback={errorImg}
-          preview={{
-            onVisibleChange: (visible) => setOpenFilePreviewDrawer(visible),
-            visible: openFilePreviewDrawer,
-            toolbarRender: (_, { transform: { scale }, actions: { onFlipY, onFlipX, onRotateLeft, onRotateRight, onZoomOut, onZoomIn, onReset } }) => (
-              <Space className="toolbar-wrapper flex-col">
-                <div className="customAntdPreviewsItem">
-                  <Popconfirm title="警告" description="删除后无法恢复，确定要删除吗" onConfirm={() => onDeleteImage(file)} okText="删除" cancelText="取消">
-                    <DeleteOutlined />
-                  </Popconfirm>
-
-                  <DownloadOutlined onClick={() => onDownloadImage(file)} />
-                  <SwapOutlined rotate={90} onClick={onFlipY} />
-                  <SwapOutlined onClick={onFlipX} />
-                  <RotateLeftOutlined onClick={onRotateLeft} />
-                  <RotateRightOutlined onClick={onRotateRight} />
-                  <ZoomOutOutlined disabled={scale === 1} onClick={onZoomOut} />
-                  <ZoomInOutlined disabled={scale === 50} onClick={onZoomIn} />
-                  <UndoOutlined onClick={onReset} />
-                </div>
-              </Space>
-            ),
-          }}
-        />
-
-        <Divider>图片操作</Divider>
-        <Button type="primary" loading={downloadLoading} onClick={() => onDownloadImage(file)} className="w-full mb-2">
-          下载图片
-        </Button>
-        <Popconfirm title="警告" description="删除后无法恢复，确定要删除吗" onConfirm={() => onDeleteImage(file)} okText="删除" cancelText="取消">
-          <Button type="primary" danger loading={btnLoading} className="w-full">
-            删除图片
-          </Button>
-        </Popconfirm>
-      </Drawer>
+      <Modal title="文件详情" open={detailOpen} onCancel={() => setDetailOpen(false)} footer={null} destroyOnHidden>
+        <Spin spinning={detailLoading}>
+          {fileInfo && (
+            <div className="space-y-2 break-all">
+              <p>
+                <strong>名称：</strong>
+                {fileInfo.name}
+              </p>
+              <p>
+                <strong>路径：</strong>
+                {fileInfo.path}
+              </p>
+              <p>
+                <strong>MIME：</strong>
+                {fileInfo.mimeType}
+              </p>
+              <p>
+                <strong>大小：</strong>
+                {formatFileSize(fileInfo.size)}
+              </p>
+              <p>
+                <strong>上传时间：</strong>
+                {dayjs(Math.floor(fileInfo.putTime / 10000)).format('YYYY-MM-DD HH:mm:ss')}
+              </p>
+              <p>
+                <strong>链接：</strong>
+                <a href={fileInfo.url} target="_blank" rel="noreferrer">
+                  {fileInfo.url}
+                </a>
+              </p>
+            </div>
+          )}
+        </Spin>
+      </Modal>
     </div>
   );
 };
