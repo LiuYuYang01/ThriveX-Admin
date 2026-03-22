@@ -142,8 +142,8 @@ export default () => {
                 {imageList.length === 3 ? (
                   // 微信朋友圈风格的三图布局：左大右小双排
                   <div className="grid grid-cols-3 gap-2">
-                    <div key={0} className="group relative aspect-auto col-span-2 row-span-1 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 flex items-center justify-center image-container">
-                      <Image src={imageList[0]} className="object-cover w-full h-full min-w-full min-h-full transition-transform duration-500 group-hover:scale-110" wrapperClassName="w-full h-full" preview={true} />
+                    <div key={0} className="group relative aspect-auto col-span-2 row-span-1 min-h-0 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 image-container">
+                      <Image src={imageList[0]} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" classNames={{ root: '!w-full !h-full' }} preview={true} />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
                         <Tooltip title="移除图片">
                           <button
@@ -159,8 +159,8 @@ export default () => {
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <div key={1} className="group relative aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 flex items-center justify-center image-container">
-                        <Image src={imageList[1]} className="object-cover w-full h-full min-w-full min-h-full transition-transform duration-500 group-hover:scale-110" wrapperClassName="w-full h-full" preview={true} />
+                      <div key={1} className="group relative aspect-square min-h-0 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 image-container">
+                        <Image src={imageList[1]} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" classNames={{ root: '!w-full !h-full' }} preview={true} />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
                           <Tooltip title="移除图片">
                             <button
@@ -175,8 +175,8 @@ export default () => {
                           </Tooltip>
                         </div>
                       </div>
-                      <div key={2} className="group relative aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 flex items-center justify-center image-container">
-                        <Image src={imageList[2]} className="object-cover w-full h-full min-w-full min-h-full transition-transform duration-500 group-hover:scale-110" wrapperClassName="w-full h-full" preview={true} />
+                      <div key={2} className="group relative aspect-square min-h-0 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 image-container">
+                        <Image src={imageList[2]} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" classNames={{ root: '!w-full !h-full' }} preview={true} />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
                           <Tooltip title="移除图片">
                             <button
@@ -196,9 +196,9 @@ export default () => {
                 ) : (
                   <div className={`grid gap-4 ${imageList.length === 1 ? 'grid-cols-1' : imageList.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'}`}>
                     {imageList.map((item, index) => (
-                      <div key={index} className="group relative aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 flex items-center justify-center image-container">
+                      <div key={index} className="group relative aspect-square min-h-0 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 image-container">
                         {/* 图片主体 */}
-                        <Image src={item} className="object-cover w-full h-full min-w-full min-h-full transition-transform duration-500 group-hover:scale-110" wrapperClassName="w-full h-full" preview={true} />
+                        <Image src={item} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" classNames={{ root: '!w-full !h-full' }} preview={true} />
 
                         {/* 删除遮罩层 */}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
