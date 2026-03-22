@@ -41,19 +41,6 @@
     }
 }
 
-// 瀑布流布局
-.masonry-grid {
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    width: auto;
-}
-
-.masonry-grid_column {
-    padding-left: 10px;
-    background-clip: padding-box;
-}
-
 // 自定义骨架屏 - 闪光动画
 @keyframes skeleton-shimmer {
     0% {

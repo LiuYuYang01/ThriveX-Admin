@@ -350,10 +350,11 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
                             key={file.path}
                             role="button"
                             tabIndex={0}
-                            className={`group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-black/6 bg-white p-0 outline-none transition-[border-color,box-shadow] duration-200 focus-visible:shadow-[0_0_0_2px_rgba(91,143,249,0.45)] dark:border-white/8 dark:bg-white/4 hover:border-[rgba(91,143,249,0.45)] hover:shadow-[0_10px_28px_rgba(17,24,39,0.08)] dark:hover:border-[rgba(91,143,249,0.45)] ${isSelected
+                            className={`group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-black/6 bg-white p-0 outline-none transition-[border-color,box-shadow] duration-200 focus-visible:shadow-[0_0_0_2px_rgba(91,143,249,0.45)] dark:border-white/8 dark:bg-white/4 hover:border-[rgba(91,143,249,0.45)] hover:shadow-[0_10px_28px_rgba(17,24,39,0.08)] dark:hover:border-[rgba(91,143,249,0.45)] ${
+                              isSelected
                                 ? 'border-[rgba(91,143,249,0.65)]! shadow-[0_0_0_2px_rgba(91,143,249,0.18)] dark:border-[rgba(96,165,250,0.65)]! dark:shadow-[0_0_0_2px_rgba(96,165,250,0.2)]'
                                 : ''
-                              }`}
+                            }`}
                             onClick={() => onHandleSelectImage(file)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
