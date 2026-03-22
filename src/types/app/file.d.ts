@@ -11,6 +11,8 @@ export interface File {
   basePath?: string;
   date?: number;
   createTime?: number;
+  /** 与详情接口 putTime 一致时可用于排序（可选） */
+  putTime?: number;
   mimeType?: string;
 }
 
@@ -38,6 +40,9 @@ export interface FileTreeNode {
   files: File[];
   fileCount: number;
   totalSize: number;
+  /** 目录更新时间（毫秒时间戳，可选，由接口返回） */
+  mtime?: number;
+  updateTime?: number;
 }
 
 export interface FileTreeData {
