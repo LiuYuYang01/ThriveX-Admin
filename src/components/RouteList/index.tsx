@@ -21,7 +21,7 @@ import Work from '@/pages/work';
 import Draft from '@/pages/draft';
 import Decycle from '@/pages/decycle';
 import Record from '@/pages/record';
-import Storage from '@/pages/storage';
+// import Storage from '@/pages/storage';
 import Assistant from '@/pages/assistant';
 import Config from '@/pages/config';
 
@@ -52,7 +52,7 @@ export default () => {
     { path: '/web', title: '网站管理', component: <Web /> },
     { path: '/swiper', title: '轮播图管理', component: <Swiper /> },
     { path: '/footprint', title: '足迹管理', component: <Footprint /> },
-    { path: '/storage', title: '存储管理', component: <Storage /> },
+    // { path: '/storage', title: '存储管理', component: <Storage /> },
     { path: '/setup', title: '项目配置', component: <Setup /> },
     { path: '/file', title: '文件管理', component: <File /> },
     { path: '/iter', title: '项目更新记录', component: <Iterative /> },

@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
-import { Image, Spin, message, Button } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
+import { Image, Spin, message, Button, Empty, Input } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
 import { Modal } from 'antd';
 import Masonry from 'react-masonry-css';
-import { getFileListAPI, getDirListAPI } from '@/api/file';
-import { File, FileDir } from '@/types/app/file';
+import { getFileTreeAPI } from '@/api/file';
+import { File, FileTreeData, FileTreeNode } from '@/types/app/file';
 import errorImg from '@/pages/file/image/error.png';
 import fileSvg from '@/pages/file/image/file.svg';
 import { PiKeyReturnFill } from 'react-icons/pi';
@@ -28,142 +28,134 @@ const breakpointColumnsObj = {
 };
 
 export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
-  // 加载状态
   const [loading, setLoading] = useState(false);
-  // 当前页码
-  const [page, setPage] = useState(1);
-  // 是否还有更多数据
-  const [hasMore, setHasMore] = useState(true);
-  // 防止重复加载的引用
-  const loadingRef = useRef(false);
-  // 文件列表数据
-  const [fileList, setFileList] = useState<File[]>([]);
-  // 目录列表数据
-  const [dirList, setDirList] = useState<FileDir[]>([]);
-  // 当前选中的目录
-  const [dirName, setDirName] = useState('');
-  // 选中的文件列表
+  const [treeData, setTreeData] = useState<FileTreeData | null>(null);
+  const [currentPath, setCurrentPath] = useState('static/');
+  const [keyword, setKeyword] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-
-  // 上传文件弹窗
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  // 获取目录列表
-  const getDirList = async () => {
+  const normalizePath = (path: string) => {
+    const cleaned = path.trim().replace(/^\/+/, '').replace(/\/+/g, '/');
+    if (!cleaned) return 'static/';
+    const withRoot = cleaned === 'static' || cleaned.startsWith('static/') ? cleaned : `static/${cleaned}`;
+    return withRoot.endsWith('/') ? withRoot : `${withRoot}/`;
+  };
+  const trimSlash = (path: string) => normalizePath(path).replace(/\/$/, '');
+
+  const findNode = (list: FileTreeNode[], targetPath: string): FileTreeNode | null => {
+    const target = normalizePath(targetPath);
+    for (const node of list) {
+      if (normalizePath(node.path) === target) return node;
+      const found = findNode(node.children, targetPath);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  /** 仅拉取整棵树；目录点击、返回上级不调用 */
+  const fetchTree = async (keepPath?: string) => {
     try {
       setLoading(true);
-      const { data } = await getDirListAPI();
-
-      const dirList = ['default', 'equipment', 'record', 'article', 'footprint', 'swiper', 'album'];
-      dirList.forEach((dir) => {
-        if (!data.some((item: FileDir) => item.name === dir)) {
-          data.push({ name: dir, path: '' });
-        }
-      });
-
-      setDirList(data);
-
-      setLoading(false);
+      const { data } = await getFileTreeAPI();
+      setTreeData(data);
+      const target = normalizePath(keepPath !== undefined ? keepPath : 'static/');
+      const pathExists = target === 'static/' || !!findNode(data.result, target);
+      setCurrentPath(pathExists ? target : 'static/');
     } catch (error) {
       console.error(error);
+    } finally {
       setLoading(false);
     }
+  };
+
+  const navigateTo = (path: string) => {
+    if (!treeData) return;
+    const target = normalizePath(path);
+    const pathExists = target === 'static/' || !!findNode(treeData.result, target);
+    setCurrentPath(pathExists ? target : 'static/');
   };
 
   useEffect(() => {
-    getDirList();
-  }, []);
-
-  // 获取文件列表
-  const getFileList = async (dir: string, isLoadMore = false) => {
-    // 防止重复加载
-    if (loadingRef.current) return;
-
-    try {
-      loadingRef.current = true;
-      setLoading(true);
-
-      // 请求文件列表数据，如果是加载更多则页码+1
-      const { data } = await getFileListAPI(dir, { page: isLoadMore ? page + 1 : 1, size: 15 });
-
-      // 根据是否是加载更多来决定是替换还是追加数据
-      if (!isLoadMore) {
-        setFileList(data.result);
-        setPage(1);
-      } else {
-        setFileList((prev) => [...prev, ...data.result]);
-        setPage((prev) => prev + 1);
-      }
-
-      // 判断是否还有更多数据
-      setHasMore(data.result.length === 15);
-
-      setLoading(false);
-      loadingRef.current = false;
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-      loadingRef.current = false;
+    if (!open) return;
+    setKeyword('');
+    setSelectedFiles([]);
+    // 已有整棵树则不再请求；无缓存时拉一次全量树（目录点击不触发请求）
+    if (!treeData) {
+      void fetchTree(currentPath);
     }
-  };
+  }, [open]);
 
-  // 处理滚动事件，实现下拉加载更多
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    // 当滚动到底部（距离底部小于50px）且还有更多数据时，触发加载更多
-    if (scrollHeight - scrollTop - clientHeight < 50 && hasMore && !loading) {
-      getFileList(dirName, true);
+  const rootNode = useMemo(() => {
+    if (!treeData) return null;
+    return treeData.result.find((node) => normalizePath(node.path) === 'static/') || null;
+  }, [treeData]);
+
+  const currentNode = useMemo(() => {
+    if (!treeData) return null;
+    if (currentPath === 'static/') {
+      if (rootNode) return rootNode;
+      return {
+        type: 'dir' as const,
+        name: 'static',
+        path: 'static/',
+        children: treeData.result,
+        files: [],
+        fileCount: treeData.total,
+        totalSize: 0,
+      };
     }
-  };
+    return findNode(treeData.result, currentPath);
+  }, [treeData, currentPath, rootNode]);
 
-  // 取消选择
+  const visibleDirs = useMemo(() => {
+    const dirs = currentNode?.children || [];
+    if (!keyword.trim()) return dirs;
+    return dirs.filter((item) => item.name.toLowerCase().includes(keyword.toLowerCase()));
+  }, [currentNode, keyword]);
+
+  const visibleFiles = useMemo(() => {
+    const files = currentNode?.files || [];
+    if (!keyword.trim()) return files;
+    return files.filter((item) => item.name.toLowerCase().includes(keyword.toLowerCase()));
+  }, [currentNode, keyword]);
+
   const onCancelSelect = () => {
     reset();
     onClose();
   };
 
-  // 打开目录
-  const openDir = (dir: string) => {
-    setDirName(dir);
-    getFileList(dir);
-  };
-
-  // 处理选中的图片
   const onHandleSelectImage = (item: File) => {
     setSelectedFiles((prev) => {
-      // 如果 maxCount 不为 1，则开启多选
       const isMultiple = multiple || (maxCount !== undefined && maxCount !== 1);
 
       if (isMultiple) {
-        // 多选模式
         const isSelected = prev.some((file) => file.url === item.url);
         if (isSelected) {
           return prev.filter((file) => file.url !== item.url);
         } else {
-          // 检查是否超过最大数量限制
           if (maxCount && prev.length >= maxCount) {
             message.warning(`最多只能选择 ${maxCount} 个文件`);
             return prev;
           }
-
           return [...prev, item];
         }
       } else {
-        // 单选模式
         return [item];
       }
     });
   };
 
-  // 处理文件上传成功做的事情
   const onUpdateSuccess = (urls: string[]) => {
     setIsUploadModalOpen(false);
-    if (onSelect) onSelect(urls);
-    reset();
-    onClose();
+    fetchTree(currentPath);
+    if (onSelect) {
+      onSelect(urls);
+      reset();
+      onClose();
+    }
   };
 
-  // 确认选择
   const onHandleSelect = () => {
     const list = selectedFiles.map((item) => item.url);
     if (onSelect) onSelect(list);
@@ -172,10 +164,12 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
   };
 
   const reset = () => {
-    setFileList([]);
     setSelectedFiles([]);
-    setDirName('');
+    setKeyword('');
+    setCurrentPath('static/');
   };
+
+  const canGoBack = currentPath !== 'static/';
 
   return (
     <Modal
@@ -185,60 +179,77 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
       onCancel={onCancelSelect}
       destroyOnHidden
       footer={
-        dirName
-          ? [
-            <Button key="cancel" onClick={onCancelSelect}>
-              取消
-            </Button>,
-            <Button key="confirm" type="primary" onClick={onHandleSelect} disabled={selectedFiles.length === 0}>
-              选择 ({selectedFiles.length})
-            </Button>,
-          ]
-          : null
+        [
+          <Button key="cancel" onClick={onCancelSelect}>
+            取消
+          </Button>,
+          <Button key="confirm" type="primary" onClick={onHandleSelect} disabled={selectedFiles.length === 0}>
+            选择 ({selectedFiles.length})
+          </Button>,
+        ]
       }
       zIndex={1100}
     >
       <div className="flex justify-between mb-4 px-4">
-        {!fileList.length && !dirName ? <PiKeyReturnFill className="text-4xl text-[#E0DFDF] cursor-pointer" /> : <PiKeyReturnFill className="text-4xl text-primary cursor-pointer" onClick={reset} />}
-
-        {dirName && (
+        <PiKeyReturnFill
+          className={`text-4xl cursor-pointer ${canGoBack ? 'text-primary' : 'text-[#E0DFDF]'}`}
+          onClick={() => {
+            if (!canGoBack || !currentNode?.path) return;
+            const parentPath = normalizePath(currentNode.path.split('/').slice(0, -2).join('/'));
+            navigateTo(parentPath || 'static/');
+          }}
+        />
+        <div className="flex items-center gap-3">
+          <Input allowClear placeholder="搜索当前目录文件/目录" className="w-64" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
           <Button type="primary" onClick={() => setIsUploadModalOpen(true)}>
             上传文件
           </Button>
-        )}
+        </div>
       </div>
 
       <Spin spinning={loading}>
-        <div className={`flex flex-wrap ${dirName ? 'justify-center!' : 'justify-start'} md:justify-normal overflow-y-auto max-h-[calc(100vh-300px)]`} onScroll={handleScroll}>
-          {fileList.length || (!fileList.length && dirName) ? (
-            <Masonry breakpointCols={breakpointColumnsObj} className="masonry-grid" columnClassName="masonry-grid_column">
-              {fileList.map((item, index) => (
-                <div key={index} className={`group relative overflow-hidden rounded-md cursor-pointer mb-4 border-2 border-stroke dark:border-transparent hover:border-primary! p-1 ${selectedFiles.some((file) => file.url === item.url) ? 'border-primary' : 'border-gray-100'}`} onClick={() => onHandleSelectImage(item)}>
-                  <div className="relative">
-                    <Image src={item.url} className="w-full rounded-md" loading="lazy" fallback={errorImg} preview={false} />
-
-                    {selectedFiles.some((file) => file.url === item.url) && (
-                      <div className="absolute top-2 right-2 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center">
-                        <CheckOutlined />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </Masonry>
+        <div className="overflow-y-auto max-h-[calc(100vh-300px)] px-3">
+          {visibleDirs.length === 0 && visibleFiles.length === 0 ? (
+            <Empty description="当前目录暂无内容" className="py-10" />
           ) : (
-            dirList.map((item, index) => (
-              <div key={index} className="group w-20 flex flex-col items-center cursor-pointer mx-4 my-2" onClick={() => openDir(item.name)}>
-                <img src={fileSvg} alt="" />
-                <p className="group-hover:text-primary transition-colors">{item.name}</p>
+            <>
+              <div className="flex flex-wrap gap-4 mb-6">
+                {visibleDirs.map((item) => (
+                  <div key={item.path} className="group w-20 flex flex-col items-center cursor-pointer" onClick={() => navigateTo(item.path)}>
+                    <img src={fileSvg} alt="" />
+                    <p className="group-hover:text-primary transition-colors text-center break-all">{item.name}</p>
+                  </div>
+                ))}
               </div>
-            ))
+
+              {visibleFiles.length > 0 && (
+                <Masonry breakpointCols={breakpointColumnsObj} className="masonry-grid" columnClassName="masonry-grid_column">
+                  {visibleFiles.map((item, index) => (
+                    <div
+                      key={index}
+                      className={`group relative overflow-hidden rounded-md cursor-pointer mb-4 border-2 border-stroke dark:border-transparent hover:border-primary! p-1 ${
+                        selectedFiles.some((file) => file.url === item.url) ? 'border-primary' : 'border-gray-100'
+                      }`}
+                      onClick={() => onHandleSelectImage(item)}
+                    >
+                      <div className="relative">
+                        <Image src={item.url} className="w-full rounded-md" loading="lazy" fallback={errorImg} preview={false} />
+                        {selectedFiles.some((file) => file.url === item.url) && (
+                          <div className="absolute top-2 right-2 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center">
+                            <CheckOutlined />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </Masonry>
+              )}
+            </>
           )}
         </div>
       </Spin>
 
-      {/* 文件上传弹窗 */}
-      <FileUpload multiple={multiple || (maxCount !== undefined && maxCount !== 1)} dir={dirName} open={isUploadModalOpen} onSuccess={onUpdateSuccess} onCancel={() => setIsUploadModalOpen(false)} />
+      <FileUpload multiple={multiple || (maxCount !== undefined && maxCount !== 1)} dir={trimSlash(currentPath)} open={isUploadModalOpen} onSuccess={onUpdateSuccess} onCancel={() => setIsUploadModalOpen(false)} />
     </Modal>
   );
 };

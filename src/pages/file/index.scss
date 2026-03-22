@@ -2,11 +2,196 @@
     .ant-image {
         display: block;
         width: 100%;
+        height: 100%;
 
         .ant-image-img {
             width: 100%;
-            height: auto;
+            height: 100%;
             display: block;
+        }
+    }
+
+    .file-section {
+        &--after-dirs {
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        &__head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        &__title {
+            font-size: 15px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.88);
+            letter-spacing: 0.02em;
+        }
+
+        &__count {
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.04);
+            color: rgba(0, 0, 0, 0.45);
+        }
+    }
+
+    .folder-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 16px;
+    }
+
+    .folder-item {
+        width: 120px;
+        padding: 10px 8px 8px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: rgba(0, 0, 0, 0.02);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+        &:hover {
+            border-color: #5b8ff9;
+            background: rgba(91, 143, 249, 0.06);
+            box-shadow: 0 4px 14px rgba(91, 143, 249, 0.12);
+        }
+
+        &__name {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.35;
+            color: rgba(0, 0, 0, 0.85);
+            word-break: break-word;
+        }
+    }
+
+    .folder-actions {
+        margin-top: 8px;
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    .file-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+    }
+
+    .file-card {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 12px;
+        padding: 0;
+        overflow: hidden;
+        background: #fff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+        &:hover {
+            border-color: rgba(91, 143, 249, 0.45);
+            box-shadow: 0 10px 28px rgba(17, 24, 39, 0.08);
+        }
+
+        &__thumb {
+            position: relative;
+            aspect-ratio: 4 / 3;
+            width: 100%;
+            background: linear-gradient(145deg, #f4f6f9 0%, #eceff4 100%);
+            overflow: hidden;
+
+            .ant-image {
+                width: 100%;
+                height: 100%;
+            }
+
+            .ant-image-img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+        }
+
+        &__body {
+            padding: 10px 12px 4px;
+            flex: 1;
+            min-height: 52px;
+        }
+
+        &__name {
+            margin: 0 0 4px;
+            font-size: 13px;
+            line-height: 1.45;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.88);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-all;
+        }
+
+        &__size {
+            margin: 0;
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.45);
+        }
+    }
+
+    .file-actions {
+        padding: 0 8px 8px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 2px;
+        margin-top: auto;
+    }
+}
+
+.dark .FilePage {
+    .file-section__title {
+        color: rgba(255, 255, 255, 0.88);
+    }
+
+    .file-section__count {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.45);
+    }
+
+    .file-section--after-dirs {
+        border-top-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .folder-item {
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+
+        &__name {
+            color: rgba(255, 255, 255, 0.88);
+        }
+    }
+
+    .file-card {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.08);
+
+        &__thumb {
+            background: linear-gradient(145deg, #1f2937 0%, #111827 100%);
+        }
+
+        &__name {
+            color: rgba(255, 255, 255, 0.88);
+        }
+
+        &__size {
+            color: rgba(255, 255, 255, 0.45);
         }
     }
 }

@@ -81,11 +81,11 @@ const routeConfigMap: Record<string, RouteConfig> = {
     title: '足迹管理',
     icon: <BiCategoryAlt className="text-base" />,
   },
-  '/storage': {
-    path: '/storage',
-    title: '存储管理',
-    icon: <BiCategoryAlt className="text-base" />,
-  },
+  // '/storage': {
+  //   path: '/storage',
+  //   title: '存储管理',
+  //   icon: <BiCategoryAlt className="text-base" />,
+  // },
   '/setup': {
     path: '/setup',
     title: '项目配置',
