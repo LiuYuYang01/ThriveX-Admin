@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeftOutlined, CloudUploadOutlined, DeleteOutlined, EditOutlined, EyeOutlined, FolderAddOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Card, Empty, Form, Image, Input, Modal, Popconfirm, Space, Spin, Tooltip, message } from 'antd';
+import { Breadcrumb, Button, Card, Empty, Form, Image, Input, Modal, Popconfirm, Space, Spin, Tooltip, message } from 'antd';
 import dayjs from 'dayjs';
 import { createDirAPI, deleteDirAPI, delFileDataAPI, getFileDataAPI, getFileTreeAPI, renameDirAPI } from '@/api/file';
 import FileUpload from '@/components/FileUpload';
@@ -8,7 +8,6 @@ import Title from '@/components/Title';
 import { FileInfo, FileTreeData, FileTreeNode } from '@/types/app/file';
 import errorImg from './image/error.png';
 import fileSvg from './image/file.svg';
-import './index.scss';
 
 /** 从整棵树推断根目录前缀（如 static/）；多根目录时返回空串，由虚拟根列表展示全部 result */
 function inferRootPathFromTree(data: FileTreeData | null): string {
@@ -278,7 +277,7 @@ export default () => {
   };
 
   return (
-    <div className="FilePage">
+    <div>
       <Title value="文件管理">
         <Space>
           <Button icon={<ReloadOutlined />} onClick={() => fetchTree(currentPath)}>
@@ -294,28 +293,46 @@ export default () => {
       </Title>
 
       <Card className="rounded-2xl!">
-        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-          <Space>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <Button
               type="text"
               icon={<ArrowLeftOutlined />}
               disabled={(!rootPath && currentPath === '') || (Boolean(rootPath) && currentPath === rootPath)}
               onClick={goBack}
-            >
-              返回上一级
-            </Button>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {breadcrumbs.map((item, index) => (
-                <span key={item.path}>
-                  <span className="cursor-pointer hover:text-primary" onClick={() => navigateTo(item.path)}>
-                    {item.label}
-                  </span>
-                  {index < breadcrumbs.length - 1 ? ' / ' : ''}
-                </span>
-              ))}
-            </div>
-          </Space>
-          <Input allowClear placeholder="搜索当前目录文件/目录" className="w-72" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+              className={`shrink-0 ${(!rootPath && currentPath === '') || (Boolean(rootPath) && currentPath === rootPath) ? 'bg-gray-50! dark:bg-gray-700!' : 'bg-gray-100! hover:bg-gray-200! dark:bg-gray-700! hover:dark:bg-gray-800!'}`}
+            />
+
+            <nav className="min-w-0 flex-1 rounded-md bg-gray-100/50 px-4 py-1 leading-normal dark:bg-gray-700!" aria-label="当前路径">
+              <Breadcrumb
+                className="text-sm [&.ant-breadcrumb]:text-inherit [&_ol]:flex [&_ol]:flex-wrap [&_ol]:items-center [&_ol]:gap-y-1 [&_.ant-breadcrumb-separator]:mx-1"
+                separator={<span className="select-none text-black/22 dark:text-white/25">/</span>}
+                items={breadcrumbs.map((item, index) => {
+                  const isCurrent = index === breadcrumbs.length - 1;
+                  return {
+                    key: `${index}-${item.path}`,
+                    title: (
+                      <button
+                        type="button"
+                        className={
+                          isCurrent
+                            ? 'max-w-full cursor-default rounded border-0 bg-transparent p-0 text-left font-inherit font-semibold text-primary focus-visible:outline focus-visible:outline-primary focus-visible:outline-offset-2 dark:text-white/92'
+                            : 'max-w-full cursor-pointer rounded border-0 bg-transparent p-0 text-left font-inherit text-black/55 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 dark:text-white/55 dark:hover:text-primary'
+                        }
+                        onClick={() => navigateTo(item.path)}
+                      >
+                        {item.label}
+                      </button>
+                    ),
+                  };
+                })}
+              />
+            </nav>
+          </div>
+
+          <div className="w-full shrink-0 sm:w-auto sm:min-w-[240px] sm:max-w-[min(100%,18rem)]">
+            <Input allowClear placeholder="搜索当前目录文件/目录" className="w-full" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+          </div>
         </div>
 
         <Spin spinning={loading}>
@@ -324,21 +341,26 @@ export default () => {
           ) : (
             <>
               {dirList.length > 0 && (
-                <section className="file-section file-section--dirs">
-                  <header className="file-section__head">
-                    <span className="file-section__title">目录</span>
-                    <span className="file-section__count">{dirList.length}</span>
+                <section>
+                  <header className="mb-4 flex items-center gap-2.5">
+                    <span className="text-[15px] font-semibold tracking-wide text-black/88 dark:text-white/88">目录</span>
+                    <span className="rounded-full bg-black/4 px-2 py-0.5 text-xs font-medium leading-none text-black/45 dark:bg-white/8 dark:text-white/45">
+                      {dirList.length}
+                    </span>
                   </header>
-                  <div className="folder-grid">
+                  <div className="flex flex-wrap gap-x-4 gap-y-3">
                     {dirList.map((dir) => (
-                      <div key={dir.path} className="folder-item">
+                      <div
+                        key={dir.path}
+                        className="w-[120px] rounded-xl border border-black/6 bg-black/2 px-2 pb-2 pt-2.5 transition-[border-color,box-shadow,background] duration-200 hover:border-[#5b8ff9] hover:bg-[rgba(91,143,249,0.06)] hover:shadow-[0_4px_14px_rgba(91,143,249,0.12)] dark:border-white/8 dark:bg-white/4"
+                      >
                         <div className="cursor-pointer text-center" onClick={() => navigateTo(dir.path)}>
-                          <img src={fileSvg} alt={dir.name} className="mx-auto mb-2 w-18 h-14 object-contain" />
+                          <img src={fileSvg} alt={dir.name} className="mx-auto mb-2 h-14 w-18 object-contain" />
                           <Tooltip title={dir.name}>
-                            <p className="folder-item__name line-clamp-2">{dir.name}</p>
+                            <p className="m-0 line-clamp-2 wrap-break-word text-[13px] leading-snug text-black/85 dark:text-white/88">{dir.name}</p>
                           </Tooltip>
                         </div>
-                        <div className="folder-actions">
+                        <div className="mt-2 flex justify-center gap-1">
                           <Tooltip title="重命名目录">
                             <Button type="text" size="small" icon={<EditOutlined />} onClick={() => openRenameDir(dir)} />
                           </Tooltip>
@@ -353,24 +375,31 @@ export default () => {
               )}
 
               {fileList.length > 0 && (
-                <section className={`file-section ${dirList.length > 0 ? 'file-section--after-dirs' : ''}`}>
-                  <header className="file-section__head">
-                    <span className="file-section__title">文件</span>
-                    <span className="file-section__count">{fileList.length}</span>
+                <section className={dirList.length > 0 ? 'mt-7 border-t border-black/6 pt-6 dark:border-white/8' : ''}>
+                  <header className="mb-4 flex items-center gap-2.5">
+                    <span className="text-[15px] font-semibold tracking-wide text-black/88 dark:text-white/88">文件</span>
+                    <span className="rounded-full bg-black/4 px-2 py-0.5 text-xs font-medium leading-none text-black/45 dark:bg-white/8 dark:text-white/45">
+                      {fileList.length}
+                    </span>
                   </header>
-                  <div className="file-grid">
+                  <div className="grid gap-[18px] grid-cols-[repeat(auto-fill,minmax(232px,1fr))]">
                     {fileList.map((file) => (
-                      <div key={file.path} className="file-card">
-                        <div className="file-card__thumb">
-                          <Image src={file.url} fallback={errorImg} preview={false} />
+                      <div
+                        key={file.path}
+                        className="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-black/6 bg-white p-0 transition-[border-color,box-shadow,transform] duration-200 ease-out dark:border-white/8 dark:bg-white/4 hover:-translate-y-1 hover:border-[rgba(91,143,249,0.45)] hover:shadow-[0_14px_36px_rgba(17,24,39,0.12)] dark:hover:border-[rgba(91,143,249,0.45)] dark:hover:shadow-[0_14px_36px_rgba(0,0,0,0.45)]"
+                      >
+                        <div className="relative aspect-4/3 w-full overflow-hidden bg-linear-to-br from-[#f4f6f9] to-[#eceff4] transition-[filter] duration-200 group-hover:brightness-[1.03] dark:from-[#1f2937] dark:to-[#111827] dark:group-hover:brightness-[1.06] [&_.ant-image]:block [&_.ant-image]:h-full [&_.ant-image]:w-full [&_.ant-image-img]:block [&_.ant-image-img]:h-full [&_.ant-image-img]:w-full [&_.ant-image-img]:origin-center [&_.ant-image-img]:object-cover [&_.ant-image-img]:transition-transform [&_.ant-image-img]:duration-300 [&_.ant-image-img]:ease-out group-hover:[&_.ant-image-img]:scale-105">
+                          <Image src={file.url} fallback={errorImg} preview={false} loading="lazy" className="h-[inherit]!"/>
                         </div>
-                        <div className="file-card__body">
+                        <div className="min-h-[52px] flex-1 px-3 pb-1 pt-2.5">
                           <Tooltip title={file.name} placement="topLeft">
-                            <p className="file-card__name">{file.name}</p>
+                            <p className="mb-1 line-clamp-2 break-all text-[13px] font-medium leading-[1.45] text-black/88 group-hover:text-primary dark:text-white/88">
+                              {file.name}
+                            </p>
                           </Tooltip>
-                          <p className="file-card__size">{formatFileSize(file.size)}</p>
+                          <p className="m-0 text-xs text-black/45 dark:text-white/45">{formatFileSize(file.size)}</p>
                         </div>
-                        <div className="file-actions">
+                        <div className="mt-auto flex justify-end gap-0.5 px-2 pb-2">
                           <Tooltip title="查看详情">
                             <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => onOpenFileDetail(file.path)} />
                           </Tooltip>
@@ -432,33 +461,44 @@ export default () => {
       <Modal title="文件详情" open={detailOpen} onCancel={() => setDetailOpen(false)} footer={null} destroyOnHidden>
         <Spin spinning={detailLoading}>
           {fileInfo && (
-            <div className="space-y-2 break-all">
-              <p>
-                <strong>名称：</strong>
-                {fileInfo.name}
-              </p>
-              <p>
-                <strong>路径：</strong>
-                {fileInfo.path}
-              </p>
-              <p>
-                <strong>MIME：</strong>
-                {fileInfo.mimeType}
-              </p>
-              <p>
-                <strong>大小：</strong>
-                {formatFileSize(fileInfo.size)}
-              </p>
-              <p>
-                <strong>上传时间：</strong>
-                {dayjs(Math.floor(fileInfo.putTime / 10000)).format('YYYY-MM-DD HH:mm:ss')}
-              </p>
-              <p>
-                <strong>链接：</strong>
-                <a href={fileInfo.url} target="_blank" rel="noreferrer">
-                  {fileInfo.url}
-                </a>
-              </p>
+            <div className="rounded-xl border border-black/6 bg-gray-50/50 dark:border-white/10 dark:bg-white/5">
+              <dl className="divide-y divide-black/6 dark:divide-white/10">
+                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
+                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">名称</dt>
+                  <dd className="min-w-0 text-sm leading-relaxed text-black/88 wrap-break-word dark:text-white/90">{fileInfo.name}</dd>
+                </div>
+                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
+                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">路径</dt>
+                  <dd className="min-w-0 font-mono text-xs leading-relaxed text-black/80 break-all dark:text-white/85">{fileInfo.path}</dd>
+                </div>
+                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
+                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">MIME</dt>
+                  <dd className="min-w-0 font-mono text-xs text-black/80 break-all dark:text-white/85">{fileInfo.mimeType}</dd>
+                </div>
+                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
+                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">大小</dt>
+                  <dd className="min-w-0 text-sm tabular-nums text-black/88 dark:text-white/90">{formatFileSize(fileInfo.size)}</dd>
+                </div>
+                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
+                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">上传时间</dt>
+                  <dd className="min-w-0 text-sm tabular-nums text-black/88 dark:text-white/90">
+                    {dayjs(Math.floor(fileInfo.putTime / 10000)).format('YYYY-MM-DD HH:mm:ss')}
+                  </dd>
+                </div>
+                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
+                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">链接</dt>
+                  <dd className="min-w-0 text-sm leading-relaxed">
+                    <a
+                      href={fileInfo.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary break-all underline-offset-2 hover:underline"
+                    >
+                      {fileInfo.url}
+                    </a>
+                  </dd>
+                </div>
+              </dl>
             </div>
           )}
         </Spin>
