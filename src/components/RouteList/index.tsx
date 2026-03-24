@@ -28,7 +28,7 @@ import Config from '@/pages/config';
 import PageTitle from '../PageTitle';
 
 import { useUserStore } from '@/stores';
-import { checkTokenAPI } from '@/api/user';
+import { isCheckTokenAPI } from '@/api/user';
 import NotFound from '../NotFound';
 
 export default () => {
@@ -62,13 +62,16 @@ export default () => {
   ];
 
   useEffect(() => {
-    // 如果没有token并且不在登录相关页面就跳转到登录页
+    // 如果没有token并且不在登录相关页面就强制跳转到登录页
     if (!store.token && !isLoginRoute) return navigate('/login');
   }, [store, isLoginRoute]);
 
   useEffect(() => {
-    if (store.token) checkTokenAPI(store.token);
-  }, [store, pathname]);
+    console.log(pathname);
+    
+    if (pathname === '/login') return;
+    isCheckTokenAPI();
+  }, [pathname]);
 
   if (isLoginRoute) {
     return (
