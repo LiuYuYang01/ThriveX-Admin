@@ -665,21 +665,20 @@ export default () => {
 
           {showBatchActions && (
             <div className="flex justify-between items-center pt-2 mt-2! border-t border-gray-100 dark:border-strokedark gap-2">
-              <div></div>
+              <Popconfirm title="删除确认" description="确定要删除选中的文章吗？" okText="删除" okButtonProps={{ danger: true }} cancelText="取消" onConfirm={() => delSelected()} disabled={!selectedRowKeys.length}>
+                <Button type="primary" danger icon={<DeleteOutlined />} disabled={!selectedRowKeys.length}>删除选中</Button>
+              </Popconfirm>
 
               <div className="flex space-x-3">
+                <Button type="primary" icon={<InboxOutlined />} onClick={() => setIsModalOpen(true)}>
+                  导入文章
+                </Button>
+
                 <ArticleExport.Dropdown
                   selectedArticles={articleList.filter((a) => selectedRowKeys.includes(a.id as number))}
                   onLoadAll={loadAllArticles}
                   setLoading={setLoading}
                 />
-
-                <Button type="primary" icon={<InboxOutlined />} onClick={() => setIsModalOpen(true)}>
-                  导入文章
-                </Button>
-                <Popconfirm title="删除确认" description="确定要删除选中的文章吗？" okText="删除" okButtonProps={{ danger: true }} cancelText="取消" onConfirm={() => delSelected()}>
-                  <Button danger icon={<DeleteOutlined />}>删除选中</Button>
-                </Popconfirm>
               </div>
             </div>
           )}
