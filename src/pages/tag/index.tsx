@@ -77,7 +77,7 @@ export default () => {
       }
 
       const { data } = await getTagListAPI();
-      setList(data as Tag[]);
+      setList(data.result);
       isFirstLoadRef.current = false;
     } catch (error) {
       console.error(error);

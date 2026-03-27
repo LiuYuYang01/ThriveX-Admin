@@ -14,17 +14,4 @@ export const editTagDataAPI = (data: Tag) => Request('PATCH', '/tag', { data })
 export const getTagDataAPI = (id?: number) => Request<Tag>('GET', `/tag/${id}`)
 
 // 获取标签列表
-// export const getTagListAPI = (data?: QueryData) => Request<Tag[]>('POST', `/tag/list`, {
-//     data: { ...data?.query },
-// })
-
-// 统计每个标签下的文章数量
-export const getTagListAPI = () => Request<Tag[]>('GET', '/tag/article/count')
-
-// 分页获取标签列表
-export const getTagPagingAPI = (data?: QueryData) => Request<Paginate<Tag[]>>('POST', `/tag/paging`, {
-    data: { ...data?.query },
-    params: {
-        ...data?.pagination
-    }
-})
+export const getTagListAPI = () => Request<Paginate<Tag[]>>('GET', '/tag')

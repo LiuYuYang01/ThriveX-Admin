@@ -383,7 +383,7 @@ export default () => {
 
   const getTagList = async () => {
     const { data } = await getTagListAPI();
-    setTagList(data as ArticleTag[]);
+    setTagList(data.result);
   };
 
   // 导入文章：收集文件后调用，仅负责解析与提交

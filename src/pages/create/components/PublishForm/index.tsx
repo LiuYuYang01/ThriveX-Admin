@@ -100,7 +100,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
 
   const getTagList = async () => {
     const { data } = await getTagListAPI();
-    setTagList(data as Tag[]);
+    setTagList(data.result);
   };
 
   useEffect(() => {
@@ -135,7 +135,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
           await addTagDataAPI({ name: item });
           const { data: list } = await getTagListAPI();
           // 添加成功后查找对应的标签id
-          const tag2 = list.find((t) => t.name === item)?.id;
+          const tag2 = list.result.find((t) => t.name === item)?.id;
           if (tag2) tagIds.push(tag2);
         } else {
           tagIds.push(item);
