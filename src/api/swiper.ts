@@ -14,14 +14,4 @@ export const editSwiperDataAPI = (data: Swiper) => Request('PATCH', '/swiper', {
 export const getSwiperDataAPI = (id?: number) => Request<Swiper>('GET', `/swiper/${id}`)
 
 // 获取轮播图数据列表
-export const getSwiperListAPI = (data?: QueryData) => Request<Swiper[]>('POST', `/swiper/list`, {
-    data: { ...data?.query },
-})
-
-// 分页获取轮播图列表
-export const getSwiperPagingAPI = (data?: QueryData) => Request<Paginate<Swiper[]>>('POST', `/swiper/paging`, {
-    data: { ...data?.query },
-    params: {
-        ...data?.pagination
-    }
-})
+export const getSwiperListAPI = () => Request<Paginate<Swiper[]>>('GET', `/swiper`)
