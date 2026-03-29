@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 
 import { useUserStore } from '@/stores';
-import { editUserDataAPI, getUserDataAPI } from '@/api/user';
+import { editUserDataAPI } from '@/api/user';
 import { User } from '@/types/app/user';
 
 interface UserForm {
@@ -16,40 +16,19 @@ export default () => {
   const [loading, setLoading] = useState<boolean>(false);
 
   const [form] = Form.useForm<UserForm>();
-  const store = useUserStore();
-
-  const getUserData = async () => {
-    try {
-      setLoading(true);
-
-      const { data } = await getUserDataAPI(store.token);
-      store.setUser(data);
-      form.setFieldsValue(data);
-
-      setLoading(false);
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-    }
-  };
+  const user = useUserStore(state => state.user);
+  const setUser = useUserStore(state => state.setUser);
 
   useEffect(() => {
-    getUserData();
-  }, []);
+    form.setFieldsValue(user);
+  }, [user]);
 
   const onSubmit = async (values: UserForm) => {
     try {
       setLoading(true);
-
-      await editUserDataAPI({
-        id: store.user.id,
-        ...values,
-        role: undefined,
-      });
-
-      getUserData();
+      await editUserDataAPI({ ...values, id: user.id });
       message.success('🎉 修改用户信息成功');
-      store.setUser(values as User);
+      setUser(values as User);
     } catch (error) {
       console.error(error);
       setLoading(false);

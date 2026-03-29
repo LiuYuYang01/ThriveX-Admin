@@ -9,8 +9,6 @@ export interface UserInfo {
   email: string;
   avatar: string;
   info: string;
-  role: Role;
-  roleId?: number;
 }
 
 export type User = Login & UserInfo & { createTime?: string };

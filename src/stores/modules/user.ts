@@ -1,5 +1,3 @@
-import { Permission } from '@/types/app/permission';
-import { Role } from '@/types/app/role';
 import { User } from '@/types/app/user';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
