@@ -220,7 +220,6 @@ export default () => {
       dataIndex: 'view',
       key: 'view',
       width: 100,
-      align: 'center',
       render: (v) => (
         <span className="inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-300 tabular-nums">
           <EyeOutlined className="text-gray-400 dark:text-gray-500 text-xs" />
@@ -235,7 +234,6 @@ export default () => {
       dataIndex: 'comment',
       key: 'comment',
       width: 90,
-      align: 'center',
       render: (v) => (
         <span className="inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-300 tabular-nums">
           <CommentOutlined className="text-gray-400 dark:text-gray-500 text-xs" />
