@@ -32,7 +32,7 @@ export default () => {
       } else {
         setLoading(true);
       }
-      const { data } = await getArticlePagingAPI({ isDel: 1, page: 1, size: 8 });
+      const { data } = await getArticlePagingAPI({ isDel: true, page: 1, size: 8 });
       setArticleList(data.result);
       isFirstLoadRef.current = false;
     } catch (error) {

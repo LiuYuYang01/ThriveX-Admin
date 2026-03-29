@@ -127,11 +127,11 @@ const ArticleImportModal: React.FC<ArticleImportModalProps> = ({
       cateList: [{ id: 1, name: '示例分类' }],
       tagList: [{ id: 2, name: '示例标签' }],
       config: {
-        status: 'default',
+        status: 1,
         password: '',
-        isDraft: 0,
-        isEncrypt: 0,
-        isDel: 0,
+        isDraft: false,
+        isEncrypt: false,
+        isDel: false,
       },
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], {

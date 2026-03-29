@@ -42,8 +42,8 @@ export default () => {
     key: undefined,
     cateId: undefined,
     tagId: undefined,
-    isDraft: 0,
-    isDel: 0,
+    isDraft: false,
+    isDel: false,
     startDate: undefined,
     endDate: undefined,
     page: 1,
@@ -257,13 +257,13 @@ export default () => {
           2: '首页隐藏',
           3: '全站隐藏',
         };
-        const label = config.password?.trim() ? '文章加密' : statusMap[config.status as keyof typeof statusMap];
+        const label = config.password?.trim() ? '文章加密' : statusMap[config.status];
         const statusColorMap: Record<string, string> = {
           1: 'success',
           2: 'warning',
           3: 'default',
         };
-        const color = config.password?.trim() ? 'processing' : statusColorMap[config.status as keyof typeof statusColorMap] ?? 'default';
+        const color = config.password?.trim() ? 'processing' : statusColorMap[config.status] ?? 'default';
         return <Tag color={color} className="m-0! border-0! whitespace-nowrap">{label}</Tag>;
       },
     },
@@ -362,8 +362,8 @@ export default () => {
       key: undefined,
       cateId: undefined,
       tagId: undefined,
-      isDraft: 0,
-      isDel: 0,
+      isDraft: false,
+      isDel: false,
       startDate: undefined,
       endDate: undefined,
     });
@@ -478,11 +478,11 @@ export default () => {
       cateIds,
       tagIds,
       config: {
-        status: 'default',
+        status: 1,
         password: '',
-        isDraft: 0,
-        isEncrypt: 0,
-        isDel: 0,
+        isDraft: false,
+        isEncrypt: false,
+        isDel: false,
       },
     };
 
@@ -500,11 +500,11 @@ export default () => {
       cateIds: (item.cateList || []).map((cate) => cate.id).filter((id): id is number => id !== undefined),
       tagIds: (item.tagList || []).map((tag) => tag.id).filter((id): id is number => id !== undefined),
       config: {
-        status: item.config?.status || 'default',
+        status: item.config?.status || 1,
         password: item.config?.password || '',
-        isDraft: item.config?.isDraft || 0,
-        isEncrypt: item.config?.isEncrypt || 0,
-        isDel: item.config?.isDel || 0,
+        isDraft: item.config?.isDraft || false,
+        isEncrypt: item.config?.isEncrypt || false,
+        isDel: item.config?.isDel || false,
       },
     });
 

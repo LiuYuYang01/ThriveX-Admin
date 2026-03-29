@@ -1,16 +1,14 @@
 import { Cate } from './cate';
 import { Tag } from './tag';
 
-export type Status = 'default' | 'no_home' | 'hide';
-
 export interface Config {
   id?: number;
   articleId?: number;
-  status: Status;
+  status: 1 | 2 | 3;
   password: string;
-  isEncrypt: number;
-  isDraft: number;
-  isDel: number;
+  isEncrypt: boolean;
+  isDraft: boolean;
+  isDel: boolean;
 }
 
 export interface Article {
@@ -19,10 +17,10 @@ export interface Article {
   description: string;
   content: string;
   cover: string;
-  cateIds: number[];
   cateList?: Cate[];
-  tagIds: number[];
   tagList?: Tag[];
+  cateIds?: number[];
+  tagIds?: number[];
   view?: number;
   comment?: number;
   config: Config;
@@ -40,8 +38,8 @@ export interface ArticleFilterQueryParams extends Page {
   key?: string;
   cateId?: number;
   tagId?: number;
-  isDraft?: number;
-  isDel?: number;
+  isDraft?: boolean;
+  isDel?: boolean;
   startDate?: string;
   endDate?: string;
 }

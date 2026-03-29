@@ -14,7 +14,7 @@ import { addTagDataAPI, getTagListAPI } from '@/api/tag';
 
 import { Cate } from '@/types/app/cate';
 import { Tag } from '@/types/app/tag';
-import { Article, Status } from '@/types/app/article';
+import { Article } from '@/types/app/article';
 
 import Material from '@/components/Material';
 
@@ -32,9 +32,9 @@ interface FieldType {
   description: string;
   config: {
     top: boolean;
-    status: Status;
+    status: 1 | 2 | 3;
     password: string;
-    isEncrypt: number;
+    isEncrypt: boolean;
   };
 }
 
@@ -74,15 +74,13 @@ const PublishForm = ({ data, closeModel }: Props) => {
       }
     });
 
-    console.log(data,data.tagList);
-    
-    const tagIds = data?.tagList!.map((item: Tag) => item.id);
+    const tagIds = (data?.tagList ?? []).map((item: Tag) => item.id);
 
     const formValues = {
       ...data,
       status: data.config.status,
       password: data.config.password,
-      isEncrypt: !!data.config.isEncrypt,
+      isEncrypt: data.config.isEncrypt,
       cateIds,
       tagIds,
       createTime: dayjs(+data.createTime!),
@@ -90,7 +88,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
 
     form.setFieldsValue(formValues);
     // 设置初始的加密状态
-    setIsEncryptEnabled(!!formValues.isEncrypt);
+    setIsEncryptEnabled(formValues.isEncrypt);
   }, [data, id]);
 
   const getCateList = async () => {
@@ -115,8 +113,6 @@ const PublishForm = ({ data, closeModel }: Props) => {
 
   const onSubmit = async (values: FieldType, isDraft?: boolean) => {
     setBtnLoading(true);
-
-    values.config.isEncrypt = values.config.isEncrypt ? 1 : 0;
 
     try {
       // 如果是文章标签，则先判断是否存在，如果不存在则添加
@@ -153,11 +149,11 @@ const PublishForm = ({ data, closeModel }: Props) => {
           tagIds,
           createTime: values.createTime.toString(),
           config: {
-            isDraft: 0,
-            isDel: 0,
+            isDraft: false,
+            isDel: false,
             ...values.config,
           },
-        } as Article);
+        });
         message.success('🎉 编辑成功');
       } else {
         if (!isDraftParams) {
@@ -167,8 +163,8 @@ const PublishForm = ({ data, closeModel }: Props) => {
             content: data.content,
             tagIds,
             config: {
-              isDraft: isDraft ? 1 : 0,
-              isDel: 0,
+              isDraft: false,
+              isDel: false,
               ...values.config,
             },
             createTime: values.createTime.toString(),
@@ -188,11 +184,11 @@ const PublishForm = ({ data, closeModel }: Props) => {
             tagIds,
             createTime: values.createTime.toString(),
             config: {
-              isDraft: isDraft ? 1 : 0,
-              isDel: 0,
+              isDraft: false,
+              isDel: false,
               ...values.config,
             },
-          } as Article);
+          });
         }
       }
 
@@ -220,9 +216,9 @@ const PublishForm = ({ data, closeModel }: Props) => {
   const initialValues = {
     config: {
       top: false,
-      status: 'default',
+      status: 1,
       password: '',
-      isEncrypt: 0,
+      isEncrypt: false,
     },
     createTime: dayjs(new Date()),
   };
