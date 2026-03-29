@@ -337,9 +337,9 @@ ${content}
 
         <Form.Item label="状态" name={['config', 'status']}>
           <Radio.Group>
-            <Radio value="default">正常</Radio>
-            <Radio value="no_home">不在首页显示</Radio>
-            <Radio value="hide">全站隐藏</Radio>
+            <Radio value={1}>正常</Radio>
+            <Radio value={2}>首页隐藏</Radio>
+            <Radio value={3}>全站隐藏</Radio>
           </Radio.Group>
         </Form.Item>
 

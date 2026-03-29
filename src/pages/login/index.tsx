@@ -29,15 +29,18 @@ export default () => {
 
       // 将用户信息和token保存起来
       store.setToken(data.token);
-      store.setUser(data.user);
+      // store.setUser(data.user);
       store.setRole(data.role);
+
+      // 待完成：加一个获取用户信息接口
 
       // 设置显示登录通知的标记
       setShowLoginNotification();
 
       notification.success({
         message: '🎉 登录成功',
-        description: `Hello ${data.user.name} 欢迎回来`,
+        // description: `Hello ${data.user.name} 欢迎回来`,
+        description: `Hello 欢迎回来`,
       });
 
       setLoading(false);

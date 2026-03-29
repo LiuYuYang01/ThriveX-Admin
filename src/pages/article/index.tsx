@@ -253,22 +253,18 @@ export default () => {
       align: 'center',
       render: (config: Config) => {
         const statusMap: Record<string, string> = {
-          default: '正常',
-          no_home: '不在首页显示',
-          hide: '隐藏',
+          1: '正常',
+          2: '首页隐藏',
+          3: '全站隐藏',
         };
-        const label = config.password?.trim() ? '文章加密' : statusMap[config.status];
+        const label = config.password?.trim() ? '文章加密' : statusMap[config.status as keyof typeof statusMap];
         const statusColorMap: Record<string, string> = {
-          default: 'success',
-          no_home: 'warning',
-          hide: 'default',
+          1: 'success',
+          2: 'warning',
+          3: 'default',
         };
-        const color = config.password?.trim() ? 'processing' : statusColorMap[config.status] ?? 'default';
-        return (
-          <Tag color={color} className="m-0! border-0! whitespace-nowrap">
-            {label}
-          </Tag>
-        );
+        const color = config.password?.trim() ? 'processing' : statusColorMap[config.status as keyof typeof statusColorMap] ?? 'default';
+        return <Tag color={color} className="m-0! border-0! whitespace-nowrap">{label}</Tag>;
       },
     },
     {
