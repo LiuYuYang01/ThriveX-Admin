@@ -4,7 +4,7 @@ import { useForm } from 'antd/es/form/Form';
 import { Button, Form, Input, notification } from 'antd';
 import { UserOutlined, LockOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 
-import { loginDataAPI } from '@/api/user';
+import { getUserDataAPI, loginDataAPI } from '@/api/user';
 import { useUserStore } from '@/stores';
 import { setShowLoginNotification } from '@/components/SystemNotification';
 
@@ -25,22 +25,19 @@ export default () => {
       setLoading(true);
 
       const values = await form.validateFields();
-      const { data } = await loginDataAPI(values);
+      const { data: loginData } = await loginDataAPI(values);
+      const { data: userData } = await getUserDataAPI(loginData.token);
 
       // 将用户信息和token保存起来
-      store.setToken(data.token);
-      // store.setUser(data.user);
-      store.setRole(data.role);
-
-      // 待完成：加一个获取用户信息接口
+      store.setToken(loginData.token);
+      store.setUser(userData);
 
       // 设置显示登录通知的标记
       setShowLoginNotification();
 
       notification.success({
         message: '🎉 登录成功',
-        // description: `Hello ${data.user.name} 欢迎回来`,
-        description: `Hello 欢迎回来`,
+        description: `Hello ${userData.name} 欢迎回来`,
       });
 
       setLoading(false);

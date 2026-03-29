@@ -22,7 +22,7 @@ export default () => {
     try {
       setLoading(true);
 
-      const { data } = await getUserDataAPI(store.user?.id);
+      const { data } = await getUserDataAPI(store.token);
       store.setUser(data);
       form.setFieldsValue(data);
 

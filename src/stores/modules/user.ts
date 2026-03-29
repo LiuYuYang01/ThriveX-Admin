@@ -11,12 +11,6 @@ interface UserStore {
   user: User;
   setUser: (data: User) => void;
 
-  role: Role;
-  setRole: (data: Role) => void;
-
-  permission: Permission[];
-  setPermission: (permission: Permission[]) => void;
-
   quitLogin: () => void;
 }
 
@@ -28,13 +22,7 @@ export default create(
 
       user: {} as User,
       setUser: (data: User) => set(() => ({ user: data })),
-
-      role: {} as Role,
-      setRole: (data: Role) => set(() => ({ role: data })),
-
-      permission: [] as Permission[],
-      setPermission: (permission: Permission[]) => set(() => ({ permission })),
-
+     
       // 退出登录
       quitLogin: () =>
         set(() => {
@@ -42,7 +30,7 @@ export default create(
           sessionStorage.clear();
           location.href = '/login';
 
-          return { token: '', user: {} as User, role: {} as Role };
+          return { token: '', user: {} as User };
         }),
     }),
     {

@@ -28,7 +28,6 @@ import Config from '@/pages/config';
 import PageTitle from '../PageTitle';
 
 import { useUserStore } from '@/stores';
-import { isCheckTokenAPI } from '@/api/user';
 import NotFound from '../NotFound';
 
 export default () => {
@@ -66,12 +65,12 @@ export default () => {
     if (!store.token && !isLoginRoute) return navigate('/login');
   }, [store, isLoginRoute]);
 
-  useEffect(() => {
-    console.log(pathname);
+  // useEffect(() => {
+  //   console.log(pathname);
     
-    if (pathname === '/login') return;
-    isCheckTokenAPI();
-  }, [pathname]);
+  //   if (pathname === '/login') return;
+  //   isCheckTokenAPI();
+  // }, [pathname]);
 
   if (isLoginRoute) {
     return (

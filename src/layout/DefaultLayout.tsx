@@ -2,8 +2,22 @@ import { useState, useEffect } from 'react';
 import Header from '../components/Header/index';
 import Sidebar from '../components/Sidebar/index';
 import { useConfigStore } from '@/stores';
+import { useUserStore } from '@/stores';
+import { getUserDataAPI } from '@/api/user';
 
 export default ({ children }: { children: React.ReactNode }) => {
+  const token = useUserStore(state => state.token);
+  const setUser = useUserStore(state => state.setUser);
+
+  const getUserData = async () => {
+    const { data } = await getUserDataAPI(token);
+    setUser(data);
+  };
+
+  useEffect(() => {
+    getUserData()
+  }, []);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const colorMode = useConfigStore((state) => state.colorMode);
 
