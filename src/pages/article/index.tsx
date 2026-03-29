@@ -46,8 +46,8 @@ export default () => {
     isDel: false,
     startDate: undefined,
     endDate: undefined,
-    page: 1,
-    size: 8,
+    pageNum: 1,
+    pageSize: 8,
   });
   const [showBatchActions, setShowBatchActions] = useState<boolean>(false);
 
@@ -332,8 +332,8 @@ export default () => {
       tagId: values.tagId,
       startDate: values.createTime?.[0] ? String(values.createTime[0].valueOf()) : undefined,
       endDate: values.createTime?.[1] ? String(values.createTime[1].valueOf()) : undefined,
-      page: 1,
-      size: prev.size ?? 8,
+      pageNum: 1,
+      pageSize: prev.pageSize ?? 8,
     }));
   };
 
@@ -357,8 +357,8 @@ export default () => {
     }
     form.resetFields();
     setFilter({
-      page: 1,
-      size: 8,
+      pageNum: 1,
+      pageSize: 8,
       key: undefined,
       cateId: undefined,
       tagId: undefined,
@@ -524,7 +524,7 @@ export default () => {
       const { code } = await delBatchArticleDataAPI(selectedRowKeys as number[]);
       if (code === 200) {
         message.success('删除成功');
-        await getArticlePagingAPI({ page: 1, size: 8 });
+        await getArticlePagingAPI({ pageNum: 1, pageSize: 8 });
       } else {
         message.error('删除失败');
       }
@@ -689,16 +689,16 @@ export default () => {
           loading={loading}
           pagination={{
             position: ['bottomRight'],
-            current: filter.page,
-            pageSize: filter.size,
+            current: filter.pageNum,
+            pageSize: filter.pageSize,
             total,
             showTotal: (totalCount) => (
               <div className="mt-[9px] text-xs text-gray-500 dark:text-gray-400">
-                当前第 {filter.page} / {Math.ceil(totalCount / (filter.size || 8))} 页 | 共 {totalCount} 条数据
+                当前第 {filter.pageNum} / {Math.ceil(totalCount / (filter.pageSize || 8))} 页 | 共 {totalCount} 条数据
               </div>
             ),
-            onChange: (page, size) => setFilter((prev) => ({ ...prev, page, size: size || prev.size })),
-            onShowSizeChange: (_, size) => setFilter((prev) => ({ ...prev, page: 1, size })),
+            onChange: (page, size) => setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size || prev.pageSize })),
+            onShowSizeChange: (_, size) => setFilter((prev) => ({ ...prev, pageNum: 1, pageSize: size })),
             className: 'px-6! py-4!',
           }}
           className="[&_.ant-table-thead>tr>th]:bg-gray-50! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-gray-500! dark:[&_.ant-table-thead>tr>th]:text-gray-400!"

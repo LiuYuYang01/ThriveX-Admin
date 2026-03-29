@@ -93,7 +93,7 @@ export default () => {
       setLoading(true);
 
       // 请求文件列表数据，如果是加载更多则页码+1
-      const { data } = await getFileListAPI(dir, { page: isLoadMore ? page + 1 : 1, size: 15 });
+      const { data } = await getFileListAPI(dir, { pageNum: isLoadMore ? page + 1 : 1, pageSize: 15 });
 
       // 根据是否是加载更多来决定是替换还是追加数据
       if (!isLoadMore) {
@@ -318,7 +318,7 @@ export default () => {
           </div>
         </div>
 
-        <Divider orientation="center">图片预览</Divider>
+        <Divider>图片预览</Divider>
         <Image
           src={file.url}
           className="rounded-md object-cover object-center"
@@ -347,7 +347,7 @@ export default () => {
           }}
         />
 
-        <Divider orientation="center">图片操作</Divider>
+        <Divider>图片操作</Divider>
         <Button type="primary" loading={downloadLoading} onClick={() => onDownloadImage(file)} className="w-full mb-2">
           下载图片
         </Button>

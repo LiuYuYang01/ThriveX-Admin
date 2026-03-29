@@ -7,8 +7,8 @@ interface Response<T> {
 interface Paginate<T> {
   next: boolean;
   prev: boolean;
-  page: number;
-  size: number;
+  pageNum: number;
+  pageSize: number;
   pages: number;
   total: number;
   result: T;

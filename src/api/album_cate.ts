@@ -27,10 +27,10 @@ export const getAlbumCatePagingAPI = (data?: QueryData) => Request<Paginate<Albu
 })
 
 // 获取指定相册中的所有照片
-export const getImagesByAlbumIdAPI = (id: number, page: number = 1, size: number = 10) =>
+export const getImagesByAlbumIdAPI = (id: number, pageNum: number = 1, pageSize: number = 10) =>
   Request<Paginate<AlbumImage[]>>('GET', `/album/cate/${id}/images`, {
     params: {
-      page,
-      size
+      pageNum,
+      pageSize
     }
   })

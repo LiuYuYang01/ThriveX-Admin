@@ -14,7 +14,7 @@ export default ({ className }: { className?: string }) => {
             seed: seed, // 使用随机种子
             size: 128,
             // 其他选项
-        }).toDataUri();
+        }).toDataUriSync();
     }, []);
 
     return <img src={avatar} alt="Avatar" className={className} />

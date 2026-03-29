@@ -84,7 +84,7 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
       setLoading(true);
 
       // 请求文件列表数据，如果是加载更多则页码+1
-      const { data } = await getFileListAPI(dir, { page: isLoadMore ? page + 1 : 1, size: 15 });
+      const { data } = await getFileListAPI(dir, { pageNum: isLoadMore ? page + 1 : 1, pageSize: 15 });
 
       // 根据是否是加载更多来决定是替换还是追加数据
       if (!isLoadMore) {
