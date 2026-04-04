@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AiOutlineClose } from 'react-icons/ai';
 import useTabsStore, { TabItem } from '@/stores/modules/tabs';
-import { getRouteConfig } from '@/utils/route';
+import { getRouteConfig } from '@/components/RouteList/route';
 
 export default () => {
   const navigate = useNavigate();
