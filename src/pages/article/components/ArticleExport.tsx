@@ -83,13 +83,16 @@ export const ArticleExportSingle = ({ article }: ArticleExportSingleProps) => {
 export interface ArticleExportDropdownProps {
   selectedArticles: Article[];
   onLoadAll: () => Promise<Article[]>;
-  setLoading?: (loading: boolean) => void;
+  /** 导出全部时的加载态（仅用于导出按钮，避免整表转圈） */
+  exportLoading?: boolean;
+  setExportLoading?: (loading: boolean) => void;
 }
 
 export const ArticleExportDropdown = ({
   selectedArticles,
   onLoadAll,
-  setLoading,
+  exportLoading,
+  setExportLoading,
 }: ArticleExportDropdownProps) => {
   const handleExportSelected = useCallback(() => {
     if (!selectedArticles.length) {
@@ -101,21 +104,22 @@ export const ArticleExportDropdown = ({
 
   const handleExportAll = useCallback(async () => {
     try {
-      setLoading?.(true);
+      setExportLoading?.(true);
       const all = await onLoadAll();
       await downloadArticlesZip(all);
     } catch (err) {
       console.error(err);
       message.error('导出全部失败');
     } finally {
-      setLoading?.(false);
+      setExportLoading?.(false);
     }
-  }, [onLoadAll, setLoading]);
+  }, [onLoadAll, setExportLoading]);
 
   return (
     <Dropdown.Button
       icon={<DownloadOutlined />}
       className="w-[120px]"
+      loading={exportLoading}
       menu={{
         items: [
           { label: '导出选中', key: 'selected', onClick: handleExportSelected },
