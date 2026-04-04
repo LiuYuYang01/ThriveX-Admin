@@ -46,6 +46,21 @@ interface AssistantResponse {
   }>;
 }
 
+/** 在分类树中查找从根到目标 id 的路径，供 Cascader 多选回显（需完整路径才能显示名称而非数字 id） */
+function findCategoryPathInTree(nodes: Cate[], targetId: number, prefix: number[] = []): number[] | null {
+  for (const node of nodes) {
+    const nid = node.id;
+    if (nid === undefined) continue;
+    const next = [...prefix, nid];
+    if (nid === targetId) return next;
+    if (node.children?.length) {
+      const found = findCategoryPathInTree(node.children, targetId, next);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 const PublishForm = ({ data, closeModel }: Props) => {
   const [params] = useSearchParams();
   const id = +params.get('id')!;
@@ -65,15 +80,6 @@ const PublishForm = ({ data, closeModel }: Props) => {
   useEffect(() => {
     if (!id) return form.resetFields();
 
-    // 把数据处理成[[1], [4, 5], [4, 6]]格式
-    const cateIds = data?.cateList?.flatMap((item) => {
-      if (item?.children?.length) {
-        return item.children.map((child) => [item.id, child.id]);
-      } else {
-        return [[item.id]];
-      }
-    });
-
     const tagIds = (data?.tagList ?? []).map((item: Tag) => item.id);
 
     const formValues = {
@@ -81,15 +87,29 @@ const PublishForm = ({ data, closeModel }: Props) => {
       status: data.config.status,
       password: data.config.password,
       isEncrypt: data.config.isEncrypt,
-      cateIds,
       tagIds,
-      createTime: dayjs(+data.createTime!),
+      createTime: dayjs(data.createTime!),
     };
 
-    form.setFieldsValue(formValues);
+    // 分类回显：优先 cateIds（真实选中的叶子/节点 id）；勿把接口里父节点下的全量 children 当成「全部选中」
+    const fromCateIds = data?.cateIds?.filter((x): x is number => x != null);
+    const rawCateIds =
+      fromCateIds?.length ?? 0
+        ? fromCateIds!
+        : (data?.cateList?.map((item) => item.id).filter((id): id is number => id !== undefined) ?? []);
+
+    const catePaths =
+      cateList.length > 0 && rawCateIds.length > 0
+        ? rawCateIds.map((cid) => findCategoryPathInTree(cateList, cid)).filter((p): p is number[] => p != null)
+        : undefined;
+
+    form.setFieldsValue({
+      ...formValues,
+      ...(catePaths?.length ? { cateIds: catePaths } : {}),
+    });
     // 设置初始的加密状态
     setIsEncryptEnabled(formValues.isEncrypt);
-  }, [data, id]);
+  }, [data, id, cateList]);
 
   const getCateList = async () => {
     const { data } = await getCateListAPI();
@@ -139,7 +159,12 @@ const PublishForm = ({ data, closeModel }: Props) => {
       }
 
       values.createTime = values.createTime.valueOf();
-      values.cateIds = [...new Set(values.cateIds?.flat())];
+      // Cascader 多选值为路径数组 [[父, 子], [一级]]，接口只需叶子分类 id，且不要用 flat 把父级 id 与叶子混成「多选了父就多了很多分类」的语义
+      values.cateIds = [
+        ...new Set(
+          (values.cateIds ?? []).map((path) => (Array.isArray(path) ? path[path.length - 1] : path)),
+        ),
+      ];
 
       if (id && !isDraftParams) {
         await editArticleDataAPI({
@@ -147,7 +172,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
           ...values,
           content: data.content,
           tagIds,
-          createTime: values.createTime.toString(),
+          createTime: values.createTime,
           config: {
             isDraft: false,
             isDel: false,
@@ -167,7 +192,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
               isDel: false,
               ...values.config,
             },
-            createTime: values.createTime.toString(),
+            createTime: values.createTime,
           });
 
           if (isDraft) {
@@ -182,7 +207,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
             ...values,
             content: data.content,
             tagIds,
-            createTime: values.createTime.toString(),
+            createTime: values.createTime,
             config: {
               isDraft: false,
               isDel: false,
@@ -316,7 +341,15 @@ ${content}
         </Form.Item>
 
         <Form.Item label="选择分类" name="cateIds" rules={[{ required: true, message: '请选择文章分类' }]}>
-          <Cascader options={cateList} maxTagCount="responsive" multiple fieldNames={{ label: 'name', value: 'id' }} placeholder="请选择文章分类" className="w-full" />
+          <Cascader
+            options={cateList}
+            maxTagCount="responsive"
+            multiple
+            showCheckedStrategy={Cascader.SHOW_CHILD}
+            fieldNames={{ label: 'name', value: 'id' }}
+            placeholder="请选择文章分类"
+            className="w-full"
+          />
         </Form.Item>
 
         <Form.Item label="选择标签" name="tagIds">

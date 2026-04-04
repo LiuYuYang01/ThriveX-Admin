@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { Button, Dropdown, Popconfirm, Tooltip, message } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import JSZip from 'jszip';
@@ -9,7 +9,7 @@ import type { Article } from '@/types/app/article';
 // 文章 → Markdown
 function articleToMarkdown(article: Article): string {
   const { title, description, content, cover, createTime, cateList, tagList } = article;
-  const formatDate = (timestamp: string) => {
+  const formatDate = (timestamp: number) => {
     const date = new Date(Number(timestamp));
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
@@ -17,7 +17,7 @@ function articleToMarkdown(article: Article): string {
   const tags = (tagList || []).map((t) => t.name);
   const categories = (cateList || []).map((c) => c.name);
   const keywords = [...tags, ...categories].join(' ');
-  return `---\ntitle: ${title}\ntags: ${tags.join(' ')}\ncategories: ${categories.join(' ')}\ncover: ${cover}\ndate: ${formatDate(createTime || String(Date.now()))}\nkeywords: ${keywords}\ndescription: ${description}\n---\n\n${(content || '').trim()}`;
+  return `---\ntitle: ${title}\ntags: ${tags.join(' ')}\ncategories: ${categories.join(' ')}\ncover: ${cover}\ndate: ${formatDate(createTime || Date.now())}\nkeywords: ${keywords}\ndescription: ${description}\n---\n\n${(content || '').trim()}`;
 }
 
 function safeFileName(title: string): string {

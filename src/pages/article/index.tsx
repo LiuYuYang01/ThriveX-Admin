@@ -270,10 +270,10 @@ export default () => {
       dataIndex: 'createTime',
       key: 'createTime',
       width: 140,
-      render: (text: string) => (
+      render: (text: number) => (
         <div className="flex flex-col">
-          <span className="text-gray-700 dark:text-gray-200 font-medium">{dayjs(+text).format('YYYY-MM-DD')}</span>
-          <span className="text-gray-400 dark:text-gray-500 text-xs">{dayjs(+text).format('HH:mm:ss')}</span>
+          <span className="text-gray-700 dark:text-gray-200 font-medium">{dayjs(text).format('YYYY-MM-DD')}</span>
+          <span className="text-gray-400 dark:text-gray-500 text-xs">{dayjs(text).format('HH:mm:ss')}</span>
         </div>
       ),
     },
@@ -328,8 +328,8 @@ export default () => {
       key: values.title,
       cateId: values.cateId,
       tagId: values.tagId,
-      startDate: values.createTime?.[0] ? String(values.createTime[0].valueOf()) : undefined,
-      endDate: values.createTime?.[1] ? String(values.createTime[1].valueOf()) : undefined,
+      startDate: values.createTime?.[0] ? values.createTime[0].toISOString() : undefined,
+      endDate: values.createTime?.[1] ? values.createTime[1].toISOString() : undefined,
       pageNum: 1,
       pageSize: prev.pageSize ?? 8,
     }));
@@ -456,11 +456,11 @@ export default () => {
       meta[key.trim()] = rest.join(':').trim();
     });
 
-    // 时间戳（从 YYYY-MM-DD HH:mm:ss 转为 timestamp）
-    const parseDateToTimestamp = (str: string): string => {
+    // 时间戳（从 YYYY-MM-DD HH:mm:ss 转为毫秒时间戳）
+    const parseDateToTimestamp = (str: string): number => {
       const d = new Date(str);
-      if (isNaN(d.getTime())) return Date.now().toString();
-      return d.getTime().toString();
+      if (isNaN(d.getTime())) return Date.now();
+      return d.getTime();
     };
     const tagNames = meta.tags?.split(/\s+/).filter(Boolean) || [];
     const tagIds = getTagOrCateIdsByNames(tagNames, tagList);

@@ -174,7 +174,6 @@ export default () => {
         title: (
           <div className="group flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 -ml-2.5 transition-colors hover:bg-slate-50 dark:hover:bg-white/5">
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="text-lg leading-none opacity-80">{item.icon}</span>
               <span className="truncate text-slate-600 dark:text-slate-200">{item.name}</span>
             </div>
 
@@ -289,10 +288,6 @@ export default () => {
               <Input placeholder="请输入分类标识" />
             </Form.Item>
           </div>
-
-          <Form.Item label="图标" name="icon">
-            <Input placeholder="请输入分类图标（如 emoji 或图标名）" />
-          </Form.Item>
 
           {isCateShow && (
             <Form.Item label="链接" name="url">

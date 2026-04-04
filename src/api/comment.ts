@@ -17,7 +17,7 @@ export const editCommentDataAPI = (data: Comment) => Request('PATCH', '/comment'
 export const getCommentDataAPI = (id?: number) => Request<Paginate<Comment>>('GET', `/comment/${id}`)
 
 // 获取评论列表
-export const getCommentListAPI = (data?: QueryData) => Request<Comment[]>('POST', `/comment/list`, {
+export const getCommentListAPI = (data?: QueryData) => Request<Comment[]>('GET', `/comment`, {
     data: { ...data, ...data?.query },
 })
 

@@ -24,7 +24,7 @@ export interface Article {
   view?: number;
   comment?: number;
   config: Config;
-  createTime?: string;
+  createTime?: number;
 }
 
 export interface ArticleFilterDataForm {
