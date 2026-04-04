@@ -647,7 +647,7 @@ export default () => {
             className: 'px-6! py-4!',
           }}
           className="[&_.ant-table-thead>tr>th]:bg-gray-50! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-gray-500! dark:[&_.ant-table-thead>tr>th]:text-gray-400!"
-          scroll={{ x: 1550 }}
+          scroll={{ x: 1510 }}
         />
       </div>
 

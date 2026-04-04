@@ -49,7 +49,7 @@ async function downloadArticlesZip(articles: Article[]) {
 }
 
 // 单篇导出
-export interface ArticleExportSingleProps {
+interface ArticleExportSingleProps {
   article: Article;
 }
 

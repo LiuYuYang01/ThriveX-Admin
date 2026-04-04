@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, ChangeEvent, DragEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, ChangeEvent, DragEvent } from 'react';
 import { Modal, Button, message } from 'antd';
 import type { UploadFile } from 'antd/es/upload/interface';
 import type { RcFile } from 'antd/es/upload/interface';
@@ -22,17 +22,13 @@ const createUploadFile = (file: File): UploadFile => {
 const isValidFile = (name: string) =>
   ACCEPT_EXT.some((ext) => name.toLowerCase().endsWith(ext));
 
-export interface ArticleImportModalProps {
+interface ArticleImportModalProps {
   open: boolean;
   onClose: () => void;
   onImport: (files: File[]) => Promise<void>;
 }
 
-const ArticleImportModal: React.FC<ArticleImportModalProps> = ({
-  open,
-  onClose,
-  onImport,
-}) => {
+export default ({ open, onClose, onImport }: ArticleImportModalProps) => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
@@ -193,11 +189,10 @@ const ArticleImportModal: React.FC<ArticleImportModalProps> = ({
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`w-full h-40 p-4 border border-dashed rounded-lg transition-all duration-300 ${
-            isDragging
-              ? 'border-primary bg-primary/5'
-              : 'border-[#D7D7D7] hover:border-primary bg-[#FAFAFA]'
-          } space-y-2 cursor-pointer`}
+          className={`w-full h-40 p-4 border border-dashed rounded-lg transition-all duration-300 ${isDragging
+            ? 'border-primary bg-primary/5'
+            : 'border-[#D7D7D7] hover:border-primary bg-[#FAFAFA]'
+            } space-y-2 cursor-pointer`}
         >
           <div className="flex justify-center">
             <InboxOutlined className="text-5xl text-primary" />
@@ -263,5 +258,3 @@ const ArticleImportModal: React.FC<ArticleImportModalProps> = ({
     </Modal>
   );
 };
-
-export default ArticleImportModal;
