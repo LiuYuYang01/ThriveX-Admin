@@ -529,16 +529,18 @@ export default () => {
   // 首屏骨架（与部门管理 Skeleton 用法一致）
   if (skeletonLoading) {
     return (
-      <Skeleton />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <Skeleton />
+      </div>
     );
   }
 
   return (
-    <div className="mx-auto">
+    <div className="flex min-h-0 flex-1 flex-col">
       <Title value="文章管理" />
 
-      <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark overflow-hidden">
-        <div className="p-5 border-b border-gray-100 dark:border-strokedark bg-gray-50/30 dark:bg-boxdark-2/50 space-y-4">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xs dark:border-strokedark dark:bg-boxdark">
+        <div className="shrink-0 space-y-4 border-b border-gray-100 bg-gray-50/30 p-5 dark:border-strokedark dark:bg-boxdark-2/50">
           <Form form={form} layout="inline" onValuesChange={onFilterChange} className="flex! flex-wrap! items-center! gap-y-2.5!">
             <Form.Item name="title" className="mb-0!">
               <Input
@@ -613,29 +615,31 @@ export default () => {
           )}
         </div>
 
-        <Table
-          rowKey="id"
-          rowSelection={rowSelection}
-          dataSource={articleList}
-          columns={columns}
-          loading={loading}
-          pagination={{
-            position: ['bottomRight'],
-            current: filter?.pageNum,
-            pageSize: filter?.pageSize,
-            total,
-            showTotal: (totalCount) => (
-              <div className="mt-[9px] text-xs text-gray-500 dark:text-gray-400">
-                当前第 {filter?.pageNum ?? 1} / {Math.ceil(totalCount / (filter?.pageSize ?? 8))} 页 | 共 {totalCount} 条数据
-              </div>
-            ),
-            onChange: (page, size) => setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev?.pageSize ?? 8 })),
-            onShowSizeChange: (_, size) => setFilter((prev) => ({ ...prev, pageNum: 1, pageSize: size ?? prev?.pageSize ?? 8 })),
-            className: 'px-6!',
-          }}
-          className="[&_.ant-table-thead>tr>th]:bg-gray-50! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-gray-500! dark:[&_.ant-table-thead>tr>th]:text-gray-400!"
-          scroll={{ x: 1480 }}
-        />
+        <div className="min-h-0 flex-1">
+          <Table
+            rowKey="id"
+            rowSelection={rowSelection}
+            dataSource={articleList}
+            columns={columns}
+            loading={loading}
+            pagination={{
+              position: ['bottomRight'],
+              current: filter?.pageNum,
+              pageSize: filter?.pageSize,
+              total,
+              showTotal: (totalCount) => (
+                <div className="mt-[9px] text-xs text-gray-500 dark:text-gray-400">
+                  当前第 {filter?.pageNum ?? 1} / {Math.ceil(totalCount / (filter?.pageSize ?? 8))} 页 | 共 {totalCount} 条数据
+                </div>
+              ),
+              onChange: (page, size) => setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev?.pageSize ?? 8 })),
+              onShowSizeChange: (_, size) => setFilter((prev) => ({ ...prev, pageNum: 1, pageSize: size ?? prev?.pageSize ?? 8 })),
+              className: 'px-6!',
+            }}
+            className="[&_.ant-table-thead>tr>th]:bg-gray-50! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-gray-500! dark:[&_.ant-table-thead>tr>th]:text-gray-400!"
+            scroll={{ x: 1480 }}
+          />
+        </div>
       </div>
 
       <ArticleImportModal

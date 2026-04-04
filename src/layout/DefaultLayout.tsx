@@ -37,11 +37,13 @@ export default ({ children }: { children: React.ReactNode }) => {
       <div className="flex h-screen overflow-hidden">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-        <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
           <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-          <main>
-            <div className="mx-auto p-4">{children}</div>
+          <main className="flex min-h-0 flex-1 flex-col">
+            <div className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col p-4">
+              {children}
+            </div>
           </main>
         </div>
       </div>
