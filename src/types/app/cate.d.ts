@@ -6,8 +6,8 @@ export interface Cate {
   level: number;
   order: number;
   type: string;
+  count?: number;
   children?: Cate[];
-  parent_id?: number[];
 }
 
 export interface CateFilterQueryParams extends Page {

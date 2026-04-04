@@ -38,7 +38,7 @@ const routeConfigMap: Record<string, RouteConfig> = {
   },
   '/cate': {
     path: '/cate',
-    title: '导航管理',
+    title: '分类管理',
     icon: <BiCategoryAlt className="text-base" />,
   },
   '/article': {

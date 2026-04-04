@@ -129,7 +129,7 @@ export default () => {
   };
 
   const toTreeData = (data: Cate[]): DataNode[] =>
-    data.map((item) => {
+    data.map((item: Cate) => {
       const items: MenuProps['items'] = [
         {
           key: '1',
@@ -175,6 +175,7 @@ export default () => {
           <div className="group flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 -ml-2.5 transition-colors hover:bg-slate-50 dark:hover:bg-white/5">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <span className="truncate text-slate-600 dark:text-slate-200">{item.name}</span>
+              {item.type === 'cate' && <span className="truncate text-xs text-slate-300 dark:text-slate-200">({item.count})</span>}
             </div>
 
             <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
@@ -221,6 +222,7 @@ export default () => {
                   <Skeleton.Input active className="h-6! w-48!" />
                   <Skeleton.Button active size="small" className="h-6! w-14!" />
                 </div>
+
                 {item <= 3 && (
                   <div className="ml-6 space-y-2">
                     {[1, 2, 3].map((child) => (
@@ -281,30 +283,25 @@ export default () => {
           className="mt-2 [&_.ant-input]:rounded-lg! [&_.ant-select-selector]:rounded-lg!"
         >
           <div className="grid gap-x-4 sm:grid-cols-2">
-            <Form.Item label="名称" name="name" rules={[{ required: true, message: '分类名称不能为空' }]}>
+            <Form.Item label="分类名称" name="name" rules={[{ required: true, message: '分类名称不能为空' }]}>
               <Input placeholder="请输入分类名称" />
             </Form.Item>
-            <Form.Item label="标识" name="mark" rules={[{ required: true, message: '分类标识不能为空' }]}>
+            <Form.Item label="分类标识" name="mark" rules={[{ required: true, message: '分类标识不能为空' }]}>
               <Input placeholder="请输入分类标识" />
             </Form.Item>
           </div>
 
-          {isCateShow && (
-            <Form.Item label="链接" name="url">
-              <Input placeholder="请输入分类链接" />
-            </Form.Item>
-          )}
-
           <div className="grid gap-x-4 sm:grid-cols-2">
-            <Form.Item label="顺序" name="order">
-              <Input placeholder="值越小越靠前" />
-            </Form.Item>
-            <Form.Item label="级别" name="level">
+            <Form.Item label="分类级别" name="level">
               <Select options={toCascaderOptions(list)} placeholder="请选择分类级别" />
+            </Form.Item>
+
+            <Form.Item label="分类顺序" name="order">
+              <Input placeholder="值越小越靠前" />
             </Form.Item>
           </div>
 
-          <Form.Item label="模式" name="type">
+          <Form.Item label="分类模式" name="type">
             <Radio.Group
               className="flex! gap-4!"
               onChange={(e) => {
@@ -320,6 +317,12 @@ export default () => {
               </Radio>
             </Radio.Group>
           </Form.Item>
+
+          {isCateShow && (
+            <Form.Item label="跳转链接" name="url">
+              <Input placeholder="请输入跳转链接" />
+            </Form.Item>
+          )}
 
           <Form.Item className="mb-0!">
             <Button type="primary" onClick={onSubmit} loading={btnLoading} className="w-full">

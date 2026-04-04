@@ -42,7 +42,7 @@ export default () => {
     { path: '/create_record', title: '闪念', component: <CreateRecord /> },
     { path: '/draft', title: '草稿箱', component: <Draft /> },
     { path: '/recycle', title: '回收站', component: <Decycle /> },
-    { path: '/cate', title: '导航管理', component: <Cate /> },
+    { path: '/cate', title: '分类管理', component: <Cate /> },
     { path: '/article', title: '文章管理', component: <Article /> },
     { path: '/record', title: '说说管理', component: <Record /> },
     { path: '/tag', title: '标签管理', component: <Tag /> },
