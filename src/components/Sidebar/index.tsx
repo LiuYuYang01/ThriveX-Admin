@@ -79,10 +79,29 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   const [isSideBarTheme] = useState<'dark' | 'light'>('light');
 
-  // 定义导航项的样式类
-  const sidebarItemStyDark = 'group relative flex items-center gap-2.5 py-2 px-4 text-[#DEE4EE]! duration-300 ease-in-out hover:bg-graydark dark:hover:bg-[#313D4A] rounded-xs font-medium hover:text-primary! dark:hover:text-primary!';
-  const sidebarItemStyLight = 'group relative flex items-center gap-2.5 py-2 px-4 text-[#444]! dark:text-slate-200! duration-300 ease-in-out hover:bg-[rgba(241,241,244,0.9)] dark:hover:bg-[#313D4A] rounded-md hover:backdrop-blur-[15px] hover:text-primary! dark:hover:text-primary!';
-  const sidebarItemActiveSty = `${isSideBarTheme === 'dark' ? 'bg-graydark' : 'text-primary!'}`;
+  // 导航项样式：默认色与激活色不能叠在同一条上（均带 ! 时编译顺序会导致 dark 下激活色被盖住）
+  const sidebarItemBaseDark =
+    'group relative flex items-center gap-2.5 py-2 px-4 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-[#313D4A] rounded-xs font-medium hover:text-primary! dark:hover:text-primary!';
+  const sidebarItemBaseLight =
+    'group relative flex items-center gap-2.5 py-2 px-4 duration-300 ease-in-out hover:bg-[rgba(241,241,244,0.9)] dark:hover:bg-[#313D4A] rounded-md hover:backdrop-blur-[15px] hover:text-primary! dark:hover:text-primary!';
+  const sidebarTextIdleDark = 'text-[#DEE4EE]!';
+  const sidebarTextIdleLight = 'text-[#444]! dark:text-slate-200!';
+  const sidebarTextActive = 'text-primary! dark:text-primary! dark:bg-[#313D4A]';
+  const sidebarItemClass = (active: boolean) =>
+    (isSideBarTheme === 'dark' ? sidebarItemBaseDark : sidebarItemBaseLight) +
+    ' ' +
+    (active ? sidebarTextActive : isSideBarTheme === 'dark' ? sidebarTextIdleDark : sidebarTextIdleLight);
+
+  /** 无子菜单的一级项：用真实路由匹配。仪表盘 to 为 /，不能用 path「dashboard」做 includes。 */
+  const isTopLevelNavActive = (item: MenuItem) => {
+    if (item.to && item.to !== '#') {
+      if (item.to === '/') {
+        return pathname === '/' || pathname === '';
+      }
+      return pathname === item.to || pathname.startsWith(`${item.to}/`);
+    }
+    return pathname.includes(item.path);
+  };
 
   // 箭头图标组件：用于显示子菜单的展开/收起状态
   const Arrow = ({ open }: { open: boolean }) => {
@@ -230,7 +249,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           name: (
             <div className="flex items-center w-full justify-between">
               <span>更新日志</span>
-              <div className="flex items-center gap-1"/>
+              <div className="flex items-center gap-1" />
             </div>
           ),
         },
@@ -340,46 +359,61 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         item.path === 'write' || (item.subMenu && item.subMenu.some((subItem) => pathname.includes(subItem.path)))
                       }
                     >
-                      {(handleClick, open) => (
-                        <React.Fragment>
-                          {/* 父级菜单项 */}
-                          <NavLink
-                            to={item.to}
-                            className={`${isSideBarTheme === 'dark' ? sidebarItemStyDark : sidebarItemStyLight}`}
-                            onClick={(e) => {
-                              e.preventDefault();
+                      {(handleClick, open) => {
+                        const isParentActive = item.subMenu!.some(
+                          (subItem) => pathname === subItem.to || pathname.startsWith(`${subItem.to}/`),
+                        );
+                        return (
+                          <React.Fragment>
+                            {/* 父级菜单项：子路由匹配时高亮（与 NavLink isActive 无关，因父级 to 为 #） */}
+                            <NavLink
+                              to={item.to}
+                              className={sidebarItemClass(isParentActive)}
+                              onClick={(e) => {
+                                e.preventDefault();
 
-                              if (sidebarExpanded) {
-                                handleClick();
-                              } else {
-                                setSidebarExpanded(true);
-                              }
-                            }}
-                          >
-                            {item.icon}
-                            {item.name}
-                            <Arrow open={open} />
-                          </NavLink>
+                                if (sidebarExpanded) {
+                                  handleClick();
+                                } else {
+                                  setSidebarExpanded(true);
+                                }
+                              }}
+                            >
+                              {item.icon}
+                              {item.name}
+                              <Arrow open={open} />
+                            </NavLink>
 
-                          {/* 子菜单列表 */}
-                          <div className={`translate transform overflow-hidden ${!open && 'hidden'}`}>
-                            <ul className="mt-4 mb-5.5 flex flex-col gap-2.5 pl-6">
-                              {item.subMenu!.map((subItem, subSubIndex) => (
-                                <li key={subSubIndex}>
-                                  <NavLink to={subItem.to} className={({ isActive }) => `text-gray-500! dark:text-gray-400! dark:hover:text-primary! group relative flex items-center gap-2.5 rounded-md px-4 duration-300 ease-in-out ${isSideBarTheme === 'dark' ? 'hover:text-white text-[#8A99AF] font-medium' : 'hover:text-primary! text-[#666] dark:text-slate-400'} ` + (isActive && 'text-primary!')}>
-                                    {subItem.name}
-                                  </NavLink>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </React.Fragment>
-                      )}
+                            {/* 子菜单列表 */}
+                            <div className={`translate transform overflow-hidden ${!open && 'hidden'}`}>
+                              <ul className="mt-4 mb-5.5 flex flex-col gap-2.5 pl-6">
+                                {item.subMenu!.map((subItem, subSubIndex) => (
+                                  <li key={subSubIndex}>
+                                    <NavLink
+                                      to={subItem.to}
+                                      className={({ isActive }) => {
+                                        const base =
+                                          'group relative flex items-center gap-2.5 rounded-md px-4 duration-300 ease-in-out dark:hover:text-primary!';
+                                        if (isSideBarTheme === 'dark') {
+                                          return `${base} ${isActive ? 'text-primary! dark:text-primary! dark:bg-[#313D4A]' : 'text-[#8A99AF] font-medium hover:text-white'}`;
+                                        }
+                                        return `${base} ${isActive ? 'text-primary! dark:text-primary! dark:bg-[#313D4A]' : 'text-[#666]! dark:text-slate-400! hover:text-primary!'}`;
+                                      }}
+                                    >
+                                      {subItem.name}
+                                    </NavLink>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </React.Fragment>
+                        );
+                      }}
                     </SidebarLinkGroup>
                   ) : (
                     // 普通导航项
                     <li key={subIndex}>
-                      <NavLink to={item.to} className={`${isSideBarTheme === 'dark' ? sidebarItemStyDark : sidebarItemStyLight} ${pathname.includes(item.path) && sidebarItemActiveSty}`}>
+                      <NavLink to={item.to} className={sidebarItemClass(isTopLevelNavActive(item))}>
                         {item.icon}
                         {item.name}
                       </NavLink>
