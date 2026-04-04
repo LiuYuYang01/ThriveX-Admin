@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Table, Button, Tag, notification, Popconfirm, Form, Input, Select, message, Tooltip, Popover, Space } from 'antd';
+import { Table, Button, Tag, notification, Popconfirm, Form, Input, Select, message, Tooltip, Space } from 'antd';
 
 import type { ColumnsType } from 'antd/es/table';
 import type { TableRowSelection } from 'antd/es/table/interface';
@@ -26,15 +26,11 @@ import { useWebStore } from '@/stores';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
 import RangePicker from '@/components/RangePicker';
 
-const TAG_COLORS = [
-  'default',
-  'processing',
-  'success',
-  'warning',
-  'cyan',
-] as const;
-
-const VISIBLE_TAG_COUNT = 1;
+import {
+  renderCollapsibleTags,
+  sortArticleByComment,
+  sortArticleByView,
+} from './articleTableShared';
 
 const ARTICLE_STATUS_LABEL: Record<string, string> = {
   1: '正常显示',
@@ -48,67 +44,12 @@ const ARTICLE_STATUS_COLOR: Record<string, string> = {
   3: 'default',
 };
 
-function renderCollapsibleTags<T extends { id?: number; name: string }>(
-  list: T[],
-  keyPrefix: string,
-) {
-  if (list.length === 0) return null;
-  const visible = list.slice(0, VISIBLE_TAG_COUNT);
-  const restCount = list.length - VISIBLE_TAG_COUNT;
-  const items = (
-    <div className="flex flex-wrap gap-1.5 max-w-[280px]">
-      {list.map((item, index) => (
-        <Tag
-          key={item.id ?? index}
-          color={TAG_COLORS[index % TAG_COLORS.length]}
-          className="m-0! border-0!"
-        >
-          {item.name}
-        </Tag>
-      ))}
-    </div>
-  );
-  return (
-    <div className="flex flex-wrap items-center gap-1.5 justify-start">
-      {visible.map((item, index) => (
-        <Tag
-          key={`${keyPrefix}-${item.id ?? index}`}
-          color={TAG_COLORS[index % TAG_COLORS.length]}
-          className="m-0! border-0!"
-        >
-          {item.name}
-        </Tag>
-      ))}
-
-      {restCount > 0 && (
-        <Popover
-          content={items}
-          trigger="hover"
-          placement="topLeft"
-          classNames={{ root: 'article-tags-popover' }}
-        >
-          <span
-            className="inline-flex items-center justify-center min-w-[28px] h-6 px-1.5 rounded-md text-xs font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-boxdark-2 dark:text-gray-400 dark:hover:bg-strokedark/80 border-0 cursor-pointer"
-            role="button"
-            tabIndex={0}
-          >
-            +{restCount}
-          </span>
-        </Popover>
-      )}
-    </div>
-  );
-}
-
 function renderArticleStatusCell(config: Config) {
   const hasPassword = Boolean(config.password?.trim());
   const label = hasPassword ? '文章加密' : ARTICLE_STATUS_LABEL[config.status];
   const color = hasPassword ? 'processing' : ARTICLE_STATUS_COLOR[config.status] ?? 'default';
   return <Tag color={color} className="m-0! border-0! whitespace-nowrap">{label}</Tag>;
 }
-
-const sortArticleByView = (a: Article, b: Article) => (a.view ?? 0) - (b.view ?? 0);
-const sortArticleByComment = (a: Article, b: Article) => (a.comment ?? 0) - (b.comment ?? 0);
 
 /** 批量导入时每批并发提交篇数，批内并行、批间顺序，减轻服务端压力 */
 const IMPORT_ARTICLE_CONCURRENCY = 5;

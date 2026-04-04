@@ -356,7 +356,7 @@ export default () => {
   }
 
   return (
-    <div className="mx-auto">
+    <div>
       <Title value="足迹管理">
         <Button type="primary" onClick={openCreate}>
           新增足迹

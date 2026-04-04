@@ -261,7 +261,7 @@ export default () => {
   }
 
   return (
-    <div className="mx-auto">
+    <div>
       <Title value="评论管理" />
 
       <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark overflow-hidden">
