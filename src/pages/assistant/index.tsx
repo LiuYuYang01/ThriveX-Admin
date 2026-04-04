@@ -1,195 +1,137 @@
-import { useState, useEffect, useRef } from 'react';
-import { Button, Card, Form, Input, Modal, Select, Tooltip, Space, Skeleton, Avatar, Tag, Dropdown, MenuProps } from 'antd';
-import { DeleteOutlined, FormOutlined, PlusOutlined, InfoCircleOutlined, MoreOutlined, ApiOutlined, ThunderboltFilled } from '@ant-design/icons';
+import { useState, useMemo, useCallback } from 'react';
+import {
+  Button,
+  Card,
+  Form,
+  Input,
+  Modal,
+  Select,
+  Tooltip,
+  Space,
+  Avatar,
+  Tag,
+  Dropdown,
+} from 'antd';
+import type { MenuProps } from 'antd';
+import {
+  DeleteOutlined,
+  FormOutlined,
+  PlusOutlined,
+  InfoCircleOutlined,
+  MoreOutlined,
+  ApiOutlined,
+  ThunderboltFilled,
+} from '@ant-design/icons';
 import { ImSwitch } from 'react-icons/im';
 
 import Title from '@/components/Title';
 import useAssistant from '@/hooks/useAssistant';
-import { Assistant } from '@/types/app/assistant';
+import type { Assistant } from '@/types/app/assistant';
 
-// 模型信息
-const modelInfoMap: Record<string, { desc: string; label: string }> = {
-  'deepseek-chat': {
-    desc: '通用聊天模型',
-    label: 'DeepSeek Chat',
-  },
-  'deepseek-reasoner': {
-    desc: '多步推理优化模型',
-    label: 'DeepSeek Reasoner',
-  },
-  'moonshot-v1-128k': {
-    desc: '长上下文模型，支持128k上下文',
-    label: 'Moonshot v1 128k',
-  },
-  'gpt-4o': {
-    desc: '多模态大模型',
-    label: 'OpenAI GPT-4o',
-  },
-  'gpt-3.5-turbo': {
-    desc: '轻量快速模型',
-    label: 'OpenAI GPT-3.5 Turbo',
-  },
-  'glm-4': {
-    desc: '中文大模型',
-    label: '智谱 GLM-4',
-  },
-  'qwen-turbo': {
-    desc: '快速对话模型',
-    label: '通义千问 Turbo',
-  },
-  'ernie-bot': {
-    desc: '文心一言大模型',
-    label: '百度文心一言大模型',
-  },
-  'doubao-chat': {
-    desc: '字节跳动豆包模型',
-    label: '豆包 Chat',
-  },
-  // 你可以继续添加更多模型
-};
+import AssistantPageSkeleton from './Skeleton';
+import { ASSISTANT_MODEL_INFO_MAP, getAssistantModelTheme } from './modelConfig';
 
-// 获取模型主题（颜色和图标）
-const getModelTheme = (model: string): { color: string; icon: string } => {
-  const themeMap: Record<string, { color: string; icon: string }> = {
-    'deepseek-chat': { color: '#1890ff', icon: 'DS' },
-    'deepseek-reasoner': { color: '#722ed1', icon: 'DR' },
-    'moonshot-v1-128k': { color: '#13c2c2', icon: 'M' },
-    'gpt-4o': { color: '#52c41a', icon: 'GPT4' },
-    'gpt-3.5-turbo': { color: '#faad14', icon: 'GPT3' },
-    'glm-4': { color: '#eb2f96', icon: 'GLM' },
-    'qwen-turbo': { color: '#f5222d', icon: 'QW' },
-    'ernie-bot': { color: '#fa8c16', icon: 'EB' },
-    'doubao-chat': { color: '#2f54eb', icon: 'DB' },
-  };
+const EMPTY_ASSISTANT: Assistant = {} as Assistant;
 
-  return themeMap[model] || { color: '#8c8c8c', icon: 'AI' };
-};
-
-export default () => {
+export default function AssistantPage() {
   const [form] = Form.useForm();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [assistant, setAssistant] = useState<Assistant>({} as Assistant);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingAssistant, setEditingAssistant] = useState<Assistant>(EMPTY_ASSISTANT);
   const [inputModelValue, setInputModelValue] = useState('');
-  const [initialLoading, setInitialLoading] = useState<boolean>(true);
-  const isFirstLoadRef = useRef<boolean>(true);
 
-  const { list, testingMap, saveAssistant, delAssistantData, setDefaultAssistant, testConnection } = useAssistant();
+  const {
+    list,
+    listLoading,
+    loading: saveLoading,
+    testingMap,
+    saveAssistant,
+    delAssistantData,
+    setDefaultAssistant,
+    testConnection,
+  } = useAssistant();
 
-  // 监听 list 变化，设置初始加载状态
-  useEffect(() => {
-    if (list.length > 0 || isFirstLoadRef.current) {
-      if (isFirstLoadRef.current && list.length > 0) {
-        setInitialLoading(false);
-        isFirstLoadRef.current = false;
-      }
+  const modelSelectOptions = useMemo(() => {
+    const base = Object.entries(ASSISTANT_MODEL_INFO_MAP).map(([value, info]) => ({
+      label: info.label,
+      value,
+    }));
+    if (inputModelValue && !base.some((opt) => opt.value === inputModelValue)) {
+      return [...base, { label: inputModelValue, value: inputModelValue }];
     }
-  }, [list]);
+    return base;
+  }, [inputModelValue]);
 
-  const handleSubmit = () => {
+  const resetModalState = useCallback(() => {
+    form.resetFields();
+    setInputModelValue('');
+    setEditingAssistant(EMPTY_ASSISTANT);
+  }, [form]);
+
+  const handleSubmit = useCallback(() => {
     form.validateFields().then((values) => {
-      console.log(values);
-
-      // 如果输入的模型不在列表，则直接用输入的文本
-      const model = values.model;
-      saveAssistant({ ...assistant, ...values, model }).then((success) => {
+      const model = values.model as string;
+      saveAssistant({ ...editingAssistant, ...values, model }).then((success) => {
         if (success) {
-          setIsModalOpen(false);
-          form.resetFields();
-          setInputModelValue('');
-          setAssistant({} as Assistant);
+          setModalOpen(false);
+          resetModalState();
         }
       });
     });
-  };
+  }, [form, editingAssistant, saveAssistant, resetModalState]);
 
-  // 生成 Select options
-  const selectOptions = Object.entries(modelInfoMap).map(([value, info]) => ({
-    label: info.label,
-    value,
-  }));
+  const openCreateModal = useCallback(() => {
+    setEditingAssistant(EMPTY_ASSISTANT);
+    setModalOpen(true);
+  }, []);
 
-  // 如果输入值是新模型，且不在选项里，加入它
-  if (inputModelValue && !selectOptions.find((opt) => opt.value === inputModelValue)) {
-    selectOptions.push({ label: inputModelValue, value: inputModelValue });
-  }
+  const openEditModal = useCallback(
+    (record: Assistant) => {
+      form.setFieldsValue(record);
+      setInputModelValue(record.model);
+      setEditingAssistant(record);
+      setModalOpen(true);
+    },
+    [form],
+  );
 
-  // 初始加载时显示骨架屏
-  if (initialLoading) {
+  if (listLoading) {
     return (
-      <div>
-        {/* Title 骨架屏 */}
-        <Card className="[&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5! mb-2">
-          <div className="flex justify-between items-center">
-            <Skeleton.Input active size="large" style={{ width: 150, height: 32 }} />
-            <Skeleton.Button active size="default" style={{ width: 100, height: 32 }} />
-          </div>
-        </Card>
-
-        {/* 卡片网格骨架屏 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mt-3">
-          {[1, 2, 3, 4, 5, 6].map((item) => (
-            <Card key={item} className="border-stroke dark:border-strokedark">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Skeleton.Avatar active size={48} shape="square" />
-                  <div>
-                    <Skeleton.Input active size="small" style={{ width: 80, height: 16 }} />
-                  </div>
-                </div>
-                <Skeleton.Button active size="small" style={{ width: 32, height: 32 }} />
-              </div>
-              <div className="bg-gray-100 dark:bg-boxdark-2 rounded-md p-3 py-4 mb-4">
-
-              </div>
-              <div className="pt-2 border-t border-gray-100 dark:border-strokedark">
-                <Skeleton.Button active size="default" style={{ width: '100%', height: 32 }} />
-              </div>
-            </Card>
-          ))}
-        </div>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <AssistantPageSkeleton />
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col space-y-2">
       <Title value="助手管理">
-        <Button type="primary" onClick={() => setIsModalOpen(true)}>
+        <Button type="primary" onClick={openCreateModal}>
           添加助手
         </Button>
       </Title>
 
-      {/* 卡片网格区域 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mt-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {list.map((item) => {
-          const info = modelInfoMap[item.model];
-          const theme = getModelTheme(item.model);
+          const info = ASSISTANT_MODEL_INFO_MAP[item.model];
+          const theme = getAssistantModelTheme(item.model);
           const isTesting = testingMap[item.id];
           const isDefault = !!item.isDefault;
 
-          // 下拉菜单项
           const menuItems: MenuProps['items'] = [
             {
               key: 'edit',
               label: '编辑配置',
               icon: <FormOutlined />,
-              onClick: () => {
-                form.setFieldsValue(item);
-                setInputModelValue(item.model);
-                setAssistant(item);
-                setIsModalOpen(true);
-              }
+              onClick: () => openEditModal(item),
             },
             {
               key: 'default',
               label: isDefault ? '已开启' : '开启助手',
               icon: <ImSwitch />,
               disabled: isDefault,
-              onClick: () => setDefaultAssistant(+item.id)
+              onClick: () => setDefaultAssistant(+item.id!),
             },
-            {
-              type: 'divider',
-            },
+            { type: 'divider' },
             {
               key: 'delete',
               label: '删除助手',
@@ -202,75 +144,78 @@ export default () => {
                   okText: '删除',
                   okType: 'danger',
                   cancelText: '取消',
-                  onOk: () => delAssistantData(+item.id),
+                  onOk: () => delAssistantData(+item.id!),
                 });
-              }
-            }
+              },
+            },
           ];
 
           return (
             <Card
               key={item.id}
-              className={`relative p-5 rounded-xl shadow-xs hover:shadow-md transition-shadow duration-300 overflow-hidden ${item.isDefault
-                ? 'border-2! border-primary! bg-linear-to-br from-blue-50 via-white to-blue-50 dark:from-blue-900/30 dark:via-boxdark dark:to-blue-900/30 dark:border-primary!'
-                : 'border border-gray-200 bg-linear-to-br from-gray-50 via-white to-slate-50 dark:from-boxdark/80 dark:via-boxdark dark:to-boxdark-2/80 dark:border-strokedark'
+              className={`relative overflow-hidden rounded-xl p-5 shadow-xs transition-shadow duration-300 hover:shadow-md ${item.isDefault
+                  ? 'border-2! border-primary! bg-linear-to-br from-blue-50 via-white to-blue-50 dark:from-blue-900/30 dark:via-boxdark dark:to-blue-900/30 dark:border-primary!'
+                  : 'border border-gray-200 bg-linear-to-br from-gray-50 via-white to-slate-50 dark:from-boxdark/80 dark:via-boxdark dark:to-boxdark-2/80 dark:border-strokedark'
                 }`}
               styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'transparent' } }}
             >
-              {/* 卡片头部：图标与名称 */}
-              <div className="flex items-start justify-between mb-4">
+              <div className="mb-4 flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar
                     shape="square"
                     size={48}
                     style={{ backgroundColor: theme.color, verticalAlign: 'middle' }}
-                    className="shadow-md text-lg font-bold"
+                    className="text-lg font-bold shadow-md"
                   >
                     {theme.icon}
                   </Avatar>
 
                   <div>
-                    <div className="font-bold text-lg text-gray-800 dark:text-white leading-tight mb-1 truncate max-w-[160px] ml-[5px]">
+                    <div className="mb-1 ml-[5px] max-w-[160px] truncate text-lg leading-tight font-bold text-gray-800 dark:text-white">
                       {item.name}
                     </div>
 
                     <Space size={4}>
-                      <Tag bordered={false} className="text-xs bg-gray-100 text-gray-500 dark:bg-boxdark-2 dark:text-gray-300 mr-0">
+                      <Tag
+                        bordered={false}
+                        className="mr-0 bg-gray-100 text-xs text-gray-500 dark:bg-boxdark-2 dark:text-gray-300"
+                      >
                         {info ? info.label : item.model}
                       </Tag>
 
                       {info && (
                         <Tooltip title={info.desc}>
-                          <InfoCircleOutlined className="text-gray-400! dark:text-gray-500 cursor-pointer hover:text-primary dark:hover:text-primary" />
+                          <InfoCircleOutlined className="cursor-pointer text-gray-400! hover:text-primary dark:text-gray-500 dark:hover:text-primary" />
                         </Tooltip>
                       )}
                     </Space>
                   </div>
                 </div>
 
-                {/* 更多操作菜单 */}
-                <Dropdown menu={{ items: menuItems }} placement="bottomRight" arrow className="bg-gray-50 dark:bg-boxdark-2/50 dark:hover:bg-boxdark-2/30">
+                <Dropdown
+                  menu={{ items: menuItems }}
+                  placement="bottomRight"
+                  arrow
+                  className="bg-gray-50 dark:bg-boxdark-2/50 dark:hover:bg-boxdark-2/30"
+                >
                   <Button type="text" icon={<MoreOutlined className="text-xl text-gray-400 dark:text-gray-500" />} />
                 </Dropdown>
               </div>
 
-              {/* 卡片内容：URL显示 */}
-              <div className="bg-gray-50 dark:bg-boxdark-2 rounded-md px-3 py-2 mb-2 flex-1 border border-gray-100 dark:border-strokedark">
-                <div className="flex items-center text-gray-400 dark:text-gray-500 text-xs uppercase font-bold mb-1">
+              <div className="mb-2 flex-1 rounded-md border border-gray-100 bg-gray-50 px-3 py-2 dark:border-strokedark dark:bg-boxdark-2">
+                <div className="mb-1 flex items-center text-xs font-bold text-gray-400 uppercase dark:text-gray-500">
                   <ApiOutlined className="mr-1" /> API Endpoint
                 </div>
-                <div
-                  className="text-gray-600 dark:text-gray-300 font-mono text-sm m-0 break-all"
-                >
-                  {item.url}
-                </div>
+                <div className="m-0 break-all font-mono text-sm text-gray-600 dark:text-gray-300">{item.url}</div>
               </div>
 
-              {/* 卡片底部：主要操作 */}
-              <div className="mt-auto pt-2 border-t border-gray-100 dark:border-strokedark flex justify-end">
+              <div className="mt-auto flex justify-end border-t border-gray-100 pt-2 dark:border-strokedark">
                 <Button
                   type={isTesting ? 'default' : 'dashed'}
-                  className={`${isTesting ? '' : 'text-primary border-primary bg-blue-50/50 dark:bg-blue-900/20 dark:border-primary dark:text-primary'} w-full`}
+                  className={`w-full ${isTesting
+                      ? ''
+                      : 'border-primary bg-blue-50/50 text-primary dark:border-primary dark:bg-blue-900/20 dark:text-primary'
+                    }`}
                   icon={isTesting ? <ThunderboltFilled spin /> : <ThunderboltFilled />}
                   loading={isTesting}
                   onClick={() => testConnection(item)}
@@ -282,26 +227,24 @@ export default () => {
           );
         })}
 
-        {/* 空状态下的添加按钮（如果没有数据或者作为最后一个Card） */}
         <Button
           type="dashed"
-          className="h-auto min-h-[200px] border-2 flex flex-col items-center justify-center gap-2 bg-white! dark:bg-boxdark! text-gray-400 dark:text-gray-500 hover:text-primary dark:hover:text-primary hover:border-primary dark:hover:border-primary rounded-lg bg-transparent dark:border-strokedark"
-          onClick={() => setIsModalOpen(true)}
+          className="flex h-auto min-h-[230px] flex-col items-center justify-center gap-2 rounded-lg border-2 bg-transparent text-gray-400 hover:border-primary hover:text-primary dark:border-strokedark dark:bg-boxdark! dark:text-gray-500 dark:hover:border-primary dark:hover:text-primary"
+          onClick={openCreateModal}
         >
-          <PlusOutlined style={{ fontSize: '24px' }} />
+          <PlusOutlined style={{ fontSize: 24 }} />
           <span className="font-medium">添加新助手</span>
         </Button>
       </div>
 
       <Modal
-        title={assistant.id ? '编辑助手' : '添加助手'}
-        open={isModalOpen}
+        title={editingAssistant.id ? '编辑助手' : '添加助手'}
+        open={modalOpen}
+        confirmLoading={saveLoading}
         onOk={handleSubmit}
         onCancel={() => {
-          setIsModalOpen(false);
-          form.resetFields();
-          setInputModelValue('');
-          setAssistant({} as Assistant);
+          setModalOpen(false);
+          resetModalState();
         }}
       >
         <Form form={form} layout="vertical" size="large">
@@ -317,8 +260,8 @@ export default () => {
               { required: true, message: '请输入 API 地址' },
               {
                 pattern: /^https?:\/\//,
-                message: '请输入正确的 API 地址'
-              }
+                message: '请输入正确的 API 地址',
+              },
             ]}
           >
             <Input placeholder="https://api.deepseek.com/v1" autoComplete="off" />
@@ -332,24 +275,19 @@ export default () => {
             <Select
               showSearch
               placeholder="选择或输入模型"
-              filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes((input ?? '').toLowerCase())}
+              filterOption={(input, option) =>
+                (option?.label ?? '').toString().toLowerCase().includes((input ?? '').toLowerCase())
+              }
               onSearch={(val) => setInputModelValue(val)}
               optionLabelProp="label"
-              options={selectOptions}
+              options={modelSelectOptions}
               optionRender={(option) => {
-                const info = modelInfoMap[option.value as string];
-                if (info) {
+                const meta = ASSISTANT_MODEL_INFO_MAP[option.value as string];
+                if (meta) {
                   return (
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
+                    <div className="flex items-center justify-between">
                       <span>{option.label}</span>
-
-                      <Tooltip title={info.desc}>
+                      <Tooltip title={meta.desc}>
                         <InfoCircleOutlined className="text-slate-300" />
                       </Tooltip>
                     </div>
@@ -363,4 +301,4 @@ export default () => {
       </Modal>
     </div>
   );
-};
+}

@@ -6,6 +6,7 @@ import { delAssistantDataAPI, getAssistantListAPI, addAssistantDataAPI, editAssi
 
 export default function useAssistant() {
   const [loading, setLoading] = useState(false);
+  const [listLoading, setListLoading] = useState(true);
   const [testingMap, setTestingMap] = useState<Record<string, boolean>>({});
 
   const [list, setList] = useState<Assistant[]>([]);
@@ -13,12 +14,17 @@ export default function useAssistant() {
 
   // 获取助手列表
   const getAssistantList = async () => {
-    const { data } = await getAssistantListAPI();
-    setList(data);
+    try {
+      const { data } = await getAssistantListAPI();
+      setList(data);
 
-    // 设置默认助手
-    const defaultAssistant = data.find((a) => a.isDefault);
-    if (defaultAssistant) setAssistant(String(defaultAssistant.id));
+      const defaultAssistant = data.find((a) => a.isDefault);
+      if (defaultAssistant) setAssistant(String(defaultAssistant.id));
+    } catch (error) {
+      console.error('获取助手列表失败：', error);
+    } finally {
+      setListLoading(false);
+    }
   };
 
   // 初始化加载助手列表
@@ -104,6 +110,7 @@ export default function useAssistant() {
     assistant,
     setAssistant,
     loading,
+    listLoading,
     testingMap,
     saveAssistant,
     delAssistantData,

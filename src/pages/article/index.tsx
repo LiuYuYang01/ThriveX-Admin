@@ -464,7 +464,7 @@ export default () => {
   }, [getArticleList]);
 
   useEffect(() => {
-    void Promise.all([getCateList(), getTagList()]);
+    Promise.all([getCateList(), getTagList()]);
   }, []);
 
   // 首屏骨架（与部门管理 Skeleton 用法一致）
