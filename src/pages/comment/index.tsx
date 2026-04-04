@@ -4,12 +4,13 @@ import dayjs from 'dayjs';
 import { message, Table, Popconfirm, Button, Modal, Form, Input, DatePicker, Tooltip } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import { ColumnsType } from 'antd/es/table';
-import { DeleteOutlined, SendOutlined, SearchOutlined, ClearOutlined } from '@ant-design/icons';
+import { DeleteOutlined, SendOutlined } from '@ant-design/icons';
 
 import { addCommentDataAPI, getCommentListAPI, delCommentDataAPI } from '@/api/comment';
 import Title from '@/components/Title';
 import { Comment, CommentFilterQueryParams } from '@/types/app/comment';
 import { useWebStore, useUserStore } from '@/stores';
+import { useDebouncedChange } from '@/hooks/useDebouncedChange';
 
 export default () => {
   const [loading, setLoading] = useState(false);
@@ -51,10 +52,29 @@ export default () => {
 
   const [filterForm] = Form.useForm();
 
-  const onFilterReset = () => {
-    filterForm.resetFields();
-    getCommentList();
+  const onFilterChange = async (values: CommentFilterQueryParams) => {
+    try {
+      setLoading(true);
+      const query = {
+        content: values?.content,
+        startDate: values.createTime?.[0]?.valueOf(),
+        endDate: values.createTime?.[1]?.valueOf(),
+      };
+      const { data } = await getCommentListAPI(query);
+      setList(data.result);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const { onValuesChange: onFilterValuesChange } = useDebouncedChange<CommentFilterQueryParams>({
+    debouncedKeys: ['content'],
+    debounceMs: 400,
+    getValues: () => filterForm.getFieldsValue() as CommentFilterQueryParams,
+    onApply: (values) => void onFilterChange(values),
+  });
 
   const columns: ColumnsType<Comment> = [
     {
@@ -181,23 +201,6 @@ export default () => {
     }
   };
 
-  const onFilterSubmit = async (values: CommentFilterQueryParams) => {
-    try {
-      setLoading(true);
-      const query = {
-        content: values?.content,
-        startDate: values.createTime?.[0]?.valueOf(),
-        endDate: values.createTime?.[1]?.valueOf(),
-      };
-      const { data } = await getCommentListAPI(query);
-      setList(data.result);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // 回复内容
   const [replyInfo, setReplyInfo] = useState('');
   const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
@@ -237,16 +240,10 @@ export default () => {
         </div>
 
         <div className="px-6 py-3 bg-white dark:bg-boxdark rounded-xl shadow-xs border border-gray-100 dark:border-strokedark">
-          <div className="flex justify-between mb-6">
-            <div className="flex gap-4 flex-wrap">
-              <div className="skeleton h-9" style={{ width: 200 }} />
-              <div className="skeleton h-9" style={{ width: 200 }} />
-              <div className="skeleton h-9" style={{ width: 280 }} />
-            </div>
-            <div className="flex gap-2">
-              <div className="skeleton h-9 rounded-md" style={{ width: 80 }} />
-              <div className="skeleton h-9 rounded-md" style={{ width: 80 }} />
-            </div>
+          <div className="flex gap-4 flex-wrap mb-6">
+            <div className="skeleton h-9" style={{ width: 200 }} />
+            <div className="skeleton h-9" style={{ width: 200 }} />
+            <div className="skeleton h-9" style={{ width: 280 }} />
           </div>
 
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
@@ -269,7 +266,12 @@ export default () => {
 
       <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark overflow-hidden">
         <div className="p-5 border-b border-gray-100 dark:border-strokedark bg-gray-50/30 dark:bg-boxdark-2/50 space-y-4">
-          <Form form={filterForm} layout="inline" onFinish={onFilterSubmit} className="flex! flex-wrap! items-center! gap-y-2.5!">
+          <Form
+            form={filterForm}
+            layout="inline"
+            onValuesChange={onFilterValuesChange}
+            className="flex! flex-wrap! items-center! gap-y-2.5!"
+          >
             <Form.Item name="content" className="mb-0!">
               <Input
                 placeholder="搜索评论内容..."
@@ -284,15 +286,6 @@ export default () => {
                 disabledDate={(current) => current && current > dayjs().endOf('day')}
               />
             </Form.Item>
-
-            <div className="flex gap-2">
-              <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                查询
-              </Button>
-              <Button icon={<ClearOutlined />} onClick={onFilterReset}>
-                重置
-              </Button>
-            </div>
           </Form>
         </div>
 

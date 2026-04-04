@@ -34,12 +34,10 @@ export interface ArticleFilterDataForm {
   createTime: Date[];
 }
 
-export interface ArticleFilterQueryParams extends Page {
-  key?: string;
+export interface ArticleFilterQueryParams extends QueryParams {
+  title?: string;
   cateId?: number;
   tagId?: number;
   isDraft?: boolean;
   isDel?: boolean;
-  startDate?: string;
-  endDate?: string;
 }

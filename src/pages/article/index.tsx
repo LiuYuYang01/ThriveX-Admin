@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Table, Button, Tag, notification, Popconfirm, Form, Input, Select, DatePicker, message, Tooltip, Space, Divider, Popover } from 'antd';
+import { Table, Button, Tag, notification, Popconfirm, Form, Input, Select, DatePicker, message, Tooltip, Popover, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { TableRowSelection } from 'antd/es/table/interface';
-import { DeleteOutlined, FormOutlined, InboxOutlined, SearchOutlined, ClearOutlined, EyeOutlined, CommentOutlined } from '@ant-design/icons';
+import { DeleteOutlined, FormOutlined, InboxOutlined, EyeOutlined, CommentOutlined } from '@ant-design/icons';
 import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 import dayjs from 'dayjs';
 
@@ -21,6 +21,7 @@ import type { Cate as ArticleCate } from '@/types/app/cate';
 import type { Article, Config, ArticleFilterQueryParams, ArticleFilterDataForm } from '@/types/app/article';
 
 import { useWebStore } from '@/stores';
+import { useDebouncedChange } from '@/hooks/useDebouncedChange';
 
 const { RangePicker } = DatePicker;
 
@@ -30,7 +31,6 @@ export default () => {
   const [btnLoading, setBtnLoading] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const isFirstLoadRef = useRef<boolean>(true);
-  const filterDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [form] = Form.useForm();
   const web = useWebStore((state) => state.web);
@@ -38,17 +38,7 @@ export default () => {
 
   const [total, setTotal] = useState<number>(0);
 
-  const [filter, setFilter] = useState<ArticleFilterQueryParams>({
-    key: undefined,
-    cateId: undefined,
-    tagId: undefined,
-    isDraft: false,
-    isDel: false,
-    startDate: undefined,
-    endDate: undefined,
-    pageNum: 1,
-    pageSize: 8,
-  });
+  const [filter, setFilter] = useState<ArticleFilterQueryParams>();
   const [showBatchActions, setShowBatchActions] = useState<boolean>(false);
 
   // 分页获取文章
@@ -149,14 +139,6 @@ export default () => {
 
   const columns: ColumnsType<Article> = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 80,
-      align: 'center',
-      render: (text) => <span className="text-gray-400 dark:text-gray-500 font-mono">#{text}</span>,
-    },
-    {
       title: '标题',
       dataIndex: 'title',
       key: 'title',
@@ -196,7 +178,7 @@ export default () => {
               </div>
             </Tooltip>
           ) : (
-            <span className="text-gray-300 dark:text-gray-500 italic">暂无摘要</span>
+            <span className="text-gray-300 dark:text-gray-500 italic">暂无</span>
           )}
         </>
       ),
@@ -205,14 +187,14 @@ export default () => {
       title: '分类',
       dataIndex: 'cateList',
       key: 'cateList',
-      width: 140,
+      width: 150,
       render: (cates: ArticleCate[]) => renderCollapsibleTags(cates || [], 'cate'),
     },
     {
       title: '标签',
       dataIndex: 'tagList',
       key: 'tagList',
-      width: 160,
+      width: 130,
       render: (tags: ArticleTag[]) => renderCollapsibleTags(tags || [], 'tag'),
     },
     {
@@ -248,10 +230,9 @@ export default () => {
       dataIndex: 'config',
       key: 'config',
       width: 130,
-      align: 'center',
       render: (config: Config) => {
         const statusMap: Record<string, string> = {
-          1: '正常',
+          1: '正常显示',
           2: '首页隐藏',
           3: '全站隐藏',
         };
@@ -269,7 +250,6 @@ export default () => {
       title: '发布时间',
       dataIndex: 'createTime',
       key: 'createTime',
-      width: 140,
       render: (date: number) => (
         <div className="flex flex-col">
           <span className="text-gray-700 dark:text-gray-200 font-medium">{dayjs(date).format('YYYY-MM-DD')}</span>
@@ -281,17 +261,16 @@ export default () => {
       title: '操作',
       key: 'action',
       fixed: 'right',
-      width: 165,
+      width: 140,
       align: 'center',
       render: (_, record: Article) => (
-        <Space separator={<Divider orientation="vertical" />}>
+        <div className="flex items-center justify-center gap-3">
           <ArticleExport.Single article={record} />
 
           <Tooltip title="编辑">
             <Link to={`/create?id=${record.id}`}>
               <Button
                 type="text"
-                size="small"
                 icon={<FormOutlined className="text-blue-500" />}
                 className="text-blue-500 dark:text-gray-300 dark:hover:text-blue-500! hover:bg-blue-50 dark:hover:bg-blue-900/20"
               />
@@ -309,7 +288,6 @@ export default () => {
             >
               <Button
                 type="text"
-                size="small"
                 danger
                 loading={btnLoading === record.id}
                 icon={<DeleteOutlined />}
@@ -317,7 +295,7 @@ export default () => {
               />
             </Popconfirm>
           </Tooltip>
-        </Space>
+        </div>
       ),
     },
   ];
@@ -325,47 +303,21 @@ export default () => {
   const applyFormValuesToFilter = (values: ArticleFilterDataForm) => {
     setFilter((prev) => ({
       ...prev,
-      key: values.title,
+      title: values.title,
       cateId: values.cateId,
       tagId: values.tagId,
-      startDate: values.createTime?.[0] ? values.createTime[0].toISOString() : undefined,
-      endDate: values.createTime?.[1] ? values.createTime[1].toISOString() : undefined,
-      pageNum: 1,
-      pageSize: prev.pageSize ?? 8,
+      startDate: values.createTime?.[0] ? values.createTime[0].valueOf() : undefined,
+      endDate: values.createTime?.[1] ? values.createTime[1].valueOf() : undefined,
     }));
   };
 
-  const onFilterValuesChange = (_: Partial<ArticleFilterDataForm>, allValues: ArticleFilterDataForm) => {
-    if (filterDebounceRef.current) {
-      clearTimeout(filterDebounceRef.current);
-      filterDebounceRef.current = null;
-    }
-    const hasTitleChange = 'title' in (_ as Partial<ArticleFilterDataForm>);
-    if (hasTitleChange) {
-      filterDebounceRef.current = setTimeout(() => applyFormValuesToFilter(allValues), 400);
-    } else {
-      applyFormValuesToFilter(allValues);
-    }
-  };
-
-  const onFilterReset = () => {
-    if (filterDebounceRef.current) {
-      clearTimeout(filterDebounceRef.current);
-      filterDebounceRef.current = null;
-    }
-    form.resetFields();
-    setFilter({
-      pageNum: 1,
-      pageSize: 8,
-      key: undefined,
-      cateId: undefined,
-      tagId: undefined,
-      isDraft: false,
-      isDel: false,
-      startDate: undefined,
-      endDate: undefined,
+  const { onValuesChange: onFilterValuesChange } =
+    useDebouncedChange<ArticleFilterDataForm>({
+      debouncedKeys: ['title'],
+      debounceMs: 400,
+      getValues: () => form.getFieldsValue() as ArticleFilterDataForm,
+      onApply: (values) => applyFormValuesToFilter(values),
     });
-  };
 
   const [cateList, setCateList] = useState<ArticleCate[]>([]);
   const [tagList, setTagList] = useState<ArticleTag[]>([]);
@@ -603,11 +555,9 @@ export default () => {
 
       <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark overflow-hidden">
         <div className="p-5 border-b border-gray-100 dark:border-strokedark bg-gray-50/30 dark:bg-boxdark-2/50 space-y-4">
-          {/* 筛选区：搜索条件 + 查询/重置 */}
           <Form form={form} layout="inline" onValuesChange={onFilterValuesChange} className="flex! flex-wrap! items-center! gap-y-2.5!">
             <Form.Item name="title" className="mb-0!">
               <Input
-                prefix={<SearchOutlined className="text-gray-400 dark:text-gray-500" />}
                 placeholder="搜索文章标题..."
                 className="w-[220px]!"
                 allowClear
@@ -645,9 +595,6 @@ export default () => {
             </Form.Item>
 
             <Space className="sm:flex-nowrap">
-              <Button icon={<ClearOutlined />} onClick={onFilterReset}>
-                重置
-              </Button>
               <Button
                 icon={showBatchActions ? <HiOutlineChevronUp /> : <HiOutlineChevronDown />}
                 onClick={() => setShowBatchActions((v) => !v)}
@@ -671,7 +618,7 @@ export default () => {
                 <Button type="primary" icon={<InboxOutlined />} onClick={() => setIsModalOpen(true)}>
                   导入文章
                 </Button>
-                <Popconfirm title="删除确认" description="确定要删除选中的文章吗？" okText="删除" okButtonProps={{ danger: true }} cancelText="取消" onConfirm={() => delSelected()}>
+                <Popconfirm title="警告" description="你确定要删除选中的文章吗？" okText="确定" cancelText="取消" onConfirm={() => delSelected()}>
                   <Button danger icon={<DeleteOutlined />}>删除选中</Button>
                 </Popconfirm>
               </div>
@@ -687,20 +634,20 @@ export default () => {
           loading={loading}
           pagination={{
             position: ['bottomRight'],
-            current: filter.pageNum,
-            pageSize: filter.pageSize,
+            current: filter?.pageNum,
+            pageSize: filter?.pageSize,
             total,
             showTotal: (totalCount) => (
               <div className="mt-[9px] text-xs text-gray-500 dark:text-gray-400">
-                当前第 {filter.pageNum} / {Math.ceil(totalCount / (filter.pageSize || 8))} 页 | 共 {totalCount} 条数据
+                当前第 {filter?.pageNum ?? 1} / {Math.ceil(totalCount / (filter?.pageSize ?? 8))} 页 | 共 {totalCount} 条数据
               </div>
             ),
-            onChange: (page, size) => setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size || prev.pageSize })),
-            onShowSizeChange: (_, size) => setFilter((prev) => ({ ...prev, pageNum: 1, pageSize: size })),
+            onChange: (page, size) => setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev?.pageSize ?? 8 })),
+            onShowSizeChange: (_, size) => setFilter((prev) => ({ ...prev, pageNum: 1, pageSize: size ?? prev?.pageSize ?? 8 })),
             className: 'px-6! py-4!',
           }}
           className="[&_.ant-table-thead>tr>th]:bg-gray-50! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-gray-500! dark:[&_.ant-table-thead>tr>th]:text-gray-400!"
-          scroll={{ x: 1400 }}
+          scroll={{ x: 1550 }}
         />
       </div>
 

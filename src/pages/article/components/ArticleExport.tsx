@@ -60,7 +60,7 @@ export const ArticleExportSingle = ({ article }: ArticleExportSingleProps) => {
   }, [article]);
 
   return (
-    <Tooltip title="导出">
+    <Tooltip title="导出文章">
       <Popconfirm
         title="提醒"
         description="确定要导出该文章吗？"
@@ -70,7 +70,6 @@ export const ArticleExportSingle = ({ article }: ArticleExportSingleProps) => {
       >
         <Button
           type="text"
-          size="small"
           icon={<DownloadOutlined />}
           className="hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800/50"
         />
