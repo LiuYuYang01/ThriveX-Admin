@@ -19,21 +19,18 @@ interface Page {
   pageSize?: number;
 }
 
-interface FilterQueryParams {
-  key?: string;
-  content?: string;
-  status?: 0 | 1;
-  startDate?: string;
-  endDate?: string;
+// 优化
+// interface FilterQueryParams {
+//   key?: string;
+//   content?: string;
+//   status?: 0 | 1;
+//   startDate?: string;
+//   endDate?: string;
+//   createTime?: Date[];
+// }
+
+interface QueryParams extends Page {
+  startDate?: number;
+  endDate?: number;
   createTime?: Date[];
-}
-
-interface QueryData<T = FilterQueryParams> {
-  // 通用的
-  sort?: 'asc' | 'desc';
-  pattern?: 'list' | 'recursion';
-  query?: T;
-
-  // 文件相关
-  dir?: 'all' | string;
 }

@@ -8,7 +8,7 @@ import { DeleteOutlined, SendOutlined, SearchOutlined, ClearOutlined } from '@an
 
 import { addCommentDataAPI, getCommentListAPI, delCommentDataAPI } from '@/api/comment';
 import Title from '@/components/Title';
-import { Comment, FilterForm } from '@/types/app/comment';
+import { Comment, CommentFilterQueryParams } from '@/types/app/comment';
 import { useWebStore, useUserStore } from '@/stores';
 
 export default () => {
@@ -35,7 +35,7 @@ export default () => {
       }
 
       const { data } = await getCommentListAPI();
-      setList(data);
+      setList(data.result);
       isFirstLoadRef.current = false;
     } catch (error) {
       console.error(error);
@@ -58,35 +58,28 @@ export default () => {
 
   const columns: ColumnsType<Comment> = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      align: 'center',
-      width: 110,
-      render: (text: number) => <span className="text-gray-400 dark:text-gray-500 font-mono">#{text}</span>,
-    },
-    {
-      title: '名称',
+      title: '评论者名称',
       dataIndex: 'name',
       key: 'name',
-      width: 110,
+      width: 130,
       render: (text: string) => <span className="text-gray-700 dark:text-gray-200 font-medium">{text || '-'}</span>,
     },
     {
-      title: '内容',
+      title: '评论内容',
       dataIndex: 'content',
       key: 'content',
-      width: 280,
+      width: 260,
       render: (text: string, record: Comment) => (
         <>
           {text ? (
             <Tooltip
+              placement="topLeft"
               title={text}
             >
-              <span className="hover:text-primary cursor-pointer line-clamp-1 text-gray-700 dark:text-gray-200"
+              <p className="line-clamp-1 hover:text-primary cursor-pointer text-gray-700 dark:text-gray-200"
                 onClick={() => {
                   setComment(record);
-                }}>{text}</span>
+                }}>{text}</p>
             </Tooltip>
           )
             : (
@@ -97,17 +90,33 @@ export default () => {
       ),
     },
     {
+      title: '所属文章',
+      dataIndex: 'articleTitle',
+      key: 'articleTitle',
+      width: 260,
+      render: (text: string, record: Comment) =>
+        text ? (
+          <Tooltip placement="topLeft" title={text}>
+            <a href={`${web.url}/article/${record.articleId}`} target="_blank" className="line-clamp-1 hover:text-primary text-gray-600 dark:text-gray-300" rel="noreferrer">
+              {text}
+            </a>
+          </Tooltip>
+        ) : (
+          <span className="text-gray-400 dark:text-gray-500">该评论暂未绑定文章</span>
+        ),
+    },
+    {
       title: '邮箱',
       dataIndex: 'email',
       key: 'email',
-      width: 180,
+      width: 210,
       render: (text: string) => <span className="text-gray-500 dark:text-gray-400">{text || '暂无邮箱'}</span>,
     },
     {
       title: '网站',
       dataIndex: 'url',
       key: 'url',
-      width: 180,
+      width: 210,
       render: (url: string) =>
         url ? (
           <a href={url} target="_blank" className="hover:text-primary text-gray-600 dark:text-gray-300" rel="noreferrer">
@@ -118,30 +127,15 @@ export default () => {
         ),
     },
     {
-      title: '所属文章',
-      dataIndex: 'articleTitle',
-      key: 'articleTitle',
-      width: 200,
-      ellipsis: true,
-      render: (text: string, record: Comment) =>
-        text ? (
-          <Tooltip title={text}>
-            <a href={`${web.url}/article/${record.articleId}`} target="_blank" className="hover:text-primary text-gray-600 dark:text-gray-300" rel="noreferrer">
-              {text}
-            </a>
-          </Tooltip>
-        ) : (
-          <span className="text-gray-400 dark:text-gray-500">该评论暂未绑定文章</span>
-        ),
-    },
-    {
       title: '评论时间',
       dataIndex: 'createTime',
       key: 'createTime',
-      width: 180,
-      render: (date: string) => <span className="text-gray-500 dark:text-gray-400">{dayjs(+date).format('YYYY-MM-DD HH:mm:ss')}</span>,
-      sorter: (a: Comment, b: Comment) => +a.createTime! - +b.createTime!,
-      showSorterTooltip: false,
+      render: (date: number) => (
+        <div className="flex flex-col">
+          <span className="text-gray-700 dark:text-gray-200 font-medium">{dayjs(date).format('YYYY-MM-DD')}</span>
+          <span className="text-gray-400 dark:text-gray-500 text-xs">{dayjs(date).format('HH:mm:ss')}</span>
+        </div>
+      )
     },
     {
       title: '操作',
@@ -187,17 +181,16 @@ export default () => {
     }
   };
 
-  const onFilterSubmit = async (values: FilterForm) => {
+  const onFilterSubmit = async (values: CommentFilterQueryParams) => {
     try {
       setLoading(true);
       const query = {
-        key: values?.title,
         content: values?.content,
-        startDate: values.createTime?.[0]?.valueOf()?.toString(),
-        endDate: values.createTime?.[1]?.valueOf()?.toString(),
+        startDate: values.createTime?.[0]?.valueOf(),
+        endDate: values.createTime?.[1]?.valueOf(),
       };
-      const { data } = await getCommentListAPI({ query });
-      setList(data);
+      const { data } = await getCommentListAPI(query);
+      setList(data.result);
     } catch (error) {
       console.error(error);
     } finally {
@@ -221,7 +214,7 @@ export default () => {
         email: user.email,
         name: user.name,
         articleId: comment?.articleId ?? 0,
-        createTime: new Date().getTime().toString(),
+        createTime: new Date().getTime(),
       });
 
       message.success('🎉 回复评论成功');
@@ -277,17 +270,8 @@ export default () => {
       <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark overflow-hidden">
         <div className="p-5 border-b border-gray-100 dark:border-strokedark bg-gray-50/30 dark:bg-boxdark-2/50 space-y-4">
           <Form form={filterForm} layout="inline" onFinish={onFilterSubmit} className="flex! flex-wrap! items-center! gap-y-2.5!">
-            <Form.Item name="title" className="mb-0!">
-              <Input
-                prefix={<SearchOutlined className="text-gray-400 dark:text-gray-500" />}
-                placeholder="搜索文章标题..."
-                className="w-[220px]!"
-                allowClear
-              />
-            </Form.Item>
             <Form.Item name="content" className="mb-0!">
               <Input
-                prefix={<SearchOutlined className="text-gray-400 dark:text-gray-500" />}
                 placeholder="搜索评论内容..."
                 className="w-[220px]!"
                 allowClear

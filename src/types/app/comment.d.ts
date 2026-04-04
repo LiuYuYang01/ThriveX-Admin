@@ -9,7 +9,7 @@ export interface Comment {
   articleTitle?: string;
   commentId: number;
   auditStatus: number;
-  createTime: string;
+  createTime: number;
 }
 
 export interface Info {
@@ -19,8 +19,6 @@ export interface Info {
   paginate: Page;
 }
 
-export interface FilterForm {
-  title?: string;
+export interface CommentFilterQueryParams extends QueryParams {
   content?: string;
-  createTime: Date[];
 }

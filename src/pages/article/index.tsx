@@ -270,10 +270,10 @@ export default () => {
       dataIndex: 'createTime',
       key: 'createTime',
       width: 140,
-      render: (text: number) => (
+      render: (date: number) => (
         <div className="flex flex-col">
-          <span className="text-gray-700 dark:text-gray-200 font-medium">{dayjs(text).format('YYYY-MM-DD')}</span>
-          <span className="text-gray-400 dark:text-gray-500 text-xs">{dayjs(text).format('HH:mm:ss')}</span>
+          <span className="text-gray-700 dark:text-gray-200 font-medium">{dayjs(date).format('YYYY-MM-DD')}</span>
+          <span className="text-gray-400 dark:text-gray-500 text-xs">{dayjs(date).format('HH:mm:ss')}</span>
         </div>
       ),
     },

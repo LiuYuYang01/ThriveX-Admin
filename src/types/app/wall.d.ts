@@ -15,7 +15,7 @@ export interface Wall {
   email: string;
   auditStatus: number;
   isChoice: number;
-  createTime: string;
+  createTime: number;
 }
 
 export interface FilterForm {
