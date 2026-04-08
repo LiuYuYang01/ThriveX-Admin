@@ -31,7 +31,6 @@ export default () => {
       key: 'name',
       dataIndex: 'name',
       width: 200,
-      align: 'center',
       render: (text: string) => (
         <Tooltip title={text}>
           <div className="max-w-[200px] truncate text-gray-700 dark:text-gray-200 hover:text-primary cursor-pointer">
@@ -195,13 +194,13 @@ export default () => {
       <div className="flex md:justify-between flex-col md:flex-row mx-auto mt-2 h-[calc(100vh-180px)]">
         <div className="w-full md:w-[40%]">
           <Spin spinning={editLoading}>
-            <Card className="border-stroke w-full h-46">
+            <Card className="border-stroke w-full [&>.ant-card-body]:pt-3!">
               <Form form={form} layout="vertical" initialValues={tag} onFinish={onSubmit} size="large">
                 <Form.Item label="标签名称" name="name" rules={[{ required: true, message: '标签名称不能为空' }]}>
                   <Input placeholder="请输入标签名称" />
                 </Form.Item>
 
-                <Form.Item>
+                <Form.Item className="mb-0!">
                   <Button type="primary" htmlType="submit" loading={btnLoading} className="w-full">
                     {tag.id ? '编辑标签' : '新增标签'}
                   </Button>

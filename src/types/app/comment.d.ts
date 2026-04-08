@@ -20,5 +20,7 @@ export interface Info {
 }
 
 export interface CommentFilterQueryParams extends QueryParams {
+  status?: 0 | 1;
+  pattern?: 'list' | 'count';
   content?: string;
 }

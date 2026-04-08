@@ -12,11 +12,11 @@ export default function InfoCard() {
   const [wallCount, setWallCount] = useState<number>(0);
 
   const getData = async () => {
-    const { data: commentList } = await getCommentListAPI({ query: { status: 0 }, pattern: 'list' });
+    const { data: commentList } = await getCommentListAPI({ status: 0, pattern: 'list' });
     const { data: linkList } = await getLinkListAPI({ query: { status: 0 } });
     const { data: wallList } = await getWallListAPI({ query: { status: 0 } });
 
-    setCommentCount(commentList.length);
+    setCommentCount(commentList.total);
     setLinkCount(linkList.length);
     setWallCount(wallList.length);
   };
