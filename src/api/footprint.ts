@@ -1,5 +1,5 @@
 import Request from '@/utils/request'
-import { Footprint } from '@/types/app/footprint'
+import { Footprint, FootprintFilterQueryParams } from '@/types/app/footprint'
 
 // 新增足迹
 export const addFootprintDataAPI = (data: Footprint) => Request('POST', '/footprint', { data })
@@ -14,6 +14,5 @@ export const editFootprintDataAPI = (data: Footprint) => Request('PATCH', '/foot
 export const getFootprintDataAPI = (id?: number) => Request<Footprint>('GET', `/footprint/${id}`)
 
 // 获取足迹列表
-export const getFootprintListAPI = (data?: QueryData) => Request<Footprint[]>('POST', '/footprint/list', {
-    data: { ...data?.query }
-});
+export const getFootprintListAPI = (params?: FootprintFilterQueryParams) =>
+  Request<Paginate<Footprint[]>>('GET', '/footprint', { params })

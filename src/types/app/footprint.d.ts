@@ -1,14 +1,14 @@
 export interface Footprint {
-  id: number;
+  id?: number;
   title: string;
   address: string;
   content: string;
   position: string;
   images: string | string[];
-  createTime?: string | Dayjs;
+  createTime?: number | Dayjs;
 }
 
-export interface FilterForm {
+
+export interface FootprintFilterQueryParams extends QueryParams {
   address?: string;
-  createTime: Date[];
 }
