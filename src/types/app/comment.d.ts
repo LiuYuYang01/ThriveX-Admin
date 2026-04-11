@@ -8,7 +8,7 @@ export interface Comment {
   articleId: number;
   articleTitle?: string;
   commentId: number;
-  auditStatus: number;
+  status: number;
   createTime: number;
 }
 

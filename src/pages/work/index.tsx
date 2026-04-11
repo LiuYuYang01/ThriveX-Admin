@@ -42,14 +42,14 @@ export default () => {
       }
 
       if (type === 'comment') {
-        const { data } = await getCommentListAPI({ query: { status: 0 }, pattern: 'list' });
-        setCommentList(data);
+        const { data } = await getCommentListAPI({ status: 0, pattern: 'list' });
+        setCommentList(data.result);
       } else if (type === 'link') {
         const { data } = await getLinkListAPI({ status: 0, pageNum: 1, pageSize: 9999 });
         setLinkList(data.result);
       } else if (type === 'wall') {
-        const { data } = await getWallListAPI({ query: { status: 0 } });
-        setWallList(data);
+        const { data } = await getWallListAPI({ status: 0 });
+        setWallList(data.result);
       }
 
       isFirstLoadRef.current = false;

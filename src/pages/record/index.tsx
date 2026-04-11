@@ -22,7 +22,7 @@ import Title from '@/components/Title';
 import RangePicker from '@/components/RangePicker';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
 
-import { delRecordDataAPI, getRecordPagingAPI } from '@/api/record';
+import { delRecordDataAPI, getRecordListAPI } from '@/api/record';
 import type { Record, RecordFilterDataForm, RecordFilterQueryParams } from '@/types/app/record';
 
 import Skeleton from './Skeleton';
@@ -45,16 +45,12 @@ export default () => {
   const getRecordList = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await getRecordPagingAPI({
-        query: {
-          key: filter.key,
-          startDate: filter.startDate,
-          endDate: filter.endDate,
-        },
-        pagination: {
-          pageNum: filter.pageNum ?? 1,
-          pageSize: filter.pageSize ?? 8,
-        },
+      const { data } = await getRecordListAPI({
+        content: filter.content,
+        startDate: filter.startDate,
+        endDate: filter.endDate,
+        pageNum: filter.pageNum ?? 1,
+        pageSize: filter.pageSize ?? 8,
       });
 
       if (data.result.length === 0 && (filter.pageNum ?? 1) > 1) {
@@ -185,7 +181,7 @@ export default () => {
       setFilter((prev) => ({
         ...prev,
         pageNum: 1,
-        key: values.content,
+        content: values.content,
         startDate: values.createTime?.[0] ? values.createTime[0].valueOf() : undefined,
         endDate: values.createTime?.[1] ? values.createTime[1].valueOf() : undefined,
       }));

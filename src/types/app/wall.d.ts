@@ -13,18 +13,13 @@ export interface Wall {
   color: string;
   content: string;
   email: string;
-  auditStatus: number;
+  status: number;
   isChoice: number;
   createTime: number;
 }
 
-export interface FilterForm {
-  content?: string;
-  cateId?: number;
-  createTime: Date[];
-}
-
-export interface FilterWall extends FilterQueryParams {
+export interface WallFilterQueryParams extends QueryParams {
+  status?: 0 | 1;
   content?: string;
   cateId?: number;
 }

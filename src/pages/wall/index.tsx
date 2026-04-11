@@ -9,7 +9,7 @@ import { getWallListAPI, delWallDataAPI, getWallCateListAPI, updateChoiceAPI } f
 import { sendReplyWallEmailAPI } from '@/api/email';
 import Title from '@/components/Title';
 import { useWebStore } from '@/stores';
-import type { Cate, Wall, FilterForm, FilterWall } from '@/types/app/wall';
+import type { Cate, Wall, WallFilterQueryParams } from '@/types/app/wall';
 import { ColumnsType } from 'antd/es/table';
 
 export default () => {
@@ -34,8 +34,8 @@ export default () => {
         setLoading(true);
       }
 
-      const { data } = await getWallListAPI();
-      setList(data);
+      const { data } = await getWallListAPI({ status: 0 });
+      setList(data.result);
       isFirstLoadRef.current = false;
     } catch (error) {
       console.error(error);
@@ -64,7 +64,7 @@ export default () => {
   const [cateList, setCateList] = useState<Cate[]>([]);
   const getCateList = async () => {
     const { data } = await getWallCateListAPI();
-    setCateList((data as Cate[]).filter((item) => item.id !== 1));
+    setCateList(data.filter((item) => item.id !== 1));
   };
 
   useEffect(() => {
@@ -196,19 +196,19 @@ export default () => {
 
   const { RangePicker } = DatePicker;
 
-  const onFilterSubmit = async (values: FilterForm) => {
+  const onFilterSubmit = async (values: WallFilterQueryParams) => {
     try {
       setLoading(true);
 
-      const query: FilterWall = {
-        key: values.content,
+      const query: WallFilterQueryParams = {
+        content: values.content,
         cateId: values.cateId,
-        startDate: values.createTime?.[0]?.valueOf()?.toString(),
-        endDate: values.createTime?.[1]?.valueOf()?.toString(),
+        startDate: values.createTime?.[0]?.valueOf(),
+        endDate: values.createTime?.[1]?.valueOf(),
       };
 
-      const { data } = await getWallListAPI({ query });
-      setList(data);
+      const { data } = await getWallListAPI(query);
+      setList(data.result);
     } catch (error) {
       console.error(error);
     } finally {

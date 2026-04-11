@@ -213,7 +213,7 @@ export default () => {
         url: web.url,
         content: replyInfo,
         commentId: comment?.id ?? 0,
-        auditStatus: 1,
+        status: 1,
         email: user.email,
         name: user.name,
         articleId: comment?.articleId ?? 0,

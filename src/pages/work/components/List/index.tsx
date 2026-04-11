@@ -68,7 +68,7 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
           url: web.url,
           content: replyInfo,
           commentId: item.id!,
-          auditStatus: 1,
+          status: 1,
           email: user.email ? user.email : null,
           name: user.name,
           articleId: item.articleId!,

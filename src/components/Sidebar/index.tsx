@@ -208,11 +208,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               name: '足迹管理',
             },
             {
-              to: '/storage',
-              path: 'storage',
-              name: '存储管理',
-            },
-            {
               to: '/config',
               path: 'config',
               name: '项目配置',

@@ -14,11 +14,11 @@ export default function InfoCard() {
   const getData = async () => {
     const { data: commentList } = await getCommentListAPI({ status: 0, pattern: 'list' });
     const { data: linkList } = await getLinkListAPI({ status: 0, pageNum: 1, pageSize: 9999 });
-    const { data: wallList } = await getWallListAPI({ query: { status: 0 } });
+    const { data: wallList } = await getWallListAPI({ status: 0 });
 
     setCommentCount(commentList.total);
     setLinkCount(linkList.total);
-    setWallCount(wallList.length);
+    setWallCount(wallList.total);
   };
 
   useEffect(() => {

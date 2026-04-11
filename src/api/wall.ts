@@ -1,5 +1,5 @@
 import Request from '@/utils/request'
-import { Wall, Cate } from '@/types/app/wall'
+import { Wall, Cate, WallFilterQueryParams } from '@/types/app/wall'
 
 // 新增留言
 export const addWallDataAPI = (data: Wall) => Request('POST', '/wall', { data })
@@ -17,16 +17,8 @@ export const editWallDataAPI = (data: Wall) => Request('PATCH', '/wall', { data 
 export const getWallDataAPI = (id?: number) => Request<Paginate<Wall>>('GET', `/wall/${id}`)
 
 // 获取留言列表
-export const getWallListAPI = (data?: QueryData) => Request<Wall[]>('POST', `/wall/list`, {
-    data: { ...data?.query },
-})
-
-// 分页获取留言列表
-export const getWallPagingAPI = (data?: QueryData) => Request<Paginate<Wall[]>>('POST', `/wall/paging`, {
-    data: { ...data?.query },
-    params: {
-        ...data?.pagination
-    }
+export const getWallListAPI = (params?: WallFilterQueryParams) => Request<Paginate<Wall[]>>('GET', `/wall`, {
+    params
 })
 
 // 获取留言分类列表
