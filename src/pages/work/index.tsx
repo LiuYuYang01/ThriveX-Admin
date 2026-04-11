@@ -45,8 +45,8 @@ export default () => {
         const { data } = await getCommentListAPI({ query: { status: 0 }, pattern: 'list' });
         setCommentList(data);
       } else if (type === 'link') {
-        const { data } = await getLinkListAPI({ query: { status: 0 } });
-        setLinkList(data);
+        const { data } = await getLinkListAPI({ status: 0, pageNum: 1, pageSize: 9999 });
+        setLinkList(data.result);
       } else if (type === 'wall') {
         const { data } = await getWallListAPI({ query: { status: 0 } });
         setWallList(data);

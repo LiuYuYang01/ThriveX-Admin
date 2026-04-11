@@ -1,5 +1,5 @@
 import Request from '@/utils/request'
-import { Web, WebType } from '@/types/app/web'
+import { Web, WebType, WebFilterQueryParams } from '@/types/app/web'
 
 // 新增网站
 export const addLinkDataAPI = (data: Web) => Request('POST', '/link', { data })
@@ -14,17 +14,9 @@ export const editLinkDataAPI = (data: Web) => Request('PATCH', '/link', { data }
 export const getLinkDataAPI = (id?: number) => Request<Web>('GET', `/link/${id}`)
 
 // 获取网站列表
-export const getLinkListAPI = (data?: QueryData) => Request<Web[]>('POST', `/link/list`, {
-    data: { ...data?.query },
-})
-
-// 分页获取评论列表
-export const getLinkPagingAPI = (data?: QueryData) => Request<Paginate<Web[]>>('POST', `/link/paging`, {
-    data: { ...data?.query },
-    params: {
-        ...data?.pagination
-    }
-})
+export const getLinkListAPI = (params?: WebFilterQueryParams) => {
+    return Request<Paginate<Web[]>>('GET', `/link`, { params });
+}
 
 // 获取网站类型列表
 export const getWebTypeListAPI = () => {

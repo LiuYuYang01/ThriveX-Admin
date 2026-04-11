@@ -6,7 +6,7 @@ export interface WebType {
 }
 
 export interface Web {
-  id: number;
+  id?: number;
   title: string;
   description: string;
   email: string;
@@ -16,6 +16,12 @@ export interface Web {
   order: number;
   typeId: number;
   type: WebType;
-  auditStatus: number;
+  status?: 0 | 1;
   createTime?: number;
+}
+
+export interface WebFilterQueryParams extends QueryParams {
+  title?: string;
+  status?: 0 | 1;
+  key?: string;
 }

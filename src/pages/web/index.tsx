@@ -5,7 +5,7 @@ import { SearchOutlined } from '@ant-design/icons';
 
 import { getLinkListAPI, addLinkDataAPI, editLinkDataAPI, delLinkDataAPI, getWebTypeListAPI } from '@/api/web';
 import Title from '@/components/Title';
-import { WebType, Web } from '@/types/app/web';
+import { WebType, Web, WebFilterQueryParams } from '@/types/app/web';
 import { RuleObject } from 'antd/es/form';
 
 import GroupSvg from './assets/svg/group.svg';
@@ -39,11 +39,13 @@ export default () => {
         setLoading(true);
       }
 
-      const { data } = await getLinkListAPI();
-      data.sort((a, b) => a.order - b.order);
-      data.sort((a, b) => a.type.order - b.type.order);
+      const params: WebFilterQueryParams = { status: 1, pageNum: 1, pageSize: 9999 };
+      const { data } = await getLinkListAPI(params);
+      const rows = data.result ?? [];
+      rows.sort((a, b) => a.order - b.order);
+      rows.sort((a, b) => a.type.order - b.type.order);
 
-      const grouped = data.reduce(
+      const grouped = rows.reduce(
         (acc, item) => {
           const groupName = item.type.name;
           if (!acc[groupName]) {
@@ -56,7 +58,7 @@ export default () => {
       );
 
       setList(grouped);
-      setListTemp(data);
+      setListTemp(rows);
       isFirstLoadRef.current = false;
     } catch (error) {
       console.error(error);
@@ -153,7 +155,7 @@ export default () => {
           await editLinkDataAPI({ ...link, ...values });
           message.success('🎉 编辑网站成功');
         } else {
-          await addLinkDataAPI({ ...values, createTime: new Date().getTime().toString() });
+          await addLinkDataAPI({ ...values, createTime: new Date().getTime() });
           message.success('🎉 新增网站成功');
         }
 
