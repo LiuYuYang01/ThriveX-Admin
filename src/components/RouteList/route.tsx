@@ -20,7 +20,6 @@ import Work from '@/pages/work';
 import Draft from '@/pages/draft';
 import Decycle from '@/pages/decycle';
 import Record from '@/pages/record';
-import Storage from '@/pages/storage';
 import Assistant from '@/pages/assistant';
 import Config from '@/pages/config';
 
@@ -51,7 +50,6 @@ export const routes: AppRouteItem[] = [
   { path: '/web', title: '网站管理', icon: <BiCategoryAlt className="text-base" />, element: <Web /> },
   { path: '/swiper', title: '轮播图管理', icon: <BiCategoryAlt className="text-base" />, element: <Swiper /> },
   { path: '/footprint', title: '足迹管理', icon: <BiCategoryAlt className="text-base" />, element: <Footprint /> },
-  { path: '/storage', title: '存储管理', icon: <BiCategoryAlt className="text-base" />, element: <Storage /> },
   { path: '/setup', title: '项目配置', icon: <BiSliderAlt className="text-base" />, element: <Setup /> },
   { path: '/file', title: '文件管理', icon: <BiFolderOpen className="text-base" />, element: <File /> },
   { path: '/iter', title: '项目更新记录', icon: <BiBug className="text-base" />, element: <Iterative /> },
