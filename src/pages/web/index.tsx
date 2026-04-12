@@ -372,7 +372,7 @@ export default () => {
             </Form.Item>
 
             <Form.Item label="站长邮箱" name="email">
-              <Input placeholder="3311118881@qq.com" />
+              <Input placeholder="liuyuyang1024@yeah.net" />
             </Form.Item>
 
             <Form.Item label="网站图标" name="image" rules={[{ required: true, message: '网站图标不能为空' }]}>

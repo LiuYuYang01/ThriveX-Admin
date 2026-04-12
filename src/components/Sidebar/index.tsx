@@ -220,10 +220,22 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           ],
         },
         {
-          to: '/setup',
-          path: 'setup',
+          to: '#',
+          path: 'system',
           icon: <BiSliderAlt className="text-[22px]" />,
           name: '系统',
+          subMenu: [
+            {
+              to: '/setup/system',
+              path: 'system',
+              name: '系统配置',
+            },
+            {
+              to: '/setup/third_party',
+              path: 'third_party',
+              name: '第三方配置',
+            },
+          ],
         },
       ],
     },
@@ -355,8 +367,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     <SidebarLinkGroup
                       key={subIndex}
                       activeCondition={
-                        // 默认展开"创作"菜单，或当前路径属于该菜单的子菜单
-                        item.path === 'write' || (item.subMenu && item.subMenu.some((subItem) => pathname.includes(subItem.path)))
+                        // 默认展开「创作」；其余分组在子路由匹配时展开
+                        item.path === 'write' ||
+                        (item.subMenu && item.subMenu.some((subItem) => pathname === subItem.to || pathname.startsWith(`${subItem.to}/`)))
                       }
                     >
                       {(handleClick, open) => {

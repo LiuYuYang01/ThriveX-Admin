@@ -8,7 +8,7 @@ import { json } from '@codemirror/lang-json';
 
 import Title from '@/components/Title';
 import { getEnvConfigListAPI, updateEnvConfigDataAPI, getPageConfigListAPI, updatePageConfigDataAPI } from '@/api/config';
-import { Config } from '@/types/app/config';
+import { Config, THIRD_PARTY_ENV_NAMES } from '@/types/app/config';
 import { titleSty } from '@/styles/sty';
 import { ColumnsType } from 'antd/es/table';
 
@@ -84,7 +84,9 @@ export default () => {
 
     try {
       const { data: list } = await tabConfig[type].getList();
-      setData((d) => ({ ...d, [type]: list }));
+      const filtered =
+        type === 'env' ? list.filter((row) => !(THIRD_PARTY_ENV_NAMES as readonly string[]).includes(row.name)) : list;
+      setData((d) => ({ ...d, [type]: filtered }));
       isFirstLoadRef.current = false;
     } catch (e) {
       console.error(e);

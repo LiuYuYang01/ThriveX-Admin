@@ -1,4 +1,4 @@
-import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug } from 'react-icons/bi';
+import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug, BiPlug } from 'react-icons/bi';
 import { TbBrandAirtable } from 'react-icons/tb';
 import React from 'react';
 
@@ -13,7 +13,8 @@ import Tag from '@/pages/tag';
 import Web from '@/pages/web';
 import Swiper from '@/pages/swiper';
 import Footprint from '@/pages/footprint';
-import Setup from '@/pages/setup';
+import SystemConfig from '@/pages/setup/system';
+import ThirdPartyConfig from '@/pages/setup/third_party';
 import File from '@/pages/file';
 import Iterative from '@/pages/iterative';
 import Work from '@/pages/work';
@@ -50,7 +51,8 @@ export const routes: AppRouteItem[] = [
   { path: '/web', title: '网站管理', icon: <BiCategoryAlt className="text-base" />, element: <Web /> },
   { path: '/swiper', title: '轮播图管理', icon: <BiCategoryAlt className="text-base" />, element: <Swiper /> },
   { path: '/footprint', title: '足迹管理', icon: <BiCategoryAlt className="text-base" />, element: <Footprint /> },
-  { path: '/setup', title: '项目配置', icon: <BiSliderAlt className="text-base" />, element: <Setup /> },
+  { path: '/setup/system', title: '系统配置', icon: <BiSliderAlt className="text-base" />, element: <SystemConfig /> },
+  { path: '/setup/third_party', title: '第三方配置', icon: <BiPlug className="text-base" />, element: <ThirdPartyConfig /> },
   { path: '/file', title: '文件管理', icon: <BiFolderOpen className="text-base" />, element: <File /> },
   { path: '/iter', title: '项目更新记录', icon: <BiBug className="text-base" />, element: <Iterative /> },
   { path: '/work', title: '工作台', icon: <TbBrandAirtable className="text-base" />, element: <Work /> },
