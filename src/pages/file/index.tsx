@@ -575,7 +575,6 @@ export default () => {
                     <>
                       <span className="hidden h-5 w-px shrink-0 bg-black/10 sm:block dark:bg-white/12" aria-hidden />
                       <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-                        <span className="shrink-0 text-xs text-black/45 dark:text-white/45">文件</span>
                         <Select<FileSortField>
                           className="min-w-22"
                           value={fileSortField}

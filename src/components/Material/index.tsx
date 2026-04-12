@@ -258,7 +258,7 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
   return (
     <Modal
       title="素材库"
-      width={1200}
+      width={1123}
       open={open}
       onCancel={onCancelSelect}
       destroyOnHidden
@@ -280,18 +280,24 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
               icon={<ArrowLeftOutlined />}
               disabled={(!rootPath && currentPath === '') || (Boolean(rootPath) && currentPath === rootPath)}
               onClick={goBack}
-            >
-              返回上一级
-            </Button>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {breadcrumbs.map((item, index) => (
-                <span key={item.path}>
-                  <span className="cursor-pointer hover:text-primary" onClick={() => navigateTo(item.path)}>
-                    {item.label}
+              className={`shrink-0 ${(!rootPath && currentPath === '') || (Boolean(rootPath) && currentPath === rootPath) ? 'bg-gray-50! dark:bg-gray-700!' : 'bg-gray-100! hover:bg-gray-200! dark:bg-gray-700! hover:dark:bg-gray-800!'}`}
+            />
+
+            <div className="min-w-0 flex-1 rounded-md bg-gray-100/50 px-4 py-1 leading-normal dark:bg-gray-700!">
+              {breadcrumbs.map((item, index) => {
+                const isCurrent = index === breadcrumbs.length - 1;
+                return (
+                  <span key={item.path}>
+                    <span
+                      className={isCurrent ? 'text-primary' : 'cursor-pointer hover:text-primary'}
+                      onClick={() => navigateTo(item.path)}
+                    >
+                      {item.label}
+                    </span>
+                    {index < breadcrumbs.length - 1 ? ' / ' : ''}
                   </span>
-                  {index < breadcrumbs.length - 1 ? ' / ' : ''}
-                </span>
-              ))}
+                );
+              })}
             </div>
           </Space>
           <Space>
@@ -320,12 +326,12 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
                       {dirList.map((dir) => (
                         <div
                           key={dir.path}
-                          className="w-[120px] rounded-xl border border-black/6 bg-black/[0.02] px-2 pb-2.5 pt-2.5 transition-[border-color,box-shadow,background] duration-200 hover:border-[#5b8ff9] hover:bg-[rgba(91,143,249,0.06)] hover:shadow-[0_4px_14px_rgba(91,143,249,0.12)] dark:border-white/8 dark:bg-white/4"
+                          className="w-[120px] rounded-xl border border-black/6 bg-black/2 px-2 pb-2.5 pt-2.5 transition-[border-color,box-shadow,background] duration-200 hover:border-[#5b8ff9] hover:bg-[rgba(91,143,249,0.06)] hover:shadow-[0_4px_14px_rgba(91,143,249,0.12)] dark:border-white/8 dark:bg-white/4"
                         >
                           <div className="cursor-pointer text-center" onClick={() => navigateTo(dir.path)}>
-                            <img src={fileSvg} alt={dir.name} className="mx-auto mb-2 h-14 w-[4.5rem] object-contain" />
+                            <img src={fileSvg} alt={dir.name} className="mx-auto mb-2 h-14 w-18 object-contain" />
                             <Tooltip title={dir.name}>
-                              <p className="m-0 line-clamp-2 break-words text-[13px] leading-snug text-black/85 dark:text-white/88">{dir.name}</p>
+                              <p className="m-0 line-clamp-2 wrap-break-word text-[13px] leading-snug text-black/85 dark:text-white/88">{dir.name}</p>
                             </Tooltip>
                           </div>
                         </div>
@@ -342,7 +348,7 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
                         {fileList.length}
                       </span>
                     </header>
-                    <div className="grid gap-[18px] [grid-template-columns:repeat(auto-fill,minmax(232px,1fr))]">
+                    <div className="grid gap-[18px] grid-cols-[repeat(auto-fill,minmax(232px,1fr))]">
                       {fileList.map((file) => {
                         const isSelected = selectedFiles.some((f) => f.url === file.url);
                         return (
@@ -350,11 +356,10 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
                             key={file.path}
                             role="button"
                             tabIndex={0}
-                            className={`group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-black/6 bg-white p-0 outline-none transition-[border-color,box-shadow] duration-200 focus-visible:shadow-[0_0_0_2px_rgba(91,143,249,0.45)] dark:border-white/8 dark:bg-white/4 hover:border-[rgba(91,143,249,0.45)] hover:shadow-[0_10px_28px_rgba(17,24,39,0.08)] dark:hover:border-[rgba(91,143,249,0.45)] ${
-                              isSelected
-                                ? 'border-[rgba(91,143,249,0.65)]! shadow-[0_0_0_2px_rgba(91,143,249,0.18)] dark:border-[rgba(96,165,250,0.65)]! dark:shadow-[0_0_0_2px_rgba(96,165,250,0.2)]'
-                                : ''
-                            }`}
+                            className={`group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-black/6 bg-white p-0 outline-none transition-[border-color,box-shadow] duration-200 focus-visible:shadow-[0_0_0_2px_rgba(91,143,249,0.45)] dark:border-white/8 dark:bg-white/4 hover:border-[rgba(91,143,249,0.45)] hover:shadow-[0_10px_28px_rgba(17,24,39,0.08)] dark:hover:border-[rgba(91,143,249,0.45)] ${isSelected
+                              ? 'border-[rgba(91,143,249,0.65)]! shadow-[0_0_0_2px_rgba(91,143,249,0.18)] dark:border-[rgba(96,165,250,0.65)]! dark:shadow-[0_0_0_2px_rgba(96,165,250,0.2)]'
+                              : ''
+                              }`}
                             onClick={() => onHandleSelectImage(file)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
@@ -363,11 +368,11 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
                               }
                             }}
                           >
-                            <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-[#f4f6f9] to-[#eceff4] dark:from-[#1f2937] dark:to-[#111827] [&_.ant-image]:block [&_.ant-image]:h-full [&_.ant-image]:w-full [&_.ant-image-img]:block [&_.ant-image-img]:h-full [&_.ant-image-img]:w-full [&_.ant-image-img]:object-cover">
+                            <div className="relative aspect-4/3 w-full overflow-hidden bg-linear-to-br from-[#f4f6f9] to-[#eceff4] dark:from-[#1f2937] dark:to-[#111827] [&_.ant-image]:block [&_.ant-image]:h-full [&_.ant-image]:w-full [&_.ant-image-img]:block [&_.ant-image-img]:h-full [&_.ant-image-img]:w-full [&_.ant-image-img]:object-cover">
                               <Image src={file.url} fallback={errorImg} preview={false} loading="lazy" />
                               {isSelected && (
                                 <span
-                                  className="pointer-events-none absolute right-2 top-2 z-[2] flex h-[26px] w-[26px] items-center justify-center rounded-full bg-primary text-xs text-white shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
+                                  className="pointer-events-none absolute right-2 top-2 z-2 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-primary text-xs text-white shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
                                   aria-hidden
                                 >
                                   <CheckOutlined />

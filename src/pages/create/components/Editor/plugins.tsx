@@ -30,7 +30,7 @@ hljs.registerLanguage('batch', dos);
 hljs.registerLanguage('bat', dos);
 hljs.registerLanguage('cmd', dos);
 
-const rehypeDouyinVideo: Plugin<[], Root> = () => {
+const rehypeDouyinVideo: Plugin<[], Root, Root> = () => {
   return (tree) => {
     visit(tree, 'element', (node: Element) => {
       if (node.tagName === 'p') {
@@ -62,7 +62,7 @@ const rehypeDouyinVideo: Plugin<[], Root> = () => {
                 children: []
               }]
             };
-            
+
             Object.assign(node, wrapperDiv);
           }
         }
@@ -73,7 +73,7 @@ const rehypeDouyinVideo: Plugin<[], Root> = () => {
 
 const videos = (): BytemdPlugin => {
   return {
-    rehype: (processor) => processor.use(rehypeDouyinVideo),
+    rehype: (processor) => processor.use(rehypeDouyinVideo as never),
     actions: [
       {
         title: '视频',
@@ -113,7 +113,7 @@ const videos = (): BytemdPlugin => {
 
 const markers = (): BytemdPlugin => {
   return {
-    remark: (processor) => processor.use(remarkMark),
+    remark: (processor) => processor.use(remarkMark as never),
     actions: [
       {
         title: '标记',
@@ -139,7 +139,7 @@ const callouts = (): BytemdPlugin => {
   ];
 
   return {
-    rehype: (processor) => processor.use(rehypeCallouts),
+    rehype: (processor) => processor.use(rehypeCallouts as never),
     actions: [
       {
         icon: calloutSvg,
