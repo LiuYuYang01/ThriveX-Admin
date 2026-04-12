@@ -746,8 +746,8 @@ export default () => {
                                     alt={file.name}
                                     loading="lazy"
                                     preview={{ alt: file.name }}
-                                    rootClassName="block size-full"
-                                    className="size-full object-cover"
+                                    rootClassName="absolute inset-0 block size-full"
+                                    className="size-full h-[inherit]! object-cover"
                                   />
                                 </div>
                               ),
@@ -828,7 +828,14 @@ export default () => {
                                 className="size-full h-[inherit]! cursor-zoom-in object-cover transition-transform duration-300 ease-out group-hover:scale-105"
                               />
                             </div>
-                            <div className="min-h-[52px] flex-1 px-3 pb-1 pt-2.5">
+                            <div
+                              className="min-h-[52px] flex-1 px-3 pb-1 pt-2.5"
+                              onClick={() => {
+                                setSelectedFilePaths((prev) =>
+                                  prev.includes(file.path) ? prev.filter((p) => p !== file.path) : [...prev, file.path],
+                                );
+                              }}
+                            >
                               <Tooltip title={file.name} placement="topLeft">
                                 <p className="mb-1 line-clamp-2 break-all text-[13px] font-medium leading-[1.45] text-black/88 group-hover:text-primary dark:text-white/88">
                                   {file.name}
