@@ -140,7 +140,7 @@ export default function AssistantPage() {
               onClick: () => {
                 Modal.confirm({
                   title: '确认删除',
-                  content: `您确定要删除助手 "${item.name}" 吗？此操作无法撤销。`,
+                  content: `你确定要删除该助手 "${item.name}" 吗？`,
                   okText: '删除',
                   okType: 'danger',
                   cancelText: '取消',

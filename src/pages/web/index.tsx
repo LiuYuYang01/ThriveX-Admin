@@ -204,7 +204,7 @@ export default () => {
                 </div>
 
                 {/* 网站项骨架屏 */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-7">
                   {[1, 2, 3, 4, 5, 6].map((item) => (
                     <div key={item} className="flex flex-col items-center p-6 rounded-2xl bg-white/70 dark:bg-boxdark/70 backdrop-blur-lg border border-white/30 dark:border-strokedark/40 shadow-xs">
                       <Skeleton.Avatar active size={80} shape="circle" className="mb-4" />
@@ -245,7 +245,7 @@ export default () => {
                 </div>
 
                 {Object.values(list[key]).length ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-7">
                     {Object.values(list[key]).map((item, index2) => (
                       <div
                         key={index2}
@@ -292,7 +292,7 @@ export default () => {
                                 e.stopPropagation();
                                 editLinkData(item);
                               }}
-                              className="flex-1 px-3 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-emerald-500 via-emerald-500 to-emerald-600 hover:from-emerald-600 hover:via-emerald-600 hover:to-emerald-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/40 active:scale-95 transform flex items-center justify-center gap-1.5"
+                              className="flex-1 px-3 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-emerald-500 via-emerald-500 to-emerald-600 hover:from-emerald-600 hover:via-emerald-600 hover:to-emerald-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-emerald-500/40 active:scale-95 transform flex items-center justify-center gap-1.5 cursor-pointer"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -313,7 +313,7 @@ export default () => {
                             >
                               <button
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex-1 px-3 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-red-500 via-red-500 to-red-600 hover:from-red-600 hover:via-red-600 hover:to-red-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-red-500/40 active:scale-95 transform flex items-center justify-center gap-1.5"
+                                className="flex-1 px-3 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-red-500 via-red-500 to-red-600 hover:from-red-600 hover:via-red-600 hover:to-red-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-red-500/40 active:scale-95 transform flex items-center justify-center gap-1.5 cursor-pointer"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -329,7 +329,7 @@ export default () => {
                               e.stopPropagation();
                               toHref(item.url);
                             }}
-                            className="w-full px-4 py-3 text-sm font-semibold text-white bg-linear-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-primary/50 active:scale-95 transform flex items-center justify-center gap-2 group/btn"
+                            className="w-full px-4 py-3 text-sm font-semibold text-white bg-linear-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-primary/50 active:scale-95 transform flex items-center justify-center gap-2 group/btn cursor-pointer"
                           >
                             <svg className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

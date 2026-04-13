@@ -386,7 +386,11 @@ export default () => {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Title value="足迹管理" />
+      <Title value="足迹管理">
+        <Button type="primary" onClick={openCreate}>
+          新增足迹
+        </Button>
+      </Title>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xs dark:border-strokedark dark:bg-boxdark">
         <div className="shrink-0 space-y-4 border-b border-gray-100 bg-gray-50/30 p-5 dark:border-strokedark dark:bg-boxdark-2/50">
@@ -410,10 +414,6 @@ export default () => {
                 <RangePicker className="w-[260px]!" />
               </Form.Item>
             </Form>
-
-            <Button type="primary" onClick={openCreate}>
-              新增足迹
-            </Button>
           </div>
         </div>
 

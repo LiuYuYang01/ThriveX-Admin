@@ -1,23 +1,37 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Button, DatePicker, Form, Input, Modal, Popconfirm, Select, Table, Tag, message, Tooltip } from 'antd';
+import { Button, Form, Input, Modal, Popconfirm, Select, Table, Tag, message, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import TextArea from 'antd/es/input/TextArea';
-import { DeleteOutlined, SendOutlined, StarFilled, StarOutlined, SearchOutlined, ClearOutlined } from '@ant-design/icons';
+import { DeleteOutlined, SendOutlined, StarFilled, StarOutlined, SearchOutlined } from '@ant-design/icons';
 
 import { getWallListAPI, delWallDataAPI, getWallCateListAPI, updateChoiceAPI } from '@/api/wall';
 import { sendReplyWallEmailAPI } from '@/api/email';
 import Title from '@/components/Title';
+import RangePicker from '@/components/RangePicker';
+import { useDebouncedChange } from '@/hooks/useDebouncedChange';
 import { useWebStore } from '@/stores';
 import type { Cate, Wall, WallFilterQueryParams } from '@/types/app/wall';
-import { ColumnsType } from 'antd/es/table';
+import type { ColumnsType } from 'antd/es/table';
+import Skeleton from './Skeleton';
 
-export default () => {
+interface WallFilterFormValues {
+  content?: string;
+  cateId?: number;
+  createTime?: [dayjs.Dayjs, dayjs.Dayjs];
+}
+
+export default function WallPage() {
   const web = useWebStore((state) => state.web);
 
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState<boolean>(true);
-  const isFirstLoadRef = useRef<boolean>(true);
+  const [skeletonLoading, setSkeletonLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [filterParams, setFilterParams] = useState<WallFilterQueryParams>({
+    status: 0,
+    pageNum: 1,
+    pageSize: 8,
+  });
 
   const [wall, setWall] = useState<Wall>({} as Wall);
   const [list, setList] = useState<Wall[]>([]);
@@ -25,68 +39,87 @@ export default () => {
   const [replyInfo, setReplyInfo] = useState('');
   const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
 
-  const getWallList = async () => {
+  const fetchWallList = useCallback(async () => {
     try {
-      // 如果是第一次加载，使用 initialLoading
-      if (isFirstLoadRef.current) {
-        setInitialLoading(true);
-      } else {
-        setLoading(true);
-      }
-
-      const { data } = await getWallListAPI({ status: 0 });
+      setLoading(true);
+      const { data } = await getWallListAPI(filterParams);
       setList(data.result);
-      isFirstLoadRef.current = false;
+      setTotal(data.total ?? data.result.length);
     } catch (error) {
       console.error(error);
     } finally {
-      setInitialLoading(false);
+      setSkeletonLoading(false);
       setLoading(false);
     }
-  };
+  }, [filterParams]);
 
-  const delWallData = async (id: number) => {
-    setLoading(true);
-
+  const deleteWallItem = useCallback(async (id: number) => {
     try {
+      setLoading(true);
       await delWallDataAPI(id);
-      getWallList();
+      await fetchWallList();
       message.success('🎉 删除留言成功');
     } catch (error) {
       console.error(error);
+    } finally {
       setLoading(false);
     }
-
-    setLoading(false);
-  };
+  }, [fetchWallList]);
 
   // 获取留言的分类列表
   const [cateList, setCateList] = useState<Cate[]>([]);
-  const getCateList = async () => {
+  const fetchWallCateList = useCallback(async () => {
     const { data } = await getWallCateListAPI();
     setCateList(data.filter((item) => item.id !== 1));
-  };
+  }, []);
 
   useEffect(() => {
-    getWallList();
-    getCateList();
-  }, []);
+    fetchWallCateList();
+  }, [fetchWallCateList]);
+
+  useEffect(() => {
+    fetchWallList();
+  }, [fetchWallList]);
 
   const [filterForm] = Form.useForm();
 
-  const onFilterReset = () => {
-    filterForm.resetFields();
-    getWallList();
-  };
+  const { onValuesChange: onFilterValuesChange } = useDebouncedChange<WallFilterFormValues>({
+    debouncedKeys: ['content'],
+    debounceMs: 400,
+    getValues: () => filterForm.getFieldsValue() as WallFilterFormValues,
+    onApply: (values) => {
+      setFilterParams((prev) => ({
+        ...prev,
+        pageNum: 1,
+        content: values.content,
+        cateId: values.cateId,
+        startDate: values.createTime?.[0]?.valueOf(),
+        endDate: values.createTime?.[1]?.valueOf(),
+      }));
+    },
+  });
 
-  const columns: ColumnsType<Wall> = [
+  const handleToggleChoice = useCallback(async (id: number) => {
+    try {
+      setLoading(true);
+      await updateChoiceAPI(id);
+      message.success('🎉 操作成功');
+      await fetchWallList();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchWallList]);
+
+  const columns: ColumnsType<Wall> = useMemo(() => [
     {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
       align: 'center',
       width: 80,
-      render: (text: number) => <span className="text-gray-400 dark:text-gray-500 font-mono">#{text}</span>,
+      render: (text: number) => <span className="font-mono text-gray-400 dark:text-gray-500">#{text}</span>,
     },
     {
       title: '分类',
@@ -94,7 +127,7 @@ export default () => {
       key: 'cate',
       width: 100,
       render: ({ name }: { name: string }, { color }: Wall) => (
-        <Tag bordered={false} color={color} className="text-[#565656]! dark:text-white! m-0!">
+        <Tag bordered={false} color={color} className="m-0! text-[#565656]! dark:text-white!">
           {name}
         </Tag>
       ),
@@ -104,7 +137,7 @@ export default () => {
       dataIndex: 'name',
       key: 'name',
       width: 120,
-      render: (text: string) => <span className="text-gray-700 dark:text-gray-200 font-medium">{text || '-'}</span>,
+      render: (text: string) => <span className="font-medium text-gray-700 dark:text-gray-200">{text || '-'}</span>,
     },
     {
       title: '内容',
@@ -112,22 +145,18 @@ export default () => {
       key: 'content',
       width: 320,
       render: (text: string, record: Wall) => (
-        <>
-          {text ? (
-            <Tooltip
-              title={text}
+        text ? (
+          <Tooltip title={text}>
+            <span
+              className="line-clamp-1 cursor-pointer text-gray-700 hover:text-primary dark:text-gray-200"
+              onClick={() => setWall(record)}
             >
-              <span className="hover:text-primary cursor-pointer line-clamp-1 text-gray-700 dark:text-gray-200"
-                onClick={() => {
-                  setWall(record);
-                }}>{text}</span>
-            </Tooltip>
-          )
-            : (
-              <span className="text-gray-300 dark:text-gray-500 italic">暂无内容</span>
-            )
-          }
-        </>
+              {text}
+            </span>
+          </Tooltip>
+        ) : (
+          <span className="italic text-gray-300 dark:text-gray-500">暂无内容</span>
+        )
       ),
     },
     {
@@ -141,9 +170,8 @@ export default () => {
       title: '留言时间',
       dataIndex: 'createTime',
       key: 'createTime',
-      width: 180,
       render: (date: string) => <span className="text-gray-500 dark:text-gray-400">{dayjs(+date).format('YYYY-MM-DD HH:mm:ss')}</span>,
-      sorter: (a: Wall, b: Wall) => +a.createTime! - +b.createTime!,
+      sorter: (a: Wall, b: Wall) => a.createTime - b.createTime,
       showSorterTooltip: false,
     },
     {
@@ -157,18 +185,7 @@ export default () => {
           <Tooltip title={record.isChoice === 1 ? '取消精选' : '设为精选'}>
             <Button
               type="text"
-              onClick={async () => {
-                try {
-                  setLoading(true);
-                  await updateChoiceAPI(record.id);
-                  message.success('🎉 操作成功');
-                  getWallList();
-                } catch (error) {
-                  console.error(error);
-                } finally {
-                  setLoading(false);
-                }
-              }}
+              onClick={() => handleToggleChoice(record.id)}
               icon={record.isChoice === 1 ? <StarFilled className="text-yellow-400" /> : <StarOutlined />}
             />
           </Tooltip>
@@ -184,7 +201,7 @@ export default () => {
             />
           </Tooltip>
 
-          <Popconfirm title="警告" description="你确定要删除吗" okText="确定" cancelText="取消" onConfirm={() => delWallData(record.id)}>
+          <Popconfirm title="警告" description="你确定要删除该留言吗?" okText="确定" cancelText="取消" onConfirm={() => deleteWallItem(record.id)}>
             <Tooltip title="删除">
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Tooltip>
@@ -192,29 +209,7 @@ export default () => {
         </div>
       ),
     },
-  ];
-
-  const { RangePicker } = DatePicker;
-
-  const onFilterSubmit = async (values: WallFilterQueryParams) => {
-    try {
-      setLoading(true);
-
-      const query: WallFilterQueryParams = {
-        content: values.content,
-        cateId: values.cateId,
-        startDate: values.createTime?.[0]?.valueOf(),
-        endDate: values.createTime?.[1]?.valueOf(),
-      };
-
-      const { data } = await getWallListAPI(query);
-      setList(data.result);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  ], [deleteWallItem, handleToggleChoice]);
 
   // 回复留言
   const onHandleReply = async () => {
@@ -233,58 +228,29 @@ export default () => {
       message.success('🎉 回复留言成功');
       setIsReplyModalOpen(false);
       setReplyInfo('');
-      getWallList();
-
-      setLoading(false);
+      await fetchWallList();
     } catch (error) {
       console.error(error);
+    } finally {
       setLoading(false);
     }
   };
 
-  // 初始加载时显示骨架屏（与 article 一致）
-  if (initialLoading) {
+  if (skeletonLoading) {
     return (
-      <div className="space-y-2">
-        <div className="px-6 py-3 bg-white dark:bg-boxdark rounded-xl shadow-xs border border-gray-100 dark:border-strokedark">
-          <div className="skeleton h-8" style={{ width: 200 }} />
-        </div>
-
-        <div className="px-6 py-3 bg-white dark:bg-boxdark rounded-xl shadow-xs border border-gray-100 dark:border-strokedark">
-          <div className="flex justify-between mb-6">
-            <div className="flex gap-4 flex-wrap">
-              <div className="skeleton h-9" style={{ width: 200 }} />
-              <div className="skeleton h-9" style={{ width: 180 }} />
-              <div className="skeleton h-9" style={{ width: 180 }} />
-              <div className="skeleton h-9" style={{ width: 280 }} />
-            </div>
-            <div className="flex gap-2">
-              <div className="skeleton h-9 rounded-md" style={{ width: 80 }} />
-              <div className="skeleton h-9 rounded-md" style={{ width: 80 }} />
-            </div>
-          </div>
-
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="flex gap-4 mb-4 items-center">
-              <div className="skeleton shrink-0 rounded-lg" style={{ width: 56, height: 56 }} />
-              <div className="flex-1 space-y-2 min-w-0">
-                <div className="skeleton h-4 w-full rounded-sm" />
-                <div className="skeleton h-3 rounded-sm" style={{ width: '60%' }} />
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <Skeleton />
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col">
       <Title value="留言管理" />
 
-      <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark overflow-hidden">
-        <div className="p-5 border-b border-gray-100 dark:border-strokedark bg-gray-50/30 dark:bg-boxdark-2/50 space-y-4">
-          <Form form={filterForm} layout="inline" onFinish={onFilterSubmit} className="flex! flex-wrap! items-center! gap-y-2.5!">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xs dark:border-strokedark dark:bg-boxdark">
+        <div className="shrink-0 space-y-4 border-b border-gray-100 bg-gray-50/30 p-5 dark:border-strokedark dark:bg-boxdark-2/50">
+          <Form form={filterForm} layout="inline" onValuesChange={onFilterValuesChange} className="flex! flex-wrap! items-center! gap-y-2.5!">
             <Form.Item name="content" className="mb-0!">
               <Input
                 prefix={<SearchOutlined className="text-gray-400 dark:text-gray-500" />}
@@ -309,40 +275,42 @@ export default () => {
                 disabledDate={(current) => current && current > dayjs().endOf('day')}
               />
             </Form.Item>
-
-            <div className="flex gap-2">
-              <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                查询
-              </Button>
-              <Button icon={<ClearOutlined />} onClick={onFilterReset}>
-                重置
-              </Button>
-            </div>
           </Form>
         </div>
 
-        <Table
-          rowKey="id"
-          dataSource={list}
-          columns={columns}
-          loading={loading}
-          scroll={{ x: 1200 }}
-          pagination={{
-            position: ['bottomRight'],
-            defaultPageSize: 8,
-            showTotal: (totalCount) => (
-              <div className="mt-[9px] text-xs text-gray-500 dark:text-gray-400">
-                共 {totalCount} 条数据
-              </div>
-            ),
-            className: 'px-6! py-4!',
-          }}
-          className="[&_.ant-table-thead>tr>th]:bg-gray-50! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-gray-500! dark:[&_.ant-table-thead>tr>th]:text-gray-400!"
-        />
+        <div className="min-h-0 flex-1">
+          <Table
+            rowKey="id"
+            dataSource={list}
+            columns={columns}
+            loading={loading}
+            scroll={{ x: 1200 }}
+            pagination={{
+              position: ['bottomRight'],
+              current: filterParams.pageNum,
+              pageSize: filterParams.pageSize,
+              total,
+              showTotal: (totalCount) => (
+                <div className="mt-[9px] text-xs text-gray-500 dark:text-gray-400">
+                  当前第 {filterParams.pageNum ?? 1} / {Math.ceil(totalCount / (filterParams.pageSize ?? 8))} 页 | 共 {totalCount} 条数据
+                </div>
+              ),
+              onChange: (page, size) => setFilterParams((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev.pageSize ?? 8 })),
+              onShowSizeChange: (_, size) => setFilterParams((prev) => ({ ...prev, pageNum: 1, pageSize: size ?? prev.pageSize ?? 8 })),
+              className: 'px-6!',
+            }}
+            className="[&_.ant-table-thead>tr>th]:bg-gray-50! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-gray-500! dark:[&_.ant-table-thead>tr>th]:text-gray-400!"
+          />
+        </div>
       </div>
 
       <Modal title="回复留言" open={isReplyModalOpen} footer={null} onCancel={() => setIsReplyModalOpen(false)}>
-        <TextArea value={replyInfo} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReplyInfo(e.target.value)} placeholder="请输入回复内容" autoSize={{ minRows: 3, maxRows: 5 }} />
+        <TextArea
+          value={replyInfo}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReplyInfo(e.target.value)}
+          placeholder="请输入回复内容"
+          autoSize={{ minRows: 3, maxRows: 5 }}
+        />
 
         <div className="flex space-x-4">
           <Button className="w-full mt-2" onClick={() => setIsReplyModalOpen(false)}>
@@ -355,4 +323,4 @@ export default () => {
       </Modal>
     </div>
   );
-};
+}

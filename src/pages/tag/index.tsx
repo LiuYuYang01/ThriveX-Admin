@@ -56,7 +56,7 @@ export default () => {
           </Tooltip>
 
           <Tooltip title="删除">
-            <Popconfirm title="警告" description="你确定要删除吗" okText="确定" cancelText="取消" onConfirm={() => delTagData(record.id!)}>
+            <Popconfirm title="警告" description="你确定要删除该标签吗?" okText="确定" cancelText="取消" onConfirm={() => delTagData(record.id!)}>
               <Button type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           </Tooltip>
