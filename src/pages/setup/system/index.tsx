@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { Card, Skeleton } from 'antd';
-import { AiOutlineSetting } from 'react-icons/ai';
+// import { AiOutlineSetting } from 'react-icons/ai';
 import { BiGlobe, BiLayout, BiShieldQuarter, BiUser } from 'react-icons/bi';
 
 import Title from '@/components/Title';
@@ -72,22 +72,22 @@ export default () => {
     },
     {
       title: '主题配置',
-      description: '配置网站主题风格',
+      description: '配置网站主题，如 LOGO、背景图、打字机文本等',
       icon: <BiLayout className={iconSty} />,
       key: 'theme',
     },
     {
       title: '个人配置',
-      description: '配置个人信息等',
+      description: '配置个人信息，如头像、昵称、邮箱等',
       icon: <BiUser className={iconSty} />,
       key: 'my',
     },
-    {
-      title: '其他设置',
-      description: '杂七八乱的各种配置',
-      icon: <AiOutlineSetting className={iconSty} />,
-      key: 'other',
-    },
+    // {
+    //   title: '其他设置',
+    //   description: '杂七八乱的各种配置',
+    //   icon: <AiOutlineSetting className={iconSty} />,
+    //   key: 'other',
+    // },
   ];
 
   // 初始加载时显示骨架屏

@@ -1,22 +1,32 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card, Skeleton } from 'antd';
-import { BiBarChart, BiCloud, BiCrosshair, BiEnvelope, BiMap } from 'react-icons/bi';
+import { BiBarChart, BiCloud, BiCrosshair, BiEnvelope, BiLineChart, BiMap, BiShield } from 'react-icons/bi';
 
 import Title from '@/components/Title';
 import { getEnvConfigListAPI } from '@/api/config';
 import { Config, THIRD_PARTY_ENV_NAMES, ThirdPartyEnvName } from '@/types/app/config';
 
-import { BaiduForm, EmailForm, GaodeCoordinateForm, GaodeMapForm, QiniuForm } from './components';
+import {
+  BaiduForm,
+  BaiduStatisKeyForm,
+  EmailForm,
+  GaodeCoordinateForm,
+  GaodeMapForm,
+  HcaptchaForm,
+  QiniuForm,
+} from './components';
 
 const TAB_KEYS = THIRD_PARTY_ENV_NAMES;
 
 const TAB_LABELS: Record<ThirdPartyEnvName, string> = {
   baidu_statis: '百度统计',
+  baidu_statis_key: '百度统计 Key',
   email: '邮件发送',
   gaode_map: '高德地图',
   gaode_coordinate: '高德坐标',
   qiniu_storage: '七牛云存储',
+  hcaptcha: 'hCaptcha',
 };
 
 const iconSty = 'w-5 h-8 mr-1';
@@ -32,32 +42,44 @@ const MENU_LIST: MenuItem[] = [
   {
     key: 'baidu_statis',
     title: '百度统计',
-    description: '站点 ID、Access Token 等统计接入',
+    description: '用于统计网站访问量、用户行为等数据',
     icon: <BiBarChart className={iconSty} />,
+  },
+  {
+    key: 'baidu_statis_key',
+    title: '百度统计 Key',
+    description: '用于在前端页面嵌入统计脚本',
+    icon: <BiLineChart className={iconSty} />,
   },
   {
     key: 'email',
     title: '邮件发送',
-    description: 'SMTP 主机、端口与发件账号',
+    description: '用于邮件通知，比如有新的留言、友联、评论',
     icon: <BiEnvelope className={iconSty} />,
   },
   {
     key: 'gaode_map',
     title: '高德地图',
-    description: 'Web 端 Key 与安全密钥',
+    description: '用于在前端足迹页面显示地图',
     icon: <BiMap className={iconSty} />,
   },
   {
     key: 'gaode_coordinate',
     title: '高德坐标',
-    description: '逆地理、坐标等接口 Key',
+    description: '用于根据地理信息获取坐标功能',
     icon: <BiCrosshair className={iconSty} />,
   },
   {
     key: 'qiniu_storage',
     title: '七牛云存储',
-    description: '域名、Bucket、密钥与 Endpoint',
+    description: '用于存储网站静态资源',
     icon: <BiCloud className={iconSty} />,
+  },
+  {
+    key: 'hcaptcha',
+    title: 'hCaptcha',
+    description: '用于拦截机器人和恶意用户等非法请求',
+    icon: <BiShield className={iconSty} />,
   },
 ];
 
@@ -117,8 +139,8 @@ export default function ThirdPartyConfigPage() {
         <Card className="border-stroke mt-2 min-h-[calc(100vh-160px)] [&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5!">
           <div className="flex flex-col md:flex-row">
             <ul className="w-full md:w-[20%] md:mr-5 mb-10 md:mb-0 border-b-0 md:border-r border-stroke dark:border-strokedark divide-y divide-solid divide-[#F6F6F6] dark:divide-strokedark">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <li key={item} className="p-3 pl-5">
+              {Array.from({ length: TAB_KEYS.length }).map((_, i) => (
+                <li key={i} className="p-3 pl-5">
                   <div className="flex items-center mb-2">
                     <Skeleton.Avatar active size={20} shape="square" style={{ marginRight: 8 }} />
                     <Skeleton.Input active size="small" style={{ width: 100, height: 20 }} />
@@ -163,10 +185,12 @@ export default function ThirdPartyConfigPage() {
           <div className="w-full md:w-[80%] px-0 md:px-8">
             <h2 className="text-xl pb-4 dark:text-white">{TAB_LABELS[activeKey]}</h2>
             {activeKey === 'baidu_statis' && <BaiduForm row={byName[activeKey]} onSaved={reload} />}
+            {activeKey === 'baidu_statis_key' && <BaiduStatisKeyForm row={byName[activeKey]} onSaved={reload} />}
             {activeKey === 'email' && <EmailForm row={byName[activeKey]} onSaved={reload} />}
             {activeKey === 'gaode_map' && <GaodeMapForm row={byName[activeKey]} onSaved={reload} />}
             {activeKey === 'gaode_coordinate' && <GaodeCoordinateForm row={byName[activeKey]} onSaved={reload} />}
             {activeKey === 'qiniu_storage' && <QiniuForm row={byName[activeKey]} onSaved={reload} />}
+            {activeKey === 'hcaptcha' && <HcaptchaForm row={byName[activeKey]} onSaved={reload} />}
           </div>
         </div>
       </Card>

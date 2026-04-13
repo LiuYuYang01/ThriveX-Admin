@@ -51,7 +51,6 @@ export interface Other {
   email: string;
 }
 
-/** 通过名称拉取的环境配置（含第三方与地图等） */
 export type EnvConfigName =
   | 'baidu_statis'
   | 'baidu_statis_key'
@@ -60,59 +59,6 @@ export type EnvConfigName =
   | 'gaode_coordinate'
   | 'qiniu_storage'
   | 'hcaptcha';
-
-/** 在项目配置「环境配置」表格中隐藏、改由「第三方配置」页表单维护的 name */
-export const THIRD_PARTY_ENV_NAMES = [
-  'baidu_statis',
-  'baidu_statis_key',
-  'email',
-  'gaode_map',
-  'gaode_coordinate',
-  'qiniu_storage',
-  'hcaptcha',
-] as const;
-export type ThirdPartyEnvName = (typeof THIRD_PARTY_ENV_NAMES)[number];
-
-export interface BaiduStatisEnvValue {
-  site_id: number;
-  access_token: string;
-}
-
-/** 百度统计前端脚本等使用的 Key */
-export interface BaiduStatisKeyEnvValue {
-  key: string;
-}
-
-/** hCaptcha 人机验证 */
-export interface HcaptchaEnvValue {
-  key: string;
-}
-
-export interface EmailEnvValue {
-  host: string;
-  port: number;
-  password: string;
-  username: string;
-}
-
-export interface GaodeMapEnvValue {
-  key_code: string;
-  security_code: string;
-}
-
-export interface GaodeCoordinateEnvValue {
-  key: string;
-}
-
-export interface QiniuStorageEnvValue {
-  domain: string;
-  zlevel: number;
-  root_dir: string;
-  end_point: string;
-  access_key: string;
-  secret_key: string;
-  bucket_name: string;
-}
 
 export interface Config {
   id: string;
