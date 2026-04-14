@@ -1,104 +1,50 @@
-import { useEffect, useState, useRef } from 'react';
-import { Table, Button, Modal, Form, message, Card, Tabs, Skeleton } from 'antd';
-import { FormOutlined } from '@ant-design/icons';
-import type { FormInstance } from 'antd/es/form';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Card, Empty, Form, Modal, Typography, message } from 'antd';
 
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 
 import Title from '@/components/Title';
-import { getEnvConfigListAPI, updateEnvConfigDataAPI, getPageConfigListAPI, updatePageConfigDataAPI } from '@/api/config';
-import { Config, THIRD_PARTY_ENV_NAMES } from '@/types/app/config';
-import { titleSty } from '@/styles/sty';
-import { ColumnsType } from 'antd/es/table';
-
-interface Props {
-  open: boolean;
-  onCancel: () => void;
-  onSave: () => void;
-  value: string;
-  error: string | null;
-  onChange: (value: string) => void;
-  onFormat: () => void;
-  loading: boolean;
-  title: string;
-  form: FormInstance;
-}
-
-function ConfigEditModal({ open, onCancel, onSave, value, error, onChange, onFormat, loading, title, form }: Props) {
-  return (
-    <Modal title={title} open={open} onCancel={onCancel} width={1000} footer={null}>
-      <Form form={form} layout="vertical" onFinish={onSave} size="large">
-        <Form.Item name="value" rules={[{ required: true, message: '请输入配置内容' }]} className="mb-4" validateStatus={error ? 'error' : ''} help={error ? `JSON格式错误: ${error}` : ''}>
-          <CodeMirror value={value} extensions={[json()]} onChange={onChange} theme={document.body.classList.contains('dark') ? 'dark' : 'light'} basicSetup={{ lineNumbers: true, foldGutter: true }} style={error ? { border: '1px solid #ff4d4f', borderRadius: 6 } : { borderRadius: 6 }} />
-        </Form.Item>
-
-        <Button onClick={onFormat} className="w-full mb-2">
-          格式化
-        </Button>
-        <Button type="primary" htmlType="submit" loading={loading} className="w-full">
-          保存配置
-        </Button>
-      </Form>
-    </Modal>
-  );
-}
-
-const tabConfig = {
-  env: {
-    label: '环境配置',
-    getList: getEnvConfigListAPI,
-    update: async (item: Config, value: object) => updateEnvConfigDataAPI({ ...item, value }),
-    modalTitle: '编辑配置',
-  },
-  page: {
-    label: '页面配置',
-    getList: getPageConfigListAPI,
-    update: async (item: Config, value: object) => updatePageConfigDataAPI(Number(item.id), value),
-    modalTitle: '编辑页面配置',
-  },
-};
+import { getPageConfigListAPI, updatePageConfigDataAPI } from '@/api/config';
+import { Config } from '@/types/app/config';
+import Skeleton from './Skeleton';
 
 export default () => {
-  // 合并状态
-  const [activeTab, setActiveTab] = useState<'env' | 'page'>('env');
-  const [data, setData] = useState<{ [key: string]: Config[] }>({ env: [], page: [] });
-  const [loading, setLoading] = useState<{ [key: string]: boolean }>({ env: false, page: false });
+  const [data, setData] = useState<Config[]>([]);
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const isFirstLoadRef = useRef<boolean>(true);
+  const [activeId, setActiveId] = useState<number | null>(null);
   const [editItem, setEditItem] = useState<Config | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [jsonValue, setJsonValue] = useState('');
   const [btnLoading, setBtnLoading] = useState(false);
-  const formRef = useRef<{ [key: string]: FormInstance[] }>({ env: Form.useForm(), page: Form.useForm() });
+  const [form] = Form.useForm();
+  const formRef = useRef(form);
 
-  // 获取配置列表
-  const fetchList = async (type: 'env' | 'page') => {
-    // 如果是第一次加载，使用 initialLoading
+  const fetchList = async () => {
     if (isFirstLoadRef.current) {
       setInitialLoading(true);
-    } else {
-      setLoading((l) => ({ ...l, [type]: true }));
     }
 
     try {
-      const { data: list } = await tabConfig[type].getList();
-      const filtered =
-        type === 'env' ? list.filter((row) => !(THIRD_PARTY_ENV_NAMES as readonly string[]).includes(row.name)) : list;
-      setData((d) => ({ ...d, [type]: filtered }));
+      const { data: list } = await getPageConfigListAPI();
+      setData(list);
+      const shouldResetActive = !list.some((item) => Number(item.id) === activeId);
+      if (shouldResetActive) {
+        setActiveId(list.length ? Number(list[0].id) : null);
+      }
       isFirstLoadRef.current = false;
     } catch (e) {
       console.error(e);
     } finally {
       setInitialLoading(false);
-      setLoading((l) => ({ ...l, [type]: false }));
     }
   };
 
   useEffect(() => {
-    fetchList(activeTab);
-  }, [activeTab]);
+    fetchList();
+  }, []);
 
   // 打开编辑弹窗
   const handleEdit = (item: Config) => {
@@ -106,7 +52,7 @@ export default () => {
     setIsModalOpen(true);
     const str = JSON.stringify(item.value, null, 2);
     setJsonValue(str);
-    formRef.current[activeTab][0].setFieldsValue({ value: str });
+    formRef.current.setFieldsValue({ value: str });
     setJsonError(null);
   };
 
@@ -114,7 +60,7 @@ export default () => {
   const handleSave = async () => {
     try {
       setBtnLoading(true);
-      const values = await formRef.current[activeTab][0].validateFields();
+      const values = await formRef.current.validateFields();
       let parsed;
       try {
         parsed = JSON.parse(values.value);
@@ -124,9 +70,9 @@ export default () => {
         setBtnLoading(false);
         return;
       }
-      await tabConfig[activeTab].update(editItem!, parsed);
+      await updatePageConfigDataAPI(Number(editItem!.id), parsed);
       message.success('保存成功');
-      fetchList(activeTab);
+      fetchList();
       setIsModalOpen(false);
       setEditItem(null);
       setBtnLoading(false);
@@ -136,10 +82,24 @@ export default () => {
     }
   };
 
+  const activeConfig = useMemo(() => {
+    if (!data.length) {
+      return null;
+    }
+    const matched = data.find((item) => Number(item.id) === activeId);
+    return matched || data[0];
+  }, [data, activeId]);
+
+  useEffect(() => {
+    if (activeConfig && Number(activeConfig.id) !== activeId) {
+      setActiveId(Number(activeConfig.id));
+    }
+  }, [activeConfig, activeId]);
+
   // JSON 输入变更时校验
   const handleJsonChange = (value: string) => {
     setJsonValue(value);
-    formRef.current[activeTab][0].setFieldsValue({ value });
+    formRef.current.setFieldsValue({ value });
     try {
       JSON.parse(value);
     } catch (error) {
@@ -152,112 +112,101 @@ export default () => {
     try {
       const formatted = JSON.stringify(JSON.parse(jsonValue), null, 2);
       setJsonValue(formatted);
-      formRef.current[activeTab][0].setFieldsValue({ value: formatted });
+      formRef.current.setFieldsValue({ value: formatted });
       setJsonError(null);
     } catch (error) {
       console.error(error);
     }
   };
 
-  const columns: ColumnsType<Config> = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      align: 'center' as const,
-      width: 120,
-    },
-    {
-      title: '名称',
-      dataIndex: 'name',
-      key: 'name',
-      width: 150,
-    },
-    {
-      title: '备注',
-      dataIndex: 'notes',
-      key: 'notes',
-      width: 150,
-    },
-    {
-      title: '配置内容',
-      dataIndex: 'value',
-      key: 'value',
-      render: (value: object) => <>{activeTab === 'page' ? <span className="text-sm text-gray-500">内容过多，不易展示</span> : <pre className="min-w-[200px] whitespace-pre-wrap break-all bg-slate-50 dark:bg-slate-800 p-2 rounded-sm text-xs overflow-auto">{JSON.stringify(value, null, 2)}</pre>}</>,
-    },
-    {
-      title: '操作',
-      key: 'action',
-      align: 'center',
-      width: 100,
-      fixed: 'right',
-      render: (_: unknown, record: Config) => <Button type="text" icon={<FormOutlined className="text-primary" />} onClick={() => handleEdit(record)} />,
-    },
-  ];
+  const prettyValue = useMemo(() => {
+    if (!activeConfig) {
+      return '';
+    }
+    return JSON.stringify(activeConfig.value, null, 2);
+  }, [activeConfig]);
 
   // 初始加载时显示骨架屏
   if (initialLoading) {
-    return (
-      <div>
-        {/* Title 骨架屏 */}
-        <Card className="[&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5! mb-2">
-          <Skeleton.Input active size="large" style={{ width: 150, height: 32 }} />
-        </Card>
-
-        {/* Tabs 和表格骨架屏 */}
-        <Card className={`${titleSty} min-h-[calc(100vh-200px)] [&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5!`}>
-          {/* Tabs 骨架屏 */}
-          <div className="flex justify-center space-x-4 mb-6">
-            <Skeleton.Button active size="default" style={{ width: 100, height: 40 }} />
-            <Skeleton.Button active size="default" style={{ width: 100, height: 40 }} />
-          </div>
-
-          {/* 表格骨架屏 */}
-          <div className="mb-4">
-            {/* 表格行骨架屏 - 模拟多行 */}
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-              <div key={item} className="flex items-center gap-4 mb-2 py-2 border-b border-gray-100">
-                <Skeleton.Input active size="small" style={{ width: 60, height: 40 }} />
-                <Skeleton.Input active size="small" style={{ width: 150, height: 40 }} />
-                <Skeleton.Input active size="small" style={{ width: 200, height: 40, flex: 1 }} />
-                <Skeleton.Input active size="small" style={{ width: 150, height: 40 }} />
-                <Skeleton.Input active size="small" style={{ width: 200, height: 40 }} />
-                <Skeleton.Input active size="small" style={{ width: 100, height: 40 }} />
-                <Skeleton.Input active size="small" style={{ width: 300, height: 40 }} />
-                <Skeleton.Input active size="small" style={{ width: 200, height: 40 }} />
-              </div>
-            ))}
-          </div>
-
-          {/* 分页骨架屏 */}
-          <div className="flex justify-center my-5">
-            <Skeleton.Input active size="default" style={{ width: 300, height: 32 }} />
-          </div>
-        </Card>
-      </div>
-    );
+    return <Skeleton />;
   }
 
   return (
     <div>
-      <Title value="项目配置" />
+      <Title value="项目配置">
+        <Button type="primary" onClick={() => handleEdit(activeConfig!)}>
+          编辑配置
+        </Button>
+      </Title>
 
-      {/* <Alert type="warning" message="必看教程：https://docs.liuyuyang.net/docs/项目部署/API/人机验证.html" showIcon closable className="mb-2" /> */}
+      <Card className="border-stroke mt-2 min-h-[calc(100vh-160px)]">
+        <div className="flex flex-col md:flex-row">
+          <div className="w-full md:w-[20%] md:mr-5 mb-10 md:mb-0 border-b-0 md:border-r border-stroke dark:border-strokedark divide-y divide-solid divide-[#F6F6F6] dark:divide-strokedark">
+            {!data.length ? (
+              <Card className="m-3">
+                <Empty description="暂无配置" />
+              </Card>
+            ) : (
+              data.map((item) => {
+                const isActive = Number(item.id) === Number(activeConfig?.id);
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveId(Number(item.id))}
+                    className={`relative w-full cursor-pointer p-3 pl-5 text-left transition-all before:absolute before:top-1/2 before:left-0 before:h-[0%] before:w-[3.5px] before:-translate-y-1/2 before:bg-primary before:content-[''] ${isActive ? 'bg-[#f7f7f8] before:h-full dark:bg-[#3c5370]' : 'hover:bg-[#f7f7f8]/70 dark:hover:bg-[#3c5370]/50'}`}
+                  >
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <Typography.Text strong ellipsis>
+                        {item.name}
+                      </Typography.Text>
+                    </div>
+                    <Typography.Paragraph className="m-0 text-sm text-bodydark2 dark:text-gray-400" ellipsis={{ rows: 2 }}>
+                      {item.notes || '暂无备注'}
+                    </Typography.Paragraph>
+                  </button>
+                );
+              })
+            )}
+          </div>
 
-      <Card className={`${titleSty} min-h-[calc(100vh-155px)]`}>
-        <Tabs
-          activeKey={activeTab}
-          onChange={(key) => setActiveTab(key as 'env' | 'page')}
-          items={Object.keys(tabConfig).map((key) => ({
-            key,
-            label: tabConfig[key as 'env' | 'page'].label,
-            children: <Table rowKey="id" dataSource={data[key]} columns={columns} scroll={{ x: '1000px' }} loading={loading[key]} pagination={false} />,
-          }))}
-          className="[&_.ant-tabs-nav]:mb-0 [&_.ant-tabs-nav-wrap]:justify-center"
-        />
+          <div className="w-full md:w-[80%] px-0 md:px-8">
+            {!activeConfig ? (
+              <Empty description="请选择一个配置项" />
+            ) : (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stroke pb-3 dark:border-strokedark">
+                  <div className="text-xl font-bold dark:text-white">{activeConfig.notes || activeConfig.name}</div>
+                </div>
+
+                <div>
+                  <Typography.Text strong className="mb-2 block">
+                    配置预览
+                  </Typography.Text>
+                  <pre className="max-h-[calc(100vh-420px)] overflow-auto rounded-lg border border-stroke bg-gray-50 p-4 text-xs leading-6 text-bodydark dark:border-strokedark dark:bg-black/20 dark:text-gray-300">
+                    {prettyValue}
+                  </pre>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </Card>
 
-      <ConfigEditModal key={activeTab} open={isModalOpen} onCancel={() => setIsModalOpen(false)} onSave={handleSave} value={jsonValue} error={jsonError} onChange={handleJsonChange} onFormat={handleFormatJson} loading={btnLoading} title={editItem ? tabConfig[activeTab].modalTitle : ''} form={formRef.current[activeTab][0]} />
+      <Modal title={editItem ? '编辑页面配置' : ''} open={isModalOpen} onCancel={() => setIsModalOpen(false)} width={1000} footer={null}>
+        <Form form={formRef.current} layout="vertical" onFinish={handleSave} size="large">
+          <Form.Item name="value" rules={[{ required: true, message: '请输入配置内容' }]} className="mb-4" validateStatus={jsonError ? 'error' : ''} help={jsonError ? `JSON格式错误: ${jsonError}` : ''}>
+            <CodeMirror value={jsonValue} extensions={[json()]} onChange={handleJsonChange} theme={document.body.classList.contains('dark') ? 'dark' : 'light'} basicSetup={{ lineNumbers: true, foldGutter: true }} style={jsonError ? { border: '1px solid #ff4d4f', borderRadius: 6 } : { borderRadius: 6 }} />
+          </Form.Item>
+
+          <Button onClick={handleFormatJson} className="w-full mb-2">
+            格式化
+          </Button>
+          <Button type="primary" htmlType="submit" loading={btnLoading} className="w-full">
+            保存配置
+          </Button>
+        </Form>
+      </Modal>
     </div>
   );
 };
