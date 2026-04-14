@@ -10,6 +10,7 @@ import {
   FiLoader,
 } from 'react-icons/fi';
 import { useConfigStore } from '@/stores';
+import Skeleton from './Skeleton';
 
 interface Commit {
   commit: {
@@ -24,30 +25,6 @@ interface TimelineItem {
 }
 
 type TimelineCardIcon = React.ComponentType<{ size?: number; className?: string }>;
-
-// 骨架屏（与图一卡片风格一致）
-const ProjectSkeleton = () => (
-  <div className="bg-slate-100 dark:bg-boxdark-2 rounded-2xl border border-slate-200/80 dark:border-strokedark shadow-sm h-full transition-colors overflow-hidden">
-    <div className="flex items-center gap-3 p-4 border-b border-slate-200/60 dark:border-strokedark">
-      <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-strokedark animate-pulse shrink-0" />
-      <div className="h-5 w-28 bg-slate-200 dark:bg-strokedark rounded animate-pulse" />
-    </div>
-    <div className="p-4 space-y-6 bg-white/60 dark:bg-boxdark/60">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="flex gap-4">
-          <div className="flex flex-col items-center">
-            <div className="w-3 h-3 rounded-full bg-slate-200 dark:bg-strokedark animate-pulse" />
-            <div className="w-0.5 flex-1 bg-slate-100 dark:bg-strokedark mt-1" />
-          </div>
-          <div className="flex-1 space-y-2 pb-4">
-            <div className="h-4 w-24 bg-slate-200 dark:bg-strokedark rounded animate-pulse" />
-            <div className="h-4 w-full bg-slate-200 dark:bg-strokedark rounded animate-pulse" />
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
 
 // 图一风格：图标背景色与图标色
 const CARD_STYLES = [
@@ -78,7 +55,7 @@ const ProjectTimelineCard = ({
         <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base tracking-tight">{title}</h3>
       </div>
 
-      <div className="p-4 overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-strokedark scrollbar-track-transparent bg-white/60 dark:bg-boxdark/60 rounded-b-2xl">
+      <div className="p-4 flex-1 min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-strokedark scrollbar-track-transparent bg-white/60 dark:bg-boxdark/60 rounded-b-2xl">
         {data.length === 0 ? (
           <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-sm">暂无提交记录</div>
         ) : (
@@ -185,9 +162,11 @@ const IterativePage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  if (initialLoading) return <Skeleton />
+
   return (
     <div className="p-4 font-sans text-slate-600 dark:text-slate-300 transition-colors">
-      <div className="max-w-7xl mx-auto mb-4">
+      <div className="mb-4">
         <div className="relative flex flex-col md:flex-row md:items-center justify-center gap-4 bg-white dark:bg-boxdark px-6 py-3 rounded-2xl shadow-xs border border-slate-100 dark:border-strokedark transition-colors">
           <h1 className="flex items-center gap-4 font-extrabold text-slate-800 dark:text-slate-100">
             <img src="/logo.png" alt="" className="w-8 h-8" />
@@ -212,7 +191,7 @@ const IterativePage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto mb-4">
+      <div className="mb-4">
         <div className="bg-white dark:bg-boxdark p-6 md:p-8 rounded-2xl shadow-xs border border-slate-100 dark:border-strokedark flex flex-col items-center justify-center relative overflow-hidden group transition-colors">
           {/* 背景装饰 */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-green-50 dark:bg-green-900/20 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/2 pointer-events-none" />
@@ -234,45 +213,37 @@ const IterativePage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto">
-        {initialLoading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
-            <ProjectSkeleton />
-            <ProjectSkeleton />
-            <ProjectSkeleton />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
-            {loading && (
-              <div className="absolute inset-0 z-20 bg-white/60 dark:bg-boxdark/80 backdrop-blur-[1px] rounded-3xl flex items-center justify-center transition-colors">
-                <div className="bg-white dark:bg-boxdark-2 p-4 rounded-full shadow-lg border border-slate-100 dark:border-strokedark">
-                  <FiLoader className="animate-spin text-indigo-600 dark:text-indigo-400" size={32} />
-                </div>
+      <div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
+          {loading && (
+            <div className="absolute inset-0 z-20 bg-white/60 dark:bg-boxdark/80 backdrop-blur-[1px] rounded-3xl flex items-center justify-center transition-colors">
+              <div className="bg-white dark:bg-boxdark-2 p-4 rounded-full shadow-lg border border-slate-100 dark:border-strokedark">
+                <FiLoader className="animate-spin text-indigo-600 dark:text-indigo-400" size={32} />
               </div>
-            )}
+            </div>
+          )}
 
-            <ProjectTimelineCard
-              title="ThriveX Blog"
-              icon={FiGlobe}
-              colorIndex={0}
-              data={blogData}
-            />
+          <ProjectTimelineCard
+            title="ThriveX Blog"
+            icon={FiGlobe}
+            colorIndex={0}
+            data={blogData}
+          />
 
-            <ProjectTimelineCard
-              title="ThriveX Admin"
-              icon={FiLayout}
-              colorIndex={1}
-              data={adminData}
-            />
+          <ProjectTimelineCard
+            title="ThriveX Admin"
+            icon={FiLayout}
+            colorIndex={1}
+            data={adminData}
+          />
 
-            <ProjectTimelineCard
-              title="ThriveX Server"
-              icon={FiServer}
-              colorIndex={2}
-              data={serverData}
-            />
-          </div>
-        )}
+          <ProjectTimelineCard
+            title="ThriveX Server"
+            icon={FiServer}
+            colorIndex={2}
+            data={serverData}
+          />
+        </div>
       </div>
     </div>
   );

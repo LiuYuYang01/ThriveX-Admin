@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 
-import { Button, Card, Empty, Form, Input, Popconfirm, Select, Spin, Modal, message, Skeleton } from 'antd';
+import { Button, Card, Empty, Form, Input, Popconfirm, Select, Spin, Modal, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 
 import { getLinkListAPI, addLinkDataAPI, editLinkDataAPI, delLinkDataAPI, getWebTypeListAPI } from '@/api/web';
@@ -9,6 +9,7 @@ import { WebType, Web, WebFilterQueryParams } from '@/types/app/web';
 import { RuleObject } from 'antd/es/form';
 
 import GroupSvg from './assets/svg/group.svg';
+import Skeleton from './Skeleton';
 
 export default () => {
   const [loading, setLoading] = useState(false);
@@ -179,47 +180,7 @@ export default () => {
 
   // 初始加载时显示骨架屏
   if (initialLoading) {
-    return (
-      <div>
-        {/* Title 骨架屏 */}
-        <Card className="[&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5!">
-          <Skeleton.Input active size="large" style={{ width: 150, height: 32 }} />
-        </Card>
-
-        {/* 内容骨架屏 */}
-        <Card className="WebPage border-stroke min-h-[calc(100vh-160px)] [&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5!">
-          {/* 搜索框骨架屏 */}
-          <div className="flex justify-center w-full mb-3">
-            <Skeleton.Input active size="large" style={{ width: 300, height: 50 }} />
-          </div>
-
-          {/* 分组卡片骨架屏 */}
-          <div className="space-y-10">
-            {[1, 2, 3].map((group) => (
-              <div key={group} className="space-y-6">
-                {/* 分组标题骨架屏 */}
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/60 dark:bg-boxdark/60 backdrop-blur-md border border-white/20 dark:border-strokedark/30">
-                  <Skeleton.Avatar active size={20} shape="square" />
-                  <Skeleton.Input active size="default" style={{ width: 150, height: 24 }} />
-                </div>
-
-                {/* 网站项骨架屏 */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-7">
-                  {[1, 2, 3, 4, 5, 6].map((item) => (
-                    <div key={item} className="flex flex-col items-center p-6 rounded-2xl bg-white/70 dark:bg-boxdark/70 backdrop-blur-lg border border-white/30 dark:border-strokedark/40 shadow-xs">
-                      <Skeleton.Avatar active size={80} shape="circle" className="mb-4" />
-                      <Skeleton.Input active size="default" style={{ width: '100%', height: 24, marginBottom: 8 }} />
-                      <Skeleton.Input active size="small" style={{ width: '100%', height: 20, marginBottom: 16 }} />
-                      <Skeleton.Input active size="small" style={{ width: 80, height: 24, borderRadius: 12 }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-    );
+    return <Skeleton />;
   }
 
   return (

@@ -10,7 +10,7 @@ export default function AssistantPageSkeleton() {
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: 6 }, (_, i) => (
+        {Array.from({ length: 5 }, (_, i) => (
           <div
             key={i}
             className="rounded-xl border border-gray-100 bg-white p-5 shadow-xs dark:border-strokedark dark:bg-boxdark"
@@ -35,6 +35,11 @@ export default function AssistantPageSkeleton() {
             </div>
           </div>
         ))}
+
+        <div className="flex min-h-[230px] flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-200 bg-transparent p-5 dark:border-strokedark">
+          <div className="skeleton size-8 rounded-md" />
+          <div className="skeleton h-4 rounded-sm" style={{ width: 88 }} />
+        </div>
       </div>
     </div>
   );

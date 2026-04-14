@@ -18,6 +18,7 @@ import { batchDelFileDataAPI, createDirAPI, deleteDirAPI, delFileDataAPI, getFil
 import FileUpload from '@/components/FileUpload';
 import Title from '@/components/Title';
 import { File as AppFile, FileInfo, FileTreeData, FileTreeNode } from '@/types/app/file';
+import Skeleton from './Skeleton';
 import errorImg from './image/error.png';
 import fileSvg from './image/file.svg';
 
@@ -149,6 +150,7 @@ type DirTableRow = Omit<FileTreeNode, 'children'> & { subDirCount: number };
 
 export default () => {
   const [loading, setLoading] = useState(false);
+  const [skeletonLoading, setSkeletonLoading] = useState(true);
   const [treeData, setTreeData] = useState<FileTreeData | null>(null);
   const [currentPath, setCurrentPath] = useState('');
   const [keyword, setKeyword] = useState('');
@@ -199,6 +201,7 @@ export default () => {
     } catch (error) {
       console.error(error);
     } finally {
+      setSkeletonLoading(false);
       setLoading(false);
     }
   };
@@ -428,6 +431,14 @@ export default () => {
     }
   };
 
+  if (skeletonLoading) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <Skeleton />
+      </div>
+    );
+  }
+
   return (
     <div>
       <Title value="文件管理">
@@ -444,7 +455,7 @@ export default () => {
         </Space>
       </Title>
 
-      <Card className="rounded-2xl!">
+      <Card className="rounded-2xl! min-h-[calc(100vh-160px)]">
         <div className="mb-4 flex min-w-0 items-center gap-2 sm:gap-3">
           <Button
             type="text"

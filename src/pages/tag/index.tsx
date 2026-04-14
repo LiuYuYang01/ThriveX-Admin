@@ -191,7 +191,7 @@ export default () => {
     <div>
       <Title value="标签管理" />
 
-      <div className="flex md:justify-between flex-col md:flex-row mx-auto mt-2 h-[calc(100vh-180px)]">
+      <div className="flex md:justify-between flex-col md:flex-row mx-auto mt-2">
         <div className="w-full md:w-[40%]">
           <Spin spinning={editLoading}>
             <Card className="border-stroke w-full [&>.ant-card-body]:pt-3!">
@@ -210,7 +210,7 @@ export default () => {
           </Spin>
         </div>
 
-        <Card className="border-stroke w-full md:w-[59%] [&>.ant-card-body]:p-0! mt-2 md:mt-0">
+        <Card className="border-stroke w-full md:w-[59%] [&>.ant-card-body]:p-0! mt-2 md:mt-0 h-[calc(100vh-150px)]">
           <Table
             rowKey="id"
             dataSource={list}

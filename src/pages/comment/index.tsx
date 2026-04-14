@@ -11,6 +11,7 @@ import Title from '@/components/Title';
 import { Comment, CommentFilterQueryParams } from '@/types/app/comment';
 import { useWebStore, useUserStore } from '@/stores';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
+import Skeleton from './Skeleton';
 
 export default () => {
   const [loading, setLoading] = useState(false);
@@ -233,38 +234,14 @@ export default () => {
 
   // 初始加载时显示骨架屏（与 article 一致）
   if (initialLoading) {
-    return (
-      <div className="space-y-2">
-        <div className="px-6 py-3 bg-white dark:bg-boxdark rounded-xl shadow-xs border border-gray-100 dark:border-strokedark">
-          <div className="skeleton h-8" style={{ width: 200 }} />
-        </div>
-
-        <div className="px-6 py-3 bg-white dark:bg-boxdark rounded-xl shadow-xs border border-gray-100 dark:border-strokedark">
-          <div className="flex gap-4 flex-wrap mb-6">
-            <div className="skeleton h-9" style={{ width: 200 }} />
-            <div className="skeleton h-9" style={{ width: 200 }} />
-            <div className="skeleton h-9" style={{ width: 280 }} />
-          </div>
-
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="flex gap-4 mb-4 items-center">
-              <div className="skeleton shrink-0 rounded-lg" style={{ width: 56, height: 56 }} />
-              <div className="flex-1 space-y-2 min-w-0">
-                <div className="skeleton h-4 w-full rounded-sm" />
-                <div className="skeleton h-3 rounded-sm" style={{ width: '60%' }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <Skeleton />;
   }
 
   return (
     <div>
       <Title value="评论管理" />
 
-      <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark overflow-hidden">
+      <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark overflow-hidden h-[calc(100vh-150px)]">
         <div className="p-5 border-b border-gray-100 dark:border-strokedark bg-gray-50/30 dark:bg-boxdark-2/50 space-y-4">
           <Form
             form={filterForm}

@@ -244,7 +244,7 @@ export default () => {
 
       {/* <Alert type="warning" message="必看教程：https://docs.liuyuyang.net/docs/项目部署/API/人机验证.html" showIcon closable className="mb-2" /> */}
 
-      <Card className={`${titleSty} min-h-[calc(100vh-200px)]`}>
+      <Card className={`${titleSty} min-h-[calc(100vh-155px)]`}>
         <Tabs
           activeKey={activeTab}
           onChange={(key) => setActiveTab(key as 'env' | 'page')}

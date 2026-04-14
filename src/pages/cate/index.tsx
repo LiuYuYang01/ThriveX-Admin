@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Form, Input, Button, Tree, Modal, Spin, Dropdown, Card, MenuProps, Popconfirm, message, Radio, Select, Skeleton } from 'antd';
+import { Form, Input, Button, Tree, Modal, Spin, Dropdown, Card, MenuProps, Popconfirm, message, Radio, Select } from 'antd';
 import type { DataNode } from 'antd/es/tree';
 
 import { Cate } from '@/types/app/cate';
 import { addCateDataAPI, delCateDataAPI, editCateDataAPI, getCateDataAPI, getCateListAPI } from '@/api/cate';
 import Title from '@/components/Title';
+import Skeleton from './Skeleton';
 
 import './index.scss';
 
@@ -205,40 +206,7 @@ export default () => {
   ];
 
   if (initialLoading) {
-    return (
-      <div className="space-y-2">
-        <Card className="rounded-xl! border-stroke! shadow-xs! [&>.ant-card-body]:p-4! dark:border-strokedark!">
-          <div className="flex items-center justify-between">
-            <Skeleton.Input active size="large" className="h-9! w-40!" />
-            <Skeleton.Button active size="large" className="h-10! w-28!" />
-          </div>
-        </Card>
-
-        <Card className="min-h-[calc(100vh-160px)]! rounded-xl! border-stroke! shadow-xs! [&>.ant-card-body]:p-6! dark:border-strokedark!">
-          <div className="space-y-5">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div key={item} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Skeleton.Input active className="h-6! w-48!" />
-                  <Skeleton.Button active size="small" className="h-6! w-14!" />
-                </div>
-
-                {item <= 3 && (
-                  <div className="ml-6 space-y-2">
-                    {[1, 2, 3].map((child) => (
-                      <div key={child} className="flex items-center justify-between">
-                        <Skeleton.Input active size="small" className="h-5! w-36!" />
-                        <Skeleton.Button active size="small" className="h-5! w-12!" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-    );
+    return <Skeleton />;
   }
 
   return (

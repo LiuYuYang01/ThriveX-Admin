@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 
-import { Card, Spin, Skeleton } from 'antd';
+import { Card, Spin } from 'antd';
 
 import { getCommentListAPI } from '@/api/comment';
 import { getLinkListAPI } from '@/api/web';
@@ -13,6 +13,7 @@ import { Comment as CommentType } from '@/types/app/comment';
 import Empty from '@/components/Empty';
 import Title from '@/components/Title';
 import List from './components/List';
+import Skeleton from './Skeleton';
 
 import comment from './image/comment.svg';
 import info from './image/message.svg';
@@ -74,39 +75,7 @@ export default () => {
 
   // 初始加载时显示骨架屏
   if (initialLoading) {
-    return (
-      <div>
-        {/* Title 骨架屏 */}
-        <Card className="[&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5! mb-2">
-          <Skeleton.Input active size="large" style={{ width: 150, height: 32 }} />
-        </Card>
-
-        <Card className="border-stroke mt-2 min-h-[calc(100vh-160px)] [&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5!">
-          <div className="flex flex-col md:flex-row w-full">
-            {/* 左侧菜单骨架屏 */}
-            <div className="w-full min-w-[200px] md:w-2/12 md:min-h-96 mb-5 md:mb-0 pr-4 md:border-b-transparent md:border-r border-stroke dark:border-strokedark">
-              <ul className="space-y-1">
-                {[1, 2, 3].map((item) => (
-                  <li key={item} className="flex items-center w-full py-3 px-4">
-                    <Skeleton.Avatar active size={32} shape="square" style={{ marginRight: 16 }} />
-                    <Skeleton.Input active size="small" style={{ width: 60, height: 20 }} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* 右侧内容骨架屏 */}
-            <div className="w-full md:w-10/12 md:pl-6 py-4 space-y-10">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <div key={item} className="border-b border-gray-100 pb-4">
-                  <Skeleton active paragraph={{ rows: 2 }} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
+    return <Skeleton />;
   }
 
   return (
