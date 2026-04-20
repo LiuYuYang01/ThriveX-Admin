@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import DefaultLayout from '@/layout/DefaultLayout';
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
 import Login from '@/pages/login';
 
@@ -9,6 +9,10 @@ import PageTitle from '../PageTitle';
 import { useUserStore } from '@/stores';
 import NotFound from '../NotFound';
 import { routes } from '@/components/RouteList/route';
+import SetupInitializePage from '@/pages/initialize';
+
+// TODO: 后续改为读取后端初始化状态字段
+const PROJECT_INITIALIZED = false;
 
 export default () => {
   const navigate = useNavigate();
@@ -33,6 +37,23 @@ export default () => {
             </>
           }
         />
+      </Routes>
+    );
+  }
+
+  if (!PROJECT_INITIALIZED) {
+    return (
+      <Routes>
+        <Route
+          path="/initialize"
+          element={
+            <>
+              <PageTitle title="ThriveX - 项目初始化" />
+              <SetupInitializePage />
+            </>
+          }
+        />
+        <Route path="*" element={<Navigate to="/initialize" replace />} />
       </Routes>
     );
   }
