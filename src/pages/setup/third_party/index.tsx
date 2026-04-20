@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Card, Skeleton } from 'antd';
+import { Card } from 'antd';
 import { BiBarChart, BiCloud, BiCrosshair, BiEnvelope, BiLineChart, BiMap, BiShield } from 'react-icons/bi';
 
 import Title from '@/components/Title';
 import { getEnvConfigListAPI } from '@/api/config';
 import { Config, THIRD_PARTY_ENV_NAMES, ThirdPartyEnvName } from '@/types/app/config';
+import ThirdPartySkeleton from './Skeleton';
 
 import {
   BaiduForm,
@@ -130,33 +131,7 @@ export default function ThirdPartyConfigPage() {
   }, [tabFromUrl, activeKey, setParams]);
 
   if (loading) {
-    return (
-      <div>
-        <Card className="[&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5! mb-2">
-          <Skeleton.Input active size="large" style={{ width: 150, height: 32 }} />
-        </Card>
-
-        <Card className="border-stroke mt-2 min-h-[calc(100vh-160px)] [&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5!">
-          <div className="flex flex-col md:flex-row">
-            <ul className="w-full md:w-[20%] md:mr-5 mb-10 md:mb-0 border-b-0 md:border-r border-stroke dark:border-strokedark divide-y divide-solid divide-[#F6F6F6] dark:divide-strokedark">
-              {Array.from({ length: TAB_KEYS.length }).map((_, i) => (
-                <li key={i} className="p-3 pl-5">
-                  <div className="flex items-center mb-2">
-                    <Skeleton.Avatar active size={20} shape="square" style={{ marginRight: 8 }} />
-                    <Skeleton.Input active size="small" style={{ width: 100, height: 20 }} />
-                  </div>
-                  <Skeleton.Input active size="small" style={{ width: 120, height: 16 }} />
-                </li>
-              ))}
-            </ul>
-
-            <div className="w-full md:w-[80%] px-0 md:px-8 mt-4">
-              <Skeleton active paragraph={{ rows: 8 }} />
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
+    return <ThirdPartySkeleton />;
   }
 
   return (
