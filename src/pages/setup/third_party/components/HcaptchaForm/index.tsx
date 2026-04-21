@@ -4,7 +4,7 @@ import { Button, Form, Input, message } from 'antd';
 import { updateEnvConfigDataAPI } from '@/api/config';
 import { HcaptchaEnvValue } from '@/types/app/config';
 
-import type { ThirdPartyFormProps } from './types';
+import type { ThirdPartyFormProps } from '../types';
 
 const Label = ({ title, url }: { title: string; url: string }) => (
   <div className="w-full flex items-center justify-between">

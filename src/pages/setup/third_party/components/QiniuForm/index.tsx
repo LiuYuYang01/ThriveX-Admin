@@ -4,7 +4,7 @@ import { Button, Form, Input, InputNumber, message } from 'antd';
 import { updateEnvConfigDataAPI } from '@/api/config';
 import { QiniuStorageEnvValue } from '@/types/app/config';
 
-import type { ThirdPartyFormProps } from './types';
+import type { ThirdPartyFormProps } from '../types';
 
 export function QiniuForm({ row, onSaved }: ThirdPartyFormProps) {
   const [form] = Form.useForm<QiniuStorageEnvValue>();

@@ -2,23 +2,20 @@ import { useEffect, useState } from 'react';
 import { Button, Form, Input, message } from 'antd';
 
 import { updateEnvConfigDataAPI } from '@/api/config';
-import { GaodeMapEnvValue } from '@/types/app/config';
+import { GaodeCoordinateEnvValue } from '@/types/app/config';
 
-import type { ThirdPartyFormProps } from './types';
+import type { ThirdPartyFormProps } from '../types';
 
-export function GaodeMapForm({ row, onSaved }: ThirdPartyFormProps) {
-  const [form] = Form.useForm<GaodeMapEnvValue>();
+export function GaodeCoordinateForm({ row, onSaved }: ThirdPartyFormProps) {
+  const [form] = Form.useForm<GaodeCoordinateEnvValue>();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const v = row?.value as GaodeMapEnvValue | undefined;
-    form.setFieldsValue({
-      key_code: v?.key_code ?? '',
-      security_code: v?.security_code ?? '',
-    });
+    const v = row?.value as GaodeCoordinateEnvValue | undefined;
+    form.setFieldsValue({ key: v?.key ?? '' });
   }, [row, form]);
 
-  const onFinish = async (values: GaodeMapEnvValue) => {
+  const onFinish = async (values: GaodeCoordinateEnvValue) => {
     if (!row) {
       message.error('未找到配置项，请检查后端 env_config 表');
       return;
@@ -37,11 +34,8 @@ export function GaodeMapForm({ row, onSaved }: ThirdPartyFormProps) {
 
   return (
     <Form form={form} layout="vertical" size="large" onFinish={onFinish} className="w-full lg:w-[500px] md:ml-10">
-      <Form.Item name="key_code" label="密钥" rules={[{ required: true, message: '请输入 Key' }]}>
-        <Input placeholder="gq3t6j358a1d55219a1c42c8d62gf561" />
-      </Form.Item>
-      <Form.Item name="security_code" label="安全密钥" rules={[{ required: true, message: '请输入安全密钥' }]}>
-        <Input.Password placeholder="c1c52309a379d969a8a53411946cdg32s" autoComplete="off" />
+      <Form.Item name="key" label="密钥" rules={[{ required: true, message: '请输入密钥' }]}>
+        <Input placeholder="d12345148a9a2521234324c8d62c3244" />
       </Form.Item>
       <Form.Item>
         <Button type="primary" htmlType="submit" loading={saving} className="w-full">
