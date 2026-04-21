@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Button, Card, Progress, Steps, Tag } from 'antd';
+import { Button, Card, Progress, Steps, Tag, message } from 'antd';
 import AccountConfigForm from './components/AccountConfigForm';
 import AIConfigForm from './components/AIConfigForm';
 import SecurityConfigForm from './components/SecurityConfigForm';
 import StorageConfigForm from './components/StorageConfigForm';
-import type { InitDraft } from './components/types';
 import WebsiteConfigForm from './components/WebsiteConfigForm';
 
 interface InitStep {
@@ -53,42 +52,33 @@ const INIT_STEPS: InitStep[] = [
   },
 ];
 
-const INITIAL_DRAFT: InitDraft = {
-  accountName: 'admin',
-  oldPassword: '',
-  newPassword: '',
-  siteTitle: '',
-  siteDesc: '',
-  siteLogo: '',
-  aiProvider: 'openai',
-  aiModel: '',
-  aiPrompt: '',
-  storageType: 'qiniu',
-  storageBucket: '',
-  storageDomain: '',
-  securityCaptcha: true,
-  securityRateLimit: true,
-};
-
 export default function SetupInitializePage() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [draft, setDraft] = useState<InitDraft>(INITIAL_DRAFT);
 
   const current = INIT_STEPS[currentStep];
   const progress = useMemo(() => Math.round(((currentStep + 1) / INIT_STEPS.length) * 100), [currentStep]);
+  const isLastStep = currentStep === INIT_STEPS.length - 1;
+
+  const handleStepSuccess = () => {
+    if (isLastStep) {
+      message.success('初始化配置已完成');
+      return;
+    }
+    setCurrentStep((prev) => Math.min(prev + 1, INIT_STEPS.length - 1));
+  };
 
   const renderFormPanel = () => {
     switch (current.key) {
       case 'account':
-        return <AccountConfigForm draft={draft} setDraft={setDraft} />;
+        return <AccountConfigForm onSuccess={handleStepSuccess} isLastStep={isLastStep} />;
       case 'website':
-        return <WebsiteConfigForm draft={draft} setDraft={setDraft} />;
+        return <WebsiteConfigForm onSuccess={handleStepSuccess} isLastStep={isLastStep} />;
       case 'ai':
-        return <AIConfigForm draft={draft} setDraft={setDraft} />;
+        return <AIConfigForm onSuccess={handleStepSuccess} isLastStep={isLastStep} />;
       case 'storage':
-        return <StorageConfigForm draft={draft} setDraft={setDraft} />;
+        return <StorageConfigForm onSuccess={handleStepSuccess} isLastStep={isLastStep} />;
       case 'security':
-        return <SecurityConfigForm draft={draft} setDraft={setDraft} />;
+        return <SecurityConfigForm onSuccess={handleStepSuccess} isLastStep={isLastStep} />;
       default:
         return null;
     }
@@ -152,15 +142,6 @@ export default function SetupInitializePage() {
 
               <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
                 <Button onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))} disabled={currentStep === 0}>上一步</Button>
-
-                <Button
-                  type="primary"
-                  onClick={() => {
-                    setCurrentStep((prev) => Math.min(prev + 1, INIT_STEPS.length - 1));
-                  }}
-                >
-                  下一步
-                </Button>
               </div>
             </Card>
           </div>

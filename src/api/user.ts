@@ -5,7 +5,7 @@ import { LoginReturn, EditUser, Login, User, UserInfo } from '@/types/app/user'
 export const editUserDataAPI = (data: UserInfo) => Request('PATCH', '/user', { data })
 
 // 获取管理员信息
-export const getUserDataAPI = (token: string) => Request<User>('GET', `/user/info?token=${token}`)
+export const getUserDataAPI = (token?: string) => Request<User>('GET', token ? `/user/info?token=${token}` : '/user/info')
 
 // 管理员登录
 export const loginDataAPI = (data: Login) => Request<LoginReturn>('POST', '/user/login', { data })

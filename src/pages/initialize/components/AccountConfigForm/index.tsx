@@ -1,25 +1,78 @@
-import { Form, Input } from 'antd';
-import type { InitDraft, UpdateDraft } from '../types';
+import { useEffect, useState } from 'react';
+import { Button, Form, Input, message } from 'antd';
+import { editAdminPassAPI, getUserDataAPI } from '@/api/user';
+import { useUserStore } from '@/stores';
+import type { InitStepFormProps } from '../types';
 
-interface AccountConfigFormProps {
-  draft: InitDraft;
-  setDraft: UpdateDraft;
+interface AccountFormValues {
+  newUsername: string;
+  oldPassword: string;
+  newPassword: string;
 }
 
-export default function AccountConfigForm({ draft, setDraft }: AccountConfigFormProps) {
+export default function AccountConfigForm({ onSuccess, isLastStep }: InitStepFormProps) {
+  const [form] = Form.useForm<AccountFormValues>();
+  const token = useUserStore((state) => state.token);
+  const user = useUserStore((state) => state.user);
+  const [loading, setLoading] = useState(false);
+  const [initLoading, setInitLoading] = useState(false);
+
+  useEffect(() => {
+    const getUserInfo = async () => {
+      try {
+        setInitLoading(true);
+        const { data } = await getUserDataAPI(token);
+        form.setFieldsValue({
+          newUsername: data.username || user.username || '',
+          oldPassword: '',
+          newPassword: '',
+        });
+      } catch {
+        message.error('管理员信息加载失败');
+      } finally {
+        setInitLoading(false);
+      }
+    };
+
+    getUserInfo();
+  }, []);
+
+  const handleSave = async (values: AccountFormValues) => {
+    try {
+      setLoading(true);
+      await editAdminPassAPI({
+        oldUsername: user.username || values.newUsername,
+        ...values,
+      });
+      message.success('账号设置已保存');
+      onSuccess();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Form layout="vertical" requiredMark={false}>
-      <Form.Item label="管理员账号" required>
-        <Input value={draft.accountName} onChange={(e) => setDraft((s) => ({ ...s, accountName: e.target.value }))} placeholder="请输入管理员账号" />
+    <Form
+      form={form}
+      layout="vertical"
+      requiredMark={false}
+      initialValues={{ newUsername: 'admin', oldPassword: '', newPassword: '' }}
+      onFinish={handleSave}
+    >
+      <Form.Item label="管理员账号" name="newUsername" rules={[{ required: true, message: '请先填写管理员账号' }]}>
+        <Input placeholder="请输入管理员账号" />
       </Form.Item>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Form.Item label="旧密码">
-          <Input.Password value={draft.oldPassword} onChange={(e) => setDraft((s) => ({ ...s, oldPassword: e.target.value }))} placeholder="请输入旧密码（首次可留空）" />
+        <Form.Item label="旧密码" name="oldPassword">
+          <Input.Password placeholder="请输入旧密码（首次可留空）" />
         </Form.Item>
-        <Form.Item label="新密码" required>
-          <Input.Password value={draft.newPassword} onChange={(e) => setDraft((s) => ({ ...s, newPassword: e.target.value }))} placeholder="请输入新密码" />
+        <Form.Item label="新密码" name="newPassword" rules={[{ required: true, message: '请先填写新密码' }]}>
+          <Input.Password placeholder="请输入新密码" />
         </Form.Item>
       </div>
+      <Button type="primary" htmlType="submit" loading={loading || initLoading}>
+        {isLastStep ? '保存并完成' : '保存并继续'}
+      </Button>
     </Form>
   );
 }
