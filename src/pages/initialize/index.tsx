@@ -1,8 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button, Card, Progress, Steps, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import AccountConfigForm from './components/AccountConfigForm';
-import AIConfigForm from './components/AIConfigForm';
 import SecurityConfigForm from './components/SecurityConfigForm';
 import StorageConfigForm from './components/StorageConfigForm';
 import WebsiteConfigForm from './components/WebsiteConfigForm';
@@ -12,7 +11,6 @@ interface InitStep {
   key: string;
   title: string;
   subtitle: string;
-  description: string;
   required: boolean;
 }
 
@@ -21,41 +19,38 @@ const INIT_STEPS: InitStep[] = [
     key: 'account',
     title: '账户设置',
     subtitle: '配置管理员账号和安全信息',
-    description: '请先完成管理员账号与密码设置，确保后台可安全登录。',
     required: true,
   },
   {
     key: 'website',
     title: '网站设置',
     subtitle: '配置站点标题、SEO、LOGO 等',
-    description: '建议优先完善品牌信息和基础 SEO，保证前台展示完整。',
-    required: true,
-  },
-  {
-    key: 'ai',
-    title: 'AI 设置',
-    subtitle: '配置 AI 助手能力与提示词',
-    description: '初始化 AI 参数，方便后续内容生成和智能运营。',
     required: true,
   },
   {
     key: 'storage',
     title: '存储设置',
     subtitle: '配置对象存储与资源上传能力',
-    description: '建议优先配置存储，避免图片与附件上传受限。',
     required: true,
   },
   {
     key: 'security',
-    title: '安全设置',
-    subtitle: '启用验证码与反爬保护策略',
-    description: '通过人机校验降低恶意访问风险，提升系统稳定性。',
+    title: '人机验证',
+    subtitle: '配置 hCaptcha 密钥，拦截机器人和恶意请求',
     required: false,
   },
 ];
 
+const INIT_STEP_STORAGE_KEY = 'thrivex-init-current-step';
+
 export default function SetupInitializePage() {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(() => {
+    const cachedStep = Number(localStorage.getItem(INIT_STEP_STORAGE_KEY));
+    if (Number.isNaN(cachedStep)) {
+      return 0;
+    }
+    return Math.min(Math.max(cachedStep, 0), INIT_STEPS.length - 1);
+  });
   const [completing, setCompleting] = useState(false);
   const [shouldCompleteInit, setShouldCompleteInit] = useState(false);
   const navigate = useNavigate();
@@ -65,11 +60,16 @@ export default function SetupInitializePage() {
   const isLastStep = currentStep === INIT_STEPS.length - 1;
   const currentFormId = `init-form-${current.key}`;
 
+  useEffect(() => {
+    localStorage.setItem(INIT_STEP_STORAGE_KEY, String(currentStep));
+  }, [currentStep]);
+
   const handleStepSuccess = async () => {
     if (isLastStep && shouldCompleteInit) {
       setCompleting(true);
       try {
         await completeSystemInitAPI();
+        localStorage.removeItem(INIT_STEP_STORAGE_KEY);
         message.success('初始化配置已完成');
         navigate('/', { replace: true });
       } finally {
@@ -87,8 +87,6 @@ export default function SetupInitializePage() {
         return <AccountConfigForm onSuccess={handleStepSuccess} />;
       case 'website':
         return <WebsiteConfigForm onSuccess={handleStepSuccess} />;
-      case 'ai':
-        return <AIConfigForm onSuccess={handleStepSuccess} />;
       case 'storage':
         return <StorageConfigForm onSuccess={handleStepSuccess} />;
       case 'security':
@@ -147,7 +145,6 @@ export default function SetupInitializePage() {
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
                   <h3 className="mt-1 text-xl font-semibold text-slate-800 dark:text-slate-100">{current.title}</h3>
-                  <p className="mt-2 text-slate-500 dark:text-slate-300">{current.description}</p>
                 </div>
               </div>
 

@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Form, Input, message } from 'antd';
+import { DatePicker, Form, Input, message } from 'antd';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { editWebConfigDataAPI, getWebConfigDataAPI } from '@/api/config';
 import type { Web } from '@/types/app/config';
 import type { InitStepFormProps } from '../types';
 
 interface WebsiteFormValues {
-  siteTitle: string;
-  siteDesc: string;
-  siteLogo: string;
+  title: string;
+  subhead: string;
+  url: string;
+  favicon: string;
+  description: string;
+  keyword: string;
+  footer: string;
+  icp: string;
+  create_time?: Dayjs;
 }
 
 export default function WebsiteConfigForm({ onSuccess }: InitStepFormProps) {
@@ -21,9 +29,15 @@ export default function WebsiteConfigForm({ onSuccess }: InitStepFormProps) {
       try {
         const { data } = await getWebConfigDataAPI('web');
         const values = {
-          siteTitle: data.value?.title || '',
-          siteDesc: data.value?.description || '',
-          siteLogo: data.value?.favicon || '',
+          title: data.value?.title || '',
+          subhead: data.value?.subhead || '',
+          url: data.value?.url || '',
+          favicon: data.value?.favicon || '',
+          description: data.value?.description || '',
+          keyword: data.value?.keyword || '',
+          footer: data.value?.footer || '',
+          icp: data.value?.icp || '',
+          create_time: data.value?.create_time ? dayjs(Number(data.value.create_time)) : undefined,
         };
         setWebConfig(data.value);
         form.setFieldsValue(values);
@@ -43,9 +57,15 @@ export default function WebsiteConfigForm({ onSuccess }: InitStepFormProps) {
       const latestConfig = webConfig || (await getWebConfigDataAPI('web')).data.value;
       const submitData: Web = {
         ...latestConfig,
-        title: values.siteTitle,
-        description: values.siteDesc,
-        favicon: values.siteLogo,
+        title: values.title,
+        subhead: values.subhead,
+        url: values.url,
+        favicon: values.favicon,
+        description: values.description,
+        keyword: values.keyword,
+        footer: values.footer,
+        icp: values.icp,
+        create_time: values.create_time ? values.create_time.valueOf() : undefined,
       };
 
       await editWebConfigDataAPI('web', submitData);
@@ -64,17 +84,45 @@ export default function WebsiteConfigForm({ onSuccess }: InitStepFormProps) {
       layout="vertical"
       disabled={loading}
       requiredMark={false}
-      initialValues={{ siteTitle: '', siteDesc: '', siteLogo: '' }}
+      initialValues={{
+        title: '',
+        subhead: '',
+        url: '',
+        favicon: '',
+        description: '',
+        keyword: '',
+        footer: '',
+        icp: '',
+        create_time: undefined,
+      }}
       onFinish={handleSave}
     >
-      <Form.Item label="网站标题" name="siteTitle" rules={[{ required: true, message: '请先填写网站标题' }]}>
-        <Input placeholder="例如：Thrive X Blog" />
+      <Form.Item label="网站标题" name="title" rules={[{ required: true, message: '请先填写网站标题' }]}>
+        <Input placeholder="例如：ThriveX" />
       </Form.Item>
-      <Form.Item label="网站描述" name="siteDesc" rules={[{ required: true, message: '请先填写网站描述' }]}>
+      <Form.Item label="网站副标题" name="subhead">
+        <Input placeholder="例如：现代化博客管理系统" />
+      </Form.Item>
+      <Form.Item label="网站链接" name="url">
+        <Input placeholder="https://liuyuyang.net/" />
+      </Form.Item>
+      <Form.Item label="LOGO 地址" name="favicon" rules={[{ required: true, message: '请先填写网站 Logo 地址' }]}>
+        <Input placeholder="https://..." />
+      </Form.Item>
+      <Form.Item label="网站描述" name="description">
         <Input.TextArea rows={3} placeholder="请输入站点简介和定位" />
       </Form.Item>
-      <Form.Item label="LOGO 地址" name="siteLogo">
-        <Input placeholder="https://..." />
+      <Form.Item label="网站关键词" name="keyword">
+        <Input placeholder="例如：Java,前端,Python" />
+      </Form.Item>
+      <Form.Item label="底部信息" name="footer">
+        <Input placeholder="例如：诚邀贡献者一起共建 ThriveX" />
+      </Form.Item>
+      <Form.Item label="ICP 备案号" name="icp">
+        <Input placeholder="例如：豫ICP备2020031040号-1" />
+      </Form.Item>
+      <Form.Item label="网站创建时间" name="create_time">
+        <DatePicker className="w-full" />
       </Form.Item>
     </Form>
   );

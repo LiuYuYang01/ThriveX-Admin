@@ -1,48 +1,82 @@
-import { Form, Space, Switch, message } from 'antd';
+import { useEffect, useState } from 'react';
+import { Form, Input, message } from 'antd';
+
+import { getEnvConfigDataAPI, updateEnvConfigDataAPI } from '@/api/config';
+import { Config, HcaptchaEnvValue } from '@/types/app/config';
 import type { InitStepFormProps } from '../types';
 
-interface SecurityFormValues {
-  securityCaptcha: boolean;
-  securityRateLimit: boolean;
-}
-
 export default function SecurityConfigForm({ onSuccess }: InitStepFormProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleSave = (_values: SecurityFormValues) => {
-    message.success('安全设置已保存');
-    onSuccess();
+  const [form] = Form.useForm<HcaptchaEnvValue>();
+  const [row, setRow] = useState<Config>();
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const loadHcaptchaConfig = async () => {
+      setLoading(true);
+      try {
+        const { data } = await getEnvConfigDataAPI('hcaptcha');
+        setRow(data);
+        const value = data?.value as HcaptchaEnvValue | undefined;
+        form.setFieldsValue({ key: value?.key ?? '' });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHcaptchaConfig();
+  }, [form]);
+
+  const handleSave = async (values: HcaptchaEnvValue) => {
+    if (!row) {
+      message.error('未找到人机验证配置项，请检查后端 env_config 表');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await updateEnvConfigDataAPI({ ...row, value: values });
+      message.success('人机验证配置已保存');
+      onSuccess();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <Form
+      form={form}
       id="init-form-security"
       layout="vertical"
       requiredMark={false}
-      initialValues={{ securityCaptcha: true, securityRateLimit: true }}
       onFinish={handleSave}
+      className="w-full"
+      disabled={loading || saving}
     >
-      <div className="rounded-md border border-stroke dark:border-strokedark px-4 py-3">
-        <Space direction="vertical" size={12} className="w-full">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-700 dark:text-slate-100">启用验证码防护</p>
-              <p className="text-xs text-slate-500 dark:text-slate-300">拦截机器人和异常提交请求</p>
-            </div>
-            <Form.Item name="securityCaptcha" valuePropName="checked" className="mb-0">
-              <Switch />
-            </Form.Item>
+      <Form.Item
+        name="key"
+        label={
+          <div className="w-full flex items-center justify-between">
+            <span>人机验证密钥</span>
+            <a
+              href="https://docs.liuyuyang.net/docs/项目部署/API/人机验证.html"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-primary text-xs text-gray-400"
+            >
+              配置教程
+            </a>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-700 dark:text-slate-100">启用频率限制</p>
-              <p className="text-xs text-slate-500 dark:text-slate-300">降低高频恶意请求造成的资源消耗</p>
-            </div>
-            <Form.Item name="securityRateLimit" valuePropName="checked" className="mb-0">
-              <Switch />
-            </Form.Item>
-          </div>
-        </Space>
-      </div>
+        }
+        rules={[{ required: true, message: '请输入密钥' }]}
+        className="[&_label]:w-full"
+      >
+        <Input placeholder="bfb82d04-e46a-4da0-9b6e-9adc052672c8" autoComplete="off" disabled={loading || saving} />
+      </Form.Item>
     </Form>
   );
 }
