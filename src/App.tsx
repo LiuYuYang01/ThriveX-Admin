@@ -7,7 +7,6 @@ import '@/styles/antd.scss';
 
 import { getWebConfigDataAPI } from '@/api/config';
 import { useWebStore, useUserStore, useConfigStore } from './stores';
-import { Web } from './types/app/config';
 
 import zhCN from 'antd/locale/zh_CN';
 import 'dayjs/locale/zh-cn';
@@ -26,7 +25,7 @@ function App() {
   const setWeb = useWebStore((state) => state.setWeb);
   const getWebData = async () => {
     if (!token) return;
-    const { data } = await getWebConfigDataAPI<{ value: Web }>('web');
+    const { data } = await getWebConfigDataAPI('web');
     setWeb(data.value);
   };
 

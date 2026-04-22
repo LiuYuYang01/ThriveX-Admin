@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { editWebConfigDataAPI, getWebConfigDataAPI } from '@/api/config';
-import { Other, Web } from '@/types/app/config';
-import dayjs from 'dayjs';
+import { Other } from '@/types/app/config';
 
 export default () => {
   const [loading, setLoading] = useState(false);
 
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<Other>();
 
   const getConfigData = async () => {
     try {
       setLoading(true);
-      const { data } = await getWebConfigDataAPI<{ value: Other }>('other');
+      const { data } = await getWebConfigDataAPI('other');
       form.setFieldsValue(data.value);
       setLoading(false);
     } catch (error) {
@@ -25,25 +24,16 @@ export default () => {
     getConfigData();
   }, []);
 
-  const onSubmit = async (values: Web) => {
+  const onSubmit = async (values: Other) => {
     setLoading(true);
 
     try {
-      // 将日期转换为时间戳
-      const submitData = {
-        ...values,
-        create_time: values.create_time ? values.create_time.valueOf() : undefined,
-      };
+      const submitData = { ...values };
 
       await editWebConfigDataAPI('other', submitData);
       message.success('🎉 编辑配置成功');
 
-      // 使用新的 submitData 来更新表单值
-      const newInitialValues = {
-        ...submitData,
-        create_time: submitData.create_time ? dayjs(Number(submitData.create_time)) : undefined,
-      };
-      form.setFieldsValue(newInitialValues);
+      form.setFieldsValue(submitData);
     } catch (error) {
       console.error(error);
       setLoading(false);

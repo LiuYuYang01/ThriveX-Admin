@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Button, Form, Input, message } from 'antd';
+import { useEffect } from 'react';
+import { Form, Input, message } from 'antd';
 import { editAdminPassAPI, getUserDataAPI } from '@/api/user';
 import { useUserStore } from '@/stores';
 import type { InitStepFormProps } from '../types';
@@ -10,17 +10,14 @@ interface AccountFormValues {
   newPassword: string;
 }
 
-export default function AccountConfigForm({ onSuccess, isLastStep }: InitStepFormProps) {
+export default function AccountConfigForm({ onSuccess }: InitStepFormProps) {
   const [form] = Form.useForm<AccountFormValues>();
   const token = useUserStore((state) => state.token);
   const user = useUserStore((state) => state.user);
-  const [loading, setLoading] = useState(false);
-  const [initLoading, setInitLoading] = useState(false);
 
   useEffect(() => {
     const getUserInfo = async () => {
       try {
-        setInitLoading(true);
         const { data } = await getUserDataAPI(token);
         form.setFieldsValue({
           newUsername: data.username || user.username || '',
@@ -29,8 +26,6 @@ export default function AccountConfigForm({ onSuccess, isLastStep }: InitStepFor
         });
       } catch {
         message.error('管理员信息加载失败');
-      } finally {
-        setInitLoading(false);
       }
     };
 
@@ -38,21 +33,17 @@ export default function AccountConfigForm({ onSuccess, isLastStep }: InitStepFor
   }, []);
 
   const handleSave = async (values: AccountFormValues) => {
-    try {
-      setLoading(true);
-      await editAdminPassAPI({
-        oldUsername: user.username || values.newUsername,
-        ...values,
-      });
-      message.success('账号设置已保存');
-      onSuccess();
-    } finally {
-      setLoading(false);
-    }
+    await editAdminPassAPI({
+      oldUsername: user.username || values.newUsername,
+      ...values,
+    });
+    message.success('账号设置已保存');
+    onSuccess();
   };
 
   return (
     <Form
+      id="init-form-account"
       form={form}
       layout="vertical"
       requiredMark={false}
@@ -70,9 +61,6 @@ export default function AccountConfigForm({ onSuccess, isLastStep }: InitStepFor
           <Input.Password placeholder="请输入新密码" />
         </Form.Item>
       </div>
-      <Button type="primary" htmlType="submit" loading={loading || initLoading}>
-        {isLastStep ? '保存并完成' : '保存并继续'}
-      </Button>
     </Form>
   );
 }

@@ -1,11 +1,19 @@
 import Request from '@/utils/request';
-import { Config, EnvConfigName, WebConfigType } from '@/types/app/config';
+import { Config, EnvConfigName, Other, Theme, Web, WebConfigType } from '@/types/app/config';
+
+type WebConfigValueMap = {
+  web: Web;
+  theme: Theme;
+  other: Other;
+};
 
 // 获取网站配置
-export const getWebConfigDataAPI = <T>(name: WebConfigType) => Request<T>('GET', `/web_config/name/${name}`);
+export const getWebConfigDataAPI = <T extends WebConfigType>(name: T) =>
+  Request<{ value: WebConfigValueMap[T] }>('GET', `/web_config/name/${name}`);
 
 // 修改网站配置
-export const editWebConfigDataAPI = (name: WebConfigType, data: object) => Request<Config>('PATCH', `/web_config/json/name/${name}`, { data });
+export const editWebConfigDataAPI = <T extends WebConfigType>(name: T, data: WebConfigValueMap[T]) =>
+  Request<Config>('PATCH', `/web_config/json/name/${name}`, { data });
 
 // 获取环境配置
 export const getEnvConfigDataAPI = (name: EnvConfigName) => Request<Config>('GET', `/env_config/name/${name}`);

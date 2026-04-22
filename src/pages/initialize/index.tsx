@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Button, Card, Progress, Steps, Tag, message } from 'antd';
+import { Button, Card, Progress, Steps, message } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import AccountConfigForm from './components/AccountConfigForm';
 import AIConfigForm from './components/AIConfigForm';
 import SecurityConfigForm from './components/SecurityConfigForm';
 import StorageConfigForm from './components/StorageConfigForm';
 import WebsiteConfigForm from './components/WebsiteConfigForm';
+import { completeSystemInitAPI } from '@/api/initialize';
 
 interface InitStep {
   key: string;
@@ -54,14 +56,26 @@ const INIT_STEPS: InitStep[] = [
 
 export default function SetupInitializePage() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [completing, setCompleting] = useState(false);
+  const [shouldCompleteInit, setShouldCompleteInit] = useState(false);
+  const navigate = useNavigate();
 
   const current = INIT_STEPS[currentStep];
   const progress = useMemo(() => Math.round(((currentStep + 1) / INIT_STEPS.length) * 100), [currentStep]);
   const isLastStep = currentStep === INIT_STEPS.length - 1;
+  const currentFormId = `init-form-${current.key}`;
 
-  const handleStepSuccess = () => {
-    if (isLastStep) {
-      message.success('初始化配置已完成');
+  const handleStepSuccess = async () => {
+    if (isLastStep && shouldCompleteInit) {
+      setCompleting(true);
+      try {
+        await completeSystemInitAPI();
+        message.success('初始化配置已完成');
+        navigate('/', { replace: true });
+      } finally {
+        setCompleting(false);
+        setShouldCompleteInit(false);
+      }
       return;
     }
     setCurrentStep((prev) => Math.min(prev + 1, INIT_STEPS.length - 1));
@@ -70,15 +84,15 @@ export default function SetupInitializePage() {
   const renderFormPanel = () => {
     switch (current.key) {
       case 'account':
-        return <AccountConfigForm onSuccess={handleStepSuccess} isLastStep={isLastStep} />;
+        return <AccountConfigForm onSuccess={handleStepSuccess} />;
       case 'website':
-        return <WebsiteConfigForm onSuccess={handleStepSuccess} isLastStep={isLastStep} />;
+        return <WebsiteConfigForm onSuccess={handleStepSuccess} />;
       case 'ai':
-        return <AIConfigForm onSuccess={handleStepSuccess} isLastStep={isLastStep} />;
+        return <AIConfigForm onSuccess={handleStepSuccess} />;
       case 'storage':
-        return <StorageConfigForm onSuccess={handleStepSuccess} isLastStep={isLastStep} />;
+        return <StorageConfigForm onSuccess={handleStepSuccess} />;
       case 'security':
-        return <SecurityConfigForm onSuccess={handleStepSuccess} isLastStep={isLastStep} />;
+        return <SecurityConfigForm onSuccess={handleStepSuccess} />;
       default:
         return null;
     }
@@ -95,16 +109,12 @@ export default function SetupInitializePage() {
                 接下来将引导您完成 ThriveX 的必要配置，帮助你快速上手
               </p>
             </div>
-
-            <Tag color="processing" className="px-3 py-1 text-[13px] rounded-md">
-              初始化流程
-            </Tag>
           </div>
 
           <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-slate-500 dark:text-slate-300">当前进度</span>
-              <span className="text-sm text-primary font-medium">{progress}%</span>
+              <span className="text-2xl text-primary font-medium">{progress}%</span>
             </div>
             <Progress percent={progress} showInfo={false} strokeColor={{ '0%': '#93c5fd', '100%': '#60a5fa' }} />
           </div>
@@ -119,11 +129,16 @@ export default function SetupInitializePage() {
                   direction="vertical"
                   size="small"
                   current={currentStep}
-                  items={INIT_STEPS.map((step) => ({
+                  items={INIT_STEPS.map((step, stepIndex) => ({
                     title: step.title,
                     description: step.subtitle,
+                    disabled: stepIndex > currentStep,
                   }))}
-                  onChange={setCurrentStep}
+                  onChange={(targetStep) => {
+                    if (targetStep <= currentStep) {
+                      setCurrentStep(targetStep);
+                    }
+                  }}
                 />
               </div>
             </Card>
@@ -142,6 +157,19 @@ export default function SetupInitializePage() {
 
               <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
                 <Button onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))} disabled={currentStep === 0}>上一步</Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  form={currentFormId}
+                  loading={isLastStep && completing}
+                  onClick={() => {
+                    if (isLastStep) {
+                      setShouldCompleteInit(true);
+                    }
+                  }}
+                >
+                  {isLastStep ? '完成' : '下一步'}
+                </Button>
               </div>
             </Card>
           </div>

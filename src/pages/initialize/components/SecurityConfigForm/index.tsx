@@ -1,4 +1,4 @@
-import { Button, Form, Space, Switch, message } from 'antd';
+import { Form, Space, Switch, message } from 'antd';
 import type { InitStepFormProps } from '../types';
 
 interface SecurityFormValues {
@@ -6,7 +6,7 @@ interface SecurityFormValues {
   securityRateLimit: boolean;
 }
 
-export default function SecurityConfigForm({ onSuccess, isLastStep }: InitStepFormProps) {
+export default function SecurityConfigForm({ onSuccess }: InitStepFormProps) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSave = (_values: SecurityFormValues) => {
     message.success('安全设置已保存');
@@ -14,7 +14,13 @@ export default function SecurityConfigForm({ onSuccess, isLastStep }: InitStepFo
   };
 
   return (
-    <Form layout="vertical" requiredMark={false} initialValues={{ securityCaptcha: true, securityRateLimit: true }} onFinish={handleSave}>
+    <Form
+      id="init-form-security"
+      layout="vertical"
+      requiredMark={false}
+      initialValues={{ securityCaptcha: true, securityRateLimit: true }}
+      onFinish={handleSave}
+    >
       <div className="rounded-md border border-stroke dark:border-strokedark px-4 py-3">
         <Space direction="vertical" size={12} className="w-full">
           <div className="flex items-center justify-between">
@@ -37,9 +43,6 @@ export default function SecurityConfigForm({ onSuccess, isLastStep }: InitStepFo
           </div>
         </Space>
       </div>
-      <Button className="mt-4" type="primary" htmlType="submit">
-        {isLastStep ? '保存并完成' : '保存并继续'}
-      </Button>
     </Form>
   );
 }

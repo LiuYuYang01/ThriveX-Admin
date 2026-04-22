@@ -1,4 +1,4 @@
-import { Button, Form, Input, Select, message } from 'antd';
+import { Form, Input, Select, message } from 'antd';
 import type { InitStepFormProps } from '../types';
 
 interface StorageFormValues {
@@ -7,7 +7,7 @@ interface StorageFormValues {
   storageDomain: string;
 }
 
-export default function StorageConfigForm({ onSuccess, isLastStep }: InitStepFormProps) {
+export default function StorageConfigForm({ onSuccess }: InitStepFormProps) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSave = (_values: StorageFormValues) => {
     message.success('存储设置已保存');
@@ -16,6 +16,7 @@ export default function StorageConfigForm({ onSuccess, isLastStep }: InitStepFor
 
   return (
     <Form
+      id="init-form-storage"
       layout="vertical"
       requiredMark={false}
       initialValues={{ storageType: 'qiniu', storageBucket: '', storageDomain: '' }}
@@ -38,9 +39,6 @@ export default function StorageConfigForm({ onSuccess, isLastStep }: InitStepFor
       <Form.Item label="访问域名" name="storageDomain" rules={[{ required: true, message: '请先填写访问域名' }]}>
         <Input placeholder="https://cdn.your-domain.com" />
       </Form.Item>
-      <Button type="primary" htmlType="submit">
-        {isLastStep ? '保存并完成' : '保存并继续'}
-      </Button>
     </Form>
   );
 }

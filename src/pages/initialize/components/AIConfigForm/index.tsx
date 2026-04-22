@@ -1,4 +1,4 @@
-import { Button, Form, Input, Select, message } from 'antd';
+import { Form, Input, Select, message } from 'antd';
 import type { InitStepFormProps } from '../types';
 
 interface AIFormValues {
@@ -7,7 +7,7 @@ interface AIFormValues {
   aiPrompt: string;
 }
 
-export default function AIConfigForm({ onSuccess, isLastStep }: InitStepFormProps) {
+export default function AIConfigForm({ onSuccess }: InitStepFormProps) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSave = (_values: AIFormValues) => {
     message.success('AI 设置已保存');
@@ -15,7 +15,13 @@ export default function AIConfigForm({ onSuccess, isLastStep }: InitStepFormProp
   };
 
   return (
-    <Form layout="vertical" requiredMark={false} initialValues={{ aiProvider: 'openai', aiModel: '', aiPrompt: '' }} onFinish={handleSave}>
+    <Form
+      id="init-form-ai"
+      layout="vertical"
+      requiredMark={false}
+      initialValues={{ aiProvider: 'openai', aiModel: '', aiPrompt: '' }}
+      onFinish={handleSave}
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Form.Item label="AI 服务商" name="aiProvider" rules={[{ required: true, message: '请先选择 AI 服务商' }]}>
           <Select
@@ -33,9 +39,6 @@ export default function AIConfigForm({ onSuccess, isLastStep }: InitStepFormProp
       <Form.Item label="系统提示词" name="aiPrompt" rules={[{ required: true, message: '请先填写系统提示词' }]}>
         <Input.TextArea rows={4} placeholder="请输入默认系统提示词" />
       </Form.Item>
-      <Button type="primary" htmlType="submit">
-        {isLastStep ? '保存并完成' : '保存并继续'}
-      </Button>
     </Form>
   );
 }

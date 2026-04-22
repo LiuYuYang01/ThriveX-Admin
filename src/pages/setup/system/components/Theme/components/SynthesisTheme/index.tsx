@@ -22,7 +22,7 @@ export default () => {
     try {
       setLoading(true);
 
-      const { data } = await getWebConfigDataAPI<{ value: Theme }>('theme');
+      const { data } = await getWebConfigDataAPI('theme');
 
       const theme = data.value;
 
