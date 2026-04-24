@@ -3,6 +3,7 @@ import { Button, Card, Progress, Steps, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import AccountConfigForm from './components/AccountConfigForm';
 import EmailConfigForm from './components/EmailConfigForm';
+import Completed from './components/Completed';
 import SecurityConfigForm from './components/SecurityConfigForm';
 import StorageConfigForm from './components/StorageConfigForm';
 import WebsiteConfigForm from './components/WebsiteConfigForm';
@@ -12,7 +13,6 @@ interface InitStep {
   key: string;
   title: string;
   subtitle: string;
-  required: boolean;
 }
 
 const INIT_STEPS: InitStep[] = [
@@ -20,32 +20,32 @@ const INIT_STEPS: InitStep[] = [
     key: 'account',
     title: '账户设置',
     subtitle: '配置管理员账号和安全信息',
-    required: true,
   },
   {
     key: 'website',
     title: '网站设置',
     subtitle: '配置站点标题、SEO、LOGO 等',
-    required: true,
   },
   {
     key: 'storage',
     title: '存储设置',
     subtitle: '配置对象存储与资源上传能力',
-    required: true,
   },
   {
     key: 'email',
     title: '邮箱设置',
     subtitle: '配置 SMTP 信息，用于邮件通知与验证码发送',
-    required: false,
   },
   {
     key: 'security',
     title: '人机验证',
     subtitle: '配置 hCaptcha 密钥，拦截机器人和恶意请求',
-    required: false,
   },
+  {
+    key: 'follow_up',
+    title: '后续步骤',
+    subtitle: '后续需要做的事情...',
+  }
 ];
 
 const INIT_STEP_STORAGE_KEY = 'thrivex-init-current-step';
@@ -100,6 +100,8 @@ export default function SetupInitializePage() {
         return <EmailConfigForm onSuccess={handleStepSuccess} />;
       case 'security':
         return <SecurityConfigForm onSuccess={handleStepSuccess} />;
+      case 'follow_up':
+        return <Completed onSuccess={handleStepSuccess} />;
       default:
         return null;
     }
@@ -174,7 +176,7 @@ export default function SetupInitializePage() {
                     }
                   }}
                 >
-                  {isLastStep ? '完成' : '下一步'}
+                  {isLastStep ? '进入系统' : '下一步'}
                 </Button>
               </div>
             </Card>
