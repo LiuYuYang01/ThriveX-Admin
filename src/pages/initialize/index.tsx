@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button, Card, Progress, Steps, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import AccountConfigForm from './components/AccountConfigForm';
+import EmailConfigForm from './components/EmailConfigForm';
 import SecurityConfigForm from './components/SecurityConfigForm';
 import StorageConfigForm from './components/StorageConfigForm';
 import WebsiteConfigForm from './components/WebsiteConfigForm';
@@ -32,6 +33,12 @@ const INIT_STEPS: InitStep[] = [
     title: '存储设置',
     subtitle: '配置对象存储与资源上传能力',
     required: true,
+  },
+  {
+    key: 'email',
+    title: '邮箱设置',
+    subtitle: '配置 SMTP 信息，用于邮件通知与验证码发送',
+    required: false,
   },
   {
     key: 'security',
@@ -89,6 +96,8 @@ export default function SetupInitializePage() {
         return <WebsiteConfigForm onSuccess={handleStepSuccess} />;
       case 'storage':
         return <StorageConfigForm onSuccess={handleStepSuccess} />;
+      case 'email':
+        return <EmailConfigForm onSuccess={handleStepSuccess} />;
       case 'security':
         return <SecurityConfigForm onSuccess={handleStepSuccess} />;
       default:
