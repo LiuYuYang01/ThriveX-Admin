@@ -173,6 +173,7 @@ export default function SetupInitializePage() {
                   onClick={() => {
                     if (isLastStep) {
                       setShouldCompleteInit(true);
+                      location.href = '/';
                     }
                   }}
                 >

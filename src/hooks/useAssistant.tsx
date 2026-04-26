@@ -16,9 +16,9 @@ export default function useAssistant() {
   const getAssistantList = async () => {
     try {
       const { data } = await getAssistantListAPI();
-      setList(data);
+      setList(data.result);
 
-      const defaultAssistant = data.find((a) => a.isDefault);
+      const defaultAssistant = data.result.find((a) => a.isDefault);
       if (defaultAssistant) setAssistant(String(defaultAssistant.id));
     } catch (error) {
       console.error('获取助手列表失败：', error);

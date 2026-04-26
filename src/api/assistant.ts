@@ -14,9 +14,7 @@ export const editAssistantDataAPI = (data: Assistant) => Request('PATCH', '/assi
 export const getAssistantDataAPI = (id?: number) => Request<Assistant>('GET', `/assistant/${id}`)
 
 // 获取助手列表
-export const getAssistantListAPI = (data?: QueryData) => Request<Assistant[]>('POST', '/assistant/list', {
-    data: { ...data?.query }
-});
+export const getAssistantListAPI = () => Request<Paginate<Assistant[]>>('GET', '/assistant')
 
 // 设置默认助手
 export const setDefaultAssistantAPI = (id: number) => Request('PATCH', `/assistant/default/${id}`)
