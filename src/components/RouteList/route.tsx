@@ -57,7 +57,7 @@ export const routes: AppRouteItem[] = [
   { path: '/iter', title: '项目更新记录', icon: <BiBug className="text-base" />, element: <Iterative /> },
   { path: '/work', title: '工作台', icon: <TbBrandAirtable className="text-base" />, element: <Work /> },
   { path: '/assistant', title: '助手管理', icon: <BiCategoryAlt className="text-base" />, element: <Assistant /> },
-  { path: '/config', title: '项目配置', icon: <BiCategoryAlt className="text-base" />, element: <Config /> },
+  { path: '/web_config', title: '页面配置', icon: <BiCategoryAlt className="text-base" />, element: <Config /> },
 ];
 
 const routeConfigMap: Record<string, RouteConfig> = Object.fromEntries(

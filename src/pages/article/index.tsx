@@ -480,7 +480,7 @@ export default () => {
     <div className="flex min-h-0 flex-1 flex-col">
       <Title value="文章管理" />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xs dark:border-strokedark dark:bg-boxdark">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xs dark:border-strokedark dark:bg-boxdark">
         <div className="shrink-0 space-y-4 border-b border-gray-100 bg-gray-50/30 p-5 dark:border-strokedark dark:bg-boxdark-2/50">
           <Form form={form} layout="inline" onValuesChange={onFilterChange} className="flex! flex-wrap! items-center! gap-y-2.5!">
             <Form.Item name="title" className="mb-0!">

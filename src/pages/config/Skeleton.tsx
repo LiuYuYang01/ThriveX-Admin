@@ -1,37 +1,50 @@
 export default function ConfigSkeleton() {
   return (
-    <div className="space-y-2">
-      <div className="rounded-xl border border-gray-100 bg-white px-6 py-3 shadow-xs dark:border-strokedark dark:bg-boxdark">
-        <div className="skeleton h-8" style={{ width: 150 }} />
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      {/* 头部骨架 */}
+      <div className="shrink-0 flex items-center justify-between rounded-xl border border-gray-100 bg-white px-6 py-4 dark:border-strokedark dark:bg-boxdark">
+        <div className="skeleton h-8 w-32" />
+        <div className="flex gap-2">
+          <div className="skeleton h-10 w-24 rounded-lg" />
+          <div className="skeleton h-10 w-24 rounded-lg" />
+        </div>
       </div>
 
-      <div className="border-stroke mt-2 min-h-[calc(100vh-160px)] rounded-xl border bg-white px-5 py-3 shadow-xs dark:border-strokedark dark:bg-boxdark">
-        <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-[20%] md:mr-5 mb-10 md:mb-0 border-b-0 md:border-r border-stroke dark:border-strokedark divide-y divide-solid divide-[#F6F6F6] dark:divide-strokedark">
+      <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-12">
+        {/* 左侧列表骨架 */}
+        <div className="lg:col-span-3 rounded-xl border border-gray-100 bg-white dark:border-strokedark dark:bg-boxdark overflow-hidden">
+          <div className="flex flex-col divide-y divide-gray-100 dark:divide-strokedark">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="p-3 pl-5">
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="skeleton h-5 w-[120px] rounded-sm" />
-                  <div className="skeleton h-5 w-[64px] rounded-sm" />
+              <div key={i} className="p-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <div className="skeleton h-5 w-24 rounded" />
+                  <div className="skeleton h-2 w-2 rounded-full" />
                 </div>
-                <div className="space-y-2">
-                  <div className="skeleton h-4 w-full rounded-sm" />
-                  <div className="skeleton h-4 w-3/4 rounded-sm" />
-                </div>
+                <div className="skeleton h-3 w-32 rounded" />
               </div>
             ))}
           </div>
+        </div>
 
-          <div className="w-full md:w-[80%] px-0 md:px-8">
-            <div className="mb-4 flex items-center justify-between border-b border-stroke pb-3 dark:border-strokedark">
-              <div className="skeleton h-7 w-[220px] rounded-sm" />
-              <div className="skeleton h-10 w-[120px] rounded-md" />
+        {/* 右侧预览骨架 */}
+        <div className="lg:col-span-9 flex flex-col rounded-xl border border-gray-100 bg-white p-6 dark:border-strokedark dark:bg-boxdark">
+          <div className="flex flex-1 min-h-0 flex-col space-y-6">
+            <div className="shrink-0 border-b border-gray-100 pb-4 dark:border-strokedark">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="skeleton h-6 w-48 rounded" />
+                  <div className="skeleton h-5 w-16 rounded-md" />
+                </div>
+                <div className="skeleton h-4 w-64 rounded" />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="skeleton h-4 w-full rounded-sm" />
-              ))}
+            <div className="flex flex-1 min-h-0 flex-col space-y-3">
+              <div className="shrink-0 flex justify-between items-center">
+                <div className="skeleton h-5 w-32 rounded" />
+                <div className="skeleton h-8 w-8 rounded" />
+              </div>
+              <div className="skeleton flex-1 min-h-0 w-full rounded-xl" />
             </div>
           </div>
         </div>
@@ -39,3 +52,4 @@ export default function ConfigSkeleton() {
     </div>
   );
 }
+

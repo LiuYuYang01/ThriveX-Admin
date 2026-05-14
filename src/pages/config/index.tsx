@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Card, Empty, Form, Modal, Typography, message } from 'antd';
+import { Button, Card, Empty, Form, Modal, Typography, message, Space, Tooltip } from 'antd';
+import {
+  CopyOutlined,
+  EditOutlined,
+  CheckOutlined,
+  FileTextOutlined,
+  UserOutlined,
+  ProjectOutlined,
+  ToolOutlined,
+  SettingOutlined,
+  AppstoreOutlined,
+  GlobalOutlined,
+} from '@ant-design/icons';
 
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
@@ -8,6 +20,17 @@ import Title from '@/components/Title';
 import { getPageConfigListAPI, updatePageConfigDataAPI } from '@/api/config';
 import { Config } from '@/types/app/config';
 import Skeleton from './Skeleton';
+
+const getConfigIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('my') || n.includes('user') || n.includes('profile')) return <UserOutlined />;
+  if (n.includes('resume') || n.includes('file')) return <FileTextOutlined />;
+  if (n.includes('equipment') || n.includes('tool')) return <ToolOutlined />;
+  if (n.includes('project')) return <ProjectOutlined />;
+  if (n.includes('web') || n.includes('site') || n.includes('global')) return <GlobalOutlined />;
+  if (n.includes('app')) return <AppstoreOutlined />;
+  return <SettingOutlined />;
+};
 
 export default () => {
   const [data, setData] = useState<Config[]>([]);
@@ -19,8 +42,11 @@ export default () => {
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [jsonValue, setJsonValue] = useState('');
   const [btnLoading, setBtnLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [form] = Form.useForm();
   const formRef = useRef(form);
+
+  const isDarkMode = document.body.classList.contains('dark');
 
   const fetchList = async () => {
     if (isFirstLoadRef.current) {
@@ -102,8 +128,13 @@ export default () => {
     formRef.current.setFieldsValue({ value });
     try {
       JSON.parse(value);
+      setJsonError(null);
     } catch (error) {
-      console.error(error);
+      if (error instanceof Error) {
+        setJsonError(error.message);
+      } else {
+        setJsonError(String(error));
+      }
     }
   };
 
@@ -116,6 +147,7 @@ export default () => {
       setJsonError(null);
     } catch (error) {
       console.error(error);
+      message.error('JSON 格式错误，无法格式化');
     }
   };
 
@@ -126,26 +158,30 @@ export default () => {
     return JSON.stringify(activeConfig.value, null, 2);
   }, [activeConfig]);
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(prettyValue);
+    setCopied(true);
+    message.success('已复制到剪贴板');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   // 初始加载时显示骨架屏
   if (initialLoading) {
     return <Skeleton />;
   }
 
   return (
-    <div>
-      <Title value="项目配置">
-        <Button type="primary" onClick={() => handleEdit(activeConfig!)}>
-          编辑配置
-        </Button>
-      </Title>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <Title value="页面配置" />
 
-      <Card className="border-stroke mt-2 min-h-[calc(100vh-160px)]">
-        <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-[20%] md:mr-5 mb-10 md:mb-0 border-b-0 md:border-r border-stroke dark:border-strokedark divide-y divide-solid divide-[#F6F6F6] dark:divide-strokedark">
+      <div className="grid flex-1 min-h-0 grid-cols-1 gap-2 lg:grid-cols-12">
+        {/* 左侧列表 */}
+        <Card className="lg:col-span-3 overflow-hidden border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: 0 } }}>
+          <div className="flex flex-col divide-y divide-gray-100 dark:divide-strokedark">
             {!data.length ? (
-              <Card className="m-3">
-                <Empty description="暂无配置" />
-              </Card>
+              <div className="p-10 text-center">
+                <Empty description="暂无配置" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              </div>
             ) : (
               data.map((item) => {
                 const isActive = Number(item.id) === Number(activeConfig?.id);
@@ -154,59 +190,120 @@ export default () => {
                     key={item.id}
                     type="button"
                     onClick={() => setActiveId(Number(item.id))}
-                    className={`relative w-full cursor-pointer p-3 pl-5 text-left transition-all before:absolute before:top-1/2 before:left-0 before:h-[0%] before:w-[3.5px] before:-translate-y-1/2 before:bg-primary before:content-[''] ${isActive ? 'bg-[#f7f7f8] before:h-full dark:bg-[#3c5370]' : 'hover:bg-[#f7f7f8]/70 dark:hover:bg-[#3c5370]/50'}`}
+                    className={`group relative flex items-center gap-3 p-4 text-left transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/5 ${
+                      isActive ? 'bg-primary/5 dark:bg-primary/10' : 'bg-transparent'
+                    } cursor-pointer`}
                   >
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <Typography.Text strong ellipsis>
-                        {item.name}
-                      </Typography.Text>
+                    {/* 激活指示条 */}
+                    {isActive && <div className="absolute left-0 top-0 h-full w-1 bg-primary" />}
+
+                    {/* 图标 */}
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
+                        isActive
+                          ? 'bg-primary text-white shadow-lg shadow-primary/30'
+                          : 'bg-gray-50 text-gray-400 dark:bg-white/5 dark:text-gray-500 group-hover:bg-primary/10 group-hover:text-primary'
+                      }`}
+                    >
+                      <span className="text-lg">{getConfigIcon(item.name)}</span>
                     </div>
-                    <Typography.Paragraph className="m-0 text-sm text-bodydark2 dark:text-gray-400" ellipsis={{ rows: 2 }}>
-                      {item.notes || '暂无备注'}
-                    </Typography.Paragraph>
+
+                    <div className="flex flex-1 flex-col overflow-hidden">
+                      <div className="flex items-center justify-between">
+                        <Typography.Text
+                          strong
+                          className={`text-xl transition-colors ${
+                            isActive ? 'text-primary' : 'text-gray-700 dark:text-gray-300'
+                          }`}
+                          ellipsis
+                        >
+                          {item.notes}
+                        </Typography.Text>
+                        {isActive && (
+                          <div className="relative flex h-2.5 w-2.5 mr-1">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </button>
                 );
               })
             )}
           </div>
+        </Card>
 
-          <div className="w-full md:w-[80%] px-0 md:px-8">
-            {!activeConfig ? (
+        {/* 右侧预览 */}
+        <Card className="lg:col-span-9 flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
+          {!activeConfig ? (
+            <div className="flex h-full items-center justify-center">
               <Empty description="请选择一个配置项" />
-            ) : (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stroke pb-3 dark:border-strokedark">
-                  <div className="text-xl font-bold dark:text-white">{activeConfig.notes || activeConfig.name}</div>
-                </div>
-
-                <div>
-                  <Typography.Text strong className="mb-2 block">
-                    配置预览
-                  </Typography.Text>
-                  <pre className="max-h-[calc(100vh-420px)] overflow-auto rounded-lg border border-stroke bg-gray-50 p-4 text-xs leading-6 text-bodydark dark:border-strokedark dark:bg-black/20 dark:text-gray-300">
-                    {prettyValue}
-                  </pre>
+            </div>
+          ) : (
+            <div className="flex flex-1 min-h-0 flex-col gap-6">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-6 dark:border-strokedark">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-primary/20">
+                    <span className="text-2xl">{getConfigIcon(activeConfig.name)}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xl font-bold text-gray-800 dark:text-white">{activeConfig.notes}</span>
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-      </Card>
 
-      <Modal title={editItem ? '编辑页面配置' : ''} open={isModalOpen} onCancel={() => setIsModalOpen(false)} width={1000} footer={null}>
-        <Form form={formRef.current} layout="vertical" onFinish={handleSave} size="large">
-          <Form.Item name="value" rules={[{ required: true, message: '请输入配置内容' }]} className="mb-4" validateStatus={jsonError ? 'error' : ''} help={jsonError ? `JSON格式错误: ${jsonError}` : ''}>
-            <CodeMirror value={jsonValue} extensions={[json()]} onChange={handleJsonChange} theme={document.body.classList.contains('dark') ? 'dark' : 'light'} basicSetup={{ lineNumbers: true, foldGutter: true }} style={jsonError ? { border: '1px solid #ff4d4f', borderRadius: 6 } : { borderRadius: 6 }} />
+              <div className="relative group flex flex-1 min-h-0 flex-col">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-1 rounded-full bg-primary" />
+                    <Typography.Text strong className="text-gray-700 dark:text-gray-300">
+                      预览
+                    </Typography.Text>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Tooltip title="编辑配置">
+                      <Button type="text" size="small" className="flex items-center gap-1.5 text-gray-400 hover:text-primary" icon={<EditOutlined />} onClick={() => handleEdit(activeConfig!)} />
+                    </Tooltip>
+                    <Tooltip title="复制 JSON 内容">
+                      <Button type="text" size="small" className="flex items-center gap-1.5 text-gray-400 hover:text-primary" icon={copied ? <CheckOutlined className="text-green-500" /> : <CopyOutlined />} onClick={handleCopy} />
+                    </Tooltip>
+                  </div>
+                </div>
+                <div className="flex-1 min-h-0 overflow-hidden rounded-2xl border border-gray-800 bg-[#1e1e1e] shadow-lg transition-all">
+                  <CodeMirror
+                    value={prettyValue}
+                    extensions={[json()]}
+                    theme="dark"
+                    editable={false}
+                    readOnly={true}
+                    basicSetup={{ lineNumbers: true, foldGutter: true, highlightActiveLine: false }}
+                    height="100%"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <Modal title={editItem ? `编辑配置: ${editItem.notes}` : '编辑页面配置'} open={isModalOpen} onCancel={() => setIsModalOpen(false)} width={1000} footer={null} centered className="config-modal" destroyOnClose>
+        <Form form={formRef.current} layout="vertical" onFinish={handleSave} size="large" className="mt-4">
+          <Form.Item name="value" rules={[{ required: true, message: '请输入配置内容' }]} className="mb-6" validateStatus={jsonError ? 'error' : ''} help={jsonError ? `JSON 格式错误: ${jsonError}` : ''}>
+            <div className="overflow-hidden rounded-xl border border-gray-100 dark:border-strokedark">
+              <CodeMirror value={jsonValue} extensions={[json()]} onChange={handleJsonChange} theme={isDarkMode ? 'dark' : 'light'} basicSetup={{ lineNumbers: true, foldGutter: true }} height="500px" />
+            </div>
           </Form.Item>
 
-          <Button onClick={handleFormatJson} className="w-full mb-2">
-            格式化
-          </Button>
-          <Button type="primary" htmlType="submit" loading={btnLoading} className="w-full">
-            保存配置
-          </Button>
+          <Space className="w-full justify-end">
+            <Button onClick={handleFormatJson}>格式化</Button>
+            <Button type="primary" htmlType="submit" loading={btnLoading}>
+              保存
+            </Button>
+          </Space>
         </Form>
       </Modal>
     </div>
   );
 };
+

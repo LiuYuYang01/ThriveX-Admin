@@ -1,5 +1,5 @@
 const ProjectCardSkeleton = () => (
-  <div className="bg-white dark:bg-boxdark rounded-2xl border border-gray-100 dark:border-strokedark shadow-xs h-full overflow-hidden">
+  <div className="bg-white dark:bg-boxdark rounded-xl border border-gray-100 dark:border-strokedark shadow-xs h-full overflow-hidden">
     <div className="flex items-center gap-3 p-4 border-b border-gray-100 dark:border-strokedark">
       <div className="skeleton w-10 h-10 rounded-xl shrink-0" />
       <div className="skeleton h-5 rounded-sm" style={{ width: 130 }} />
