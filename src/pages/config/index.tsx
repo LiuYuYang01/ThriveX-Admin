@@ -46,8 +46,6 @@ export default () => {
   const [form] = Form.useForm();
   const formRef = useRef(form);
 
-  const isDarkMode = document.body.classList.contains('dark');
-
   const fetchList = async () => {
     if (isFirstLoadRef.current) {
       setInitialLoading(true);
@@ -190,20 +188,18 @@ export default () => {
                     key={item.id}
                     type="button"
                     onClick={() => setActiveId(Number(item.id))}
-                    className={`group relative flex items-center gap-3 p-4 text-left transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/5 ${
-                      isActive ? 'bg-primary/5 dark:bg-primary/10' : 'bg-transparent'
-                    } cursor-pointer`}
+                    className={`group relative flex items-center gap-3 p-4 text-left transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/5 ${isActive ? 'bg-primary/5 dark:bg-primary/10' : 'bg-transparent'
+                      } cursor-pointer`}
                   >
                     {/* 激活指示条 */}
                     {isActive && <div className="absolute left-0 top-0 h-full w-1 bg-primary" />}
 
                     {/* 图标 */}
                     <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
-                        isActive
-                          ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                          : 'bg-gray-50 text-gray-400 dark:bg-white/5 dark:text-gray-500 group-hover:bg-primary/10 group-hover:text-primary'
-                      }`}
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${isActive
+                        ? 'bg-primary text-white shadow-lg shadow-primary/30'
+                        : 'bg-gray-50 text-gray-400 dark:bg-white/5 dark:text-gray-500 group-hover:bg-primary/10 group-hover:text-primary'
+                        }`}
                     >
                       <span className="text-lg">{getConfigIcon(item.name)}</span>
                     </div>
@@ -212,9 +208,8 @@ export default () => {
                       <div className="flex items-center justify-between">
                         <Typography.Text
                           strong
-                          className={`text-xl transition-colors ${
-                            isActive ? 'text-primary' : 'text-gray-700 dark:text-gray-300'
-                          }`}
+                          className={`text-xl transition-colors ${isActive ? 'text-primary' : 'text-gray-700 dark:text-gray-300'
+                            }`}
                           ellipsis
                         >
                           {item.notes}
@@ -242,7 +237,7 @@ export default () => {
             </div>
           ) : (
             <div className="flex flex-1 min-h-0 flex-col gap-6">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-6 dark:border-strokedark">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-5 dark:border-strokedark">
                 <div className="flex items-center gap-4">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-primary/20">
                     <span className="text-2xl">{getConfigIcon(activeConfig.name)}</span>
@@ -287,11 +282,11 @@ export default () => {
         </Card>
       </div>
 
-      <Modal title={editItem ? `编辑配置: ${editItem.notes}` : '编辑页面配置'} open={isModalOpen} onCancel={() => setIsModalOpen(false)} width={1000} footer={null} centered className="config-modal" destroyOnClose>
+      <Modal title={editItem?.notes} open={isModalOpen} onCancel={() => setIsModalOpen(false)} width={1000} footer={null} centered className="config-modal" destroyOnClose>
         <Form form={formRef.current} layout="vertical" onFinish={handleSave} size="large" className="mt-4">
           <Form.Item name="value" rules={[{ required: true, message: '请输入配置内容' }]} className="mb-6" validateStatus={jsonError ? 'error' : ''} help={jsonError ? `JSON 格式错误: ${jsonError}` : ''}>
-            <div className="overflow-hidden rounded-xl border border-gray-100 dark:border-strokedark">
-              <CodeMirror value={jsonValue} extensions={[json()]} onChange={handleJsonChange} theme={isDarkMode ? 'dark' : 'light'} basicSetup={{ lineNumbers: true, foldGutter: true }} height="500px" />
+            <div className="overflow-hidden rounded-xl border border-gray-800 bg-[#1e1e1e]">
+              <CodeMirror value={jsonValue} extensions={[json()]} onChange={handleJsonChange} theme="dark" basicSetup={{ lineNumbers: true, foldGutter: true }} height="500px" />
             </div>
           </Form.Item>
 
