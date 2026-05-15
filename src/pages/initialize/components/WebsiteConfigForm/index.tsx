@@ -122,7 +122,10 @@ export default function WebsiteConfigForm({ onSuccess }: InitStepFormProps) {
         <Input placeholder="例如：豫ICP备2020031040号-1" />
       </Form.Item>
       <Form.Item label="网站创建时间" name="create_time">
-        <DatePicker className="w-full" />
+        <DatePicker
+          className="w-full"
+          disabledDate={(current) => Boolean(current && current.isAfter(dayjs().endOf('day')))}
+        />
       </Form.Item>
     </Form>
   );

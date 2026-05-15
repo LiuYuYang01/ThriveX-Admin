@@ -108,8 +108,17 @@ export default function SetupInitializePage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-6 md:px-6 md:py-8 bg-[#f5f7fb] dark:bg-[#1A222C]">
-      <div className="max-w-6xl mx-auto rounded-xl border border-stroke dark:border-strokedark bg-linear-to-br from-[#f8fbff] via-white to-[#f5f9ff] dark:from-[#2b394a] dark:via-boxdark-2 dark:to-[#2c3a4c] shadow-[0_8px_28px_rgba(96,165,250,0.14)]">
+    <div className="relative overflow-hidden min-h-screen flex items-center justify-center px-4 py-6 md:px-6 md:py-8 bg-[#f5f7fb] dark:bg-[#1A222C]">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 dark:hidden bg-[radial-gradient(circle_at_18%_12%,rgba(59,130,246,0.22),transparent_48%),radial-gradient(circle_at_82%_18%,rgba(168,85,247,0.18),transparent_52%),radial-gradient(circle_at_50%_92%,rgba(34,197,94,0.14),transparent_50%)]" />
+        <div className="absolute inset-0 hidden dark:block bg-[radial-gradient(circle_at_20%_12%,rgba(96,165,250,0.18),transparent_55%),radial-gradient(circle_at_85%_20%,rgba(147,51,234,0.18),transparent_58%),radial-gradient(circle_at_50%_92%,rgba(34,197,94,0.12),transparent_58%)]" />
+        <div className="absolute inset-0 dark:hidden opacity-[0.45] bg-[radial-gradient(rgba(148,163,184,0.35)_1px,transparent_1px)] [background-size:22px_22px]" />
+        <div className="absolute inset-0 hidden dark:block opacity-[0.25] bg-[radial-gradient(rgba(148,163,184,0.25)_1px,transparent_1px)] [background-size:26px_26px]" />
+        <div className="absolute -top-24 -right-28 h-[340px] w-[340px] rounded-full blur-3xl opacity-40 bg-linear-to-br from-sky-300 via-blue-200 to-transparent dark:from-sky-500/30 dark:via-indigo-500/20 dark:to-transparent" />
+        <div className="absolute -bottom-28 -left-36 h-[420px] w-[420px] rounded-full blur-3xl opacity-35 bg-linear-to-tr from-violet-300 via-fuchsia-200 to-transparent dark:from-violet-500/25 dark:via-fuchsia-500/15 dark:to-transparent" />
+      </div>
+
+      <div className="w-full lg:max-w-6xl mx-auto rounded-xl bg-white/75 dark:bg-[#243244]/45 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-black/5 dark:ring-white/5 shadow-[0_10px_38px_rgba(15,23,42,0.12)]">
         <div className="px-6 md:px-10 pt-8 pb-5 border-b border-stroke dark:border-strokedark">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
@@ -123,7 +132,8 @@ export default function SetupInitializePage() {
           <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-slate-500 dark:text-slate-300">当前进度</span>
-              <span className="text-2xl text-primary font-medium">{progress}%</span>
+              <span className="hidden sm:block absolute top-[2%] lg:top-[3%] right-12 text-[70px] text-primary font-bold">{progress}%</span>
+              <span className="block sm:hidden text-xl text-primary font-bold">{progress}%</span>
             </div>
             <Progress percent={progress} showInfo={false} strokeColor={{ '0%': '#93c5fd', '100%': '#60a5fa' }} />
           </div>
@@ -131,7 +141,7 @@ export default function SetupInitializePage() {
 
         <div className="px-6 md:px-10 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <Card className="rounded-lg h-fit bg-transparent! border-none! shadow-none!">
+            <Card className="rounded-lg h-fit bg-transparent! border-none! shadow-none! [&>.ant-card-body]:p-0! sm:[&>.ant-card-body]:p-5!">
               <h4 className="text-base font-semibold text-slate-800 dark:text-slate-100">初始化步骤</h4>
               <div className="mt-4">
                 <Steps
@@ -152,7 +162,7 @@ export default function SetupInitializePage() {
               </div>
             </Card>
 
-            <Card className="lg:col-span-2 rounded-lg bg-transparent! border-none! shadow-none!">
+            <Card className="lg:col-span-2 rounded-lg bg-transparent! border-none! shadow-none! [&>.ant-card-body]:p-0! sm:[&>.ant-card-body]:p-5!">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
                   <h3 className="mt-1 text-xl font-semibold text-slate-800 dark:text-slate-100">{current.title}</h3>

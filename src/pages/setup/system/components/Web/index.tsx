@@ -85,7 +85,10 @@ export default () => {
         </Form.Item>
 
         <Form.Item label="网站创建时间" name="create_time">
-          <DatePicker className="w-full" />
+          <DatePicker
+            className="w-full"
+            disabledDate={(current) => Boolean(current && current.isAfter(dayjs().endOf('day')))}
+          />
         </Form.Item>
 
         <Form.Item>

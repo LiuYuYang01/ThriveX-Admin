@@ -357,7 +357,28 @@ ${content}
         </Form.Item>
 
         <Form.Item label="选择发布时间" name="createTime">
-          <DatePicker showTime placeholder="选择文章发布时间" className="w-full" />
+          <DatePicker
+            showTime
+            placeholder="选择文章发布时间"
+            className="w-full"
+            disabledDate={(current) => Boolean(current && current.isAfter(dayjs().endOf('day')))}
+            disabledTime={(current) => {
+              if (!current) return {};
+              const now = dayjs();
+              if (!current.isSame(now, 'day')) return {};
+              return {
+                disabledHours: () => Array.from({ length: 24 }, (_, i) => i).filter((h) => h > now.hour()),
+                disabledMinutes: (selectedHour) =>
+                  selectedHour === now.hour()
+                    ? Array.from({ length: 60 }, (_, i) => i).filter((m) => m > now.minute())
+                    : [],
+                disabledSeconds: (selectedHour, selectedMinute) =>
+                  selectedHour === now.hour() && selectedMinute === now.minute()
+                    ? Array.from({ length: 60 }, (_, i) => i).filter((s) => s > now.second())
+                    : [],
+              };
+            }}
+          />
         </Form.Item>
 
         {/* <Form.Item label="是否置顶" name={["config", "top"]} valuePropName="checked">

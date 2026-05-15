@@ -24,8 +24,8 @@ export default function AccountConfigForm({ onSuccess }: InitStepFormProps) {
           oldPassword: '',
           newPassword: '',
         });
-      } catch {
-        message.error('管理员信息加载失败');
+      } catch (error) {
+        console.error('管理员信息加载失败', error);
       }
     };
 

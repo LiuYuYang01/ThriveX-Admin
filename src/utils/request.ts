@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { Modal, notification } from 'antd';
+import { notification } from 'antd';
 import { useUserStore } from '@/stores';
 
 // 配置项目API域名
@@ -20,6 +20,21 @@ const source = CancelToken.source();
 
 // 标记是否已经处理过401错误
 let isHandling401Error = false;
+
+const handleUnauthorized = (messageText?: string) => {
+    if (isHandling401Error) return;
+    isHandling401Error = true;
+
+    if (messageText) {
+        notification.error({
+            message: '登录已失效',
+            description: messageText,
+        });
+    }
+
+    const store = useUserStore.getState();
+    store.quitLogin();
+};
 
 // 请求拦截
 instance.interceptors.request.use(
@@ -47,6 +62,11 @@ instance.interceptors.response.use(
     (res: AxiosResponse) => {
         if (res.data?.code === 600) return res.data
 
+        if (res.data?.code === 401) {
+            handleUnauthorized(res.data?.message || '请重新登录');
+            return Promise.reject(res.data);
+        }
+
         // 只要code不等于200, 就相当于响应失败
         if (res.data?.code !== 200) {
             notification.error({
@@ -60,26 +80,11 @@ instance.interceptors.response.use(
         return res.data;
     },
     (err: AxiosError) => {
-        if (isHandling401Error) return;
+        if (isHandling401Error) return Promise.reject(err);
 
         // 如果code为401就证明认证失败
         if (err.response?.status === 401) {
-            isHandling401Error = true; // 标记为正在处理401错误
-
-            Modal.error({
-                title: '暂无权限',
-                content: '🔒️ 登录已过期，请重新登录?',
-                okText: '去登录',
-                onOk: () => {
-                    const store = useUserStore.getState()
-                    store.quitLogin()
-                    isHandling401Error = false; // 重置标记
-                }
-            });
-
-            // 取消后续的所有请求
-            source.cancel('认证失败，取消所有请求');
-
+            handleUnauthorized('请重新登录');
             return Promise.reject(err.response?.data);
         }
 
