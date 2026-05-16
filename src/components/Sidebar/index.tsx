@@ -213,8 +213,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             //   name: '存储管理',
             // },
             {
-              to: '/web_config',
-              path: 'web_config',
+              to: '/page_config',
+              path: 'page_config',
               name: '页面配置',
             },
           ],

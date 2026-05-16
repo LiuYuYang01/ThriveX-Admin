@@ -22,7 +22,7 @@ import Draft from '@/pages/draft';
 import Decycle from '@/pages/decycle';
 import Record from '@/pages/record';
 import Assistant from '@/pages/assistant';
-import Config from '@/pages/config';
+import PageConfig from '@/pages/page_config';
 
 // 路由配置接口
 export interface RouteConfig {
@@ -57,7 +57,7 @@ export const routes: AppRouteItem[] = [
   { path: '/iter', title: '项目更新记录', icon: <BiBug className="text-base" />, element: <Iterative /> },
   { path: '/work', title: '工作台', icon: <TbBrandAirtable className="text-base" />, element: <Work /> },
   { path: '/assistant', title: '助手管理', icon: <BiCategoryAlt className="text-base" />, element: <Assistant /> },
-  { path: '/web_config', title: '页面配置', icon: <BiCategoryAlt className="text-base" />, element: <Config /> },
+  { path: '/page_config', title: '页面配置', icon: <BiCategoryAlt className="text-base" />, element: <PageConfig /> },
 ];
 
 const routeConfigMap: Record<string, RouteConfig> = Object.fromEntries(

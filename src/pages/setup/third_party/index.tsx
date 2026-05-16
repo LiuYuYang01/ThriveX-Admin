@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Card } from 'antd';
+import { Card, Typography } from 'antd';
 import { BiBarChart, BiCloud, BiCrosshair, BiEnvelope, BiLineChart, BiMap, BiShield } from 'react-icons/bi';
 
 import Title from '@/components/Title';
@@ -135,40 +135,79 @@ export default function ThirdPartyConfigPage() {
   }
 
   return (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col">
       <Title value="第三方配置" />
 
-      <Card className="border-stroke mt-2 min-h-[calc(100vh-160px)]">
-        <div className="flex flex-col md:flex-row">
-          <ul className="w-full md:w-[20%] md:mr-5 mb-10 md:mb-0 border-b-0 md:border-r border-stroke dark:border-strokedark divide-y divide-solid divide-[#F6F6F6] dark:divide-strokedark">
-            {MENU_LIST.map((item) => (
-              <li
-                key={item.key}
-                className={`relative p-3 pl-5 before:content-[''] before:absolute before:top-1/2 before:left-0 before:-translate-y-1/2 before:w-[3.5px] before:h-[0%] before:bg-primary cursor-pointer transition-all ${activeKey === item.key ? 'bg-[#f7f7f8] dark:bg-[#3c5370] before:h-full' : ''}`}
-                onClick={() => handleMenuClick(item.key)}
-              >
-                <h3 className="flex items-center text-base dark:text-white">
-                  {item.icon}
-                  {item.title}
-                </h3>
+      <div className="grid flex-1 min-h-0 grid-cols-1 gap-2 lg:grid-cols-12">
+        {/* 左侧列表 */}
+        <Card className="lg:col-span-3 overflow-hidden border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: 0 } }}>
+          <div className="flex flex-col divide-y divide-gray-100 dark:divide-strokedark">
+            {MENU_LIST.map((item) => {
+              const isActive = activeKey === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleMenuClick(item.key)}
+                  className={`group relative flex items-center gap-3 p-4 text-left transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/5 ${isActive ? 'bg-primary/5 dark:bg-primary/10' : 'bg-transparent'
+                    } cursor-pointer`}
+                >
+                  {/* 激活指示条 */}
+                  {isActive && <div className="absolute left-0 top-0 h-full w-1 bg-primary" />}
 
-                <p className="text-[13px] text-gray-500 mt-1">{item.description}</p>
-              </li>
-            ))}
-          </ul>
+                  {/* 图标 */}
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${isActive
+                      ? 'bg-primary text-white shadow-lg shadow-primary/30'
+                      : 'bg-gray-50 text-gray-400 dark:bg-white/5 dark:text-gray-500 group-hover:bg-primary/10 group-hover:text-primary'
+                      }`}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                  </div>
 
-          <div className="w-full md:w-[80%] px-0 md:px-8">
-            <h2 className="text-xl pb-4 dark:text-white">{TAB_LABELS[activeKey]}</h2>
-            {activeKey === 'baidu_statis' && <BaiduForm row={byName[activeKey]} onSaved={reload} />}
-            {activeKey === 'baidu_statis_key' && <BaiduStatisKeyForm row={byName[activeKey]} onSaved={reload} />}
-            {activeKey === 'email' && <EmailForm row={byName[activeKey]} onSaved={reload} />}
-            {activeKey === 'gaode_map' && <GaodeMapForm row={byName[activeKey]} onSaved={reload} />}
-            {activeKey === 'gaode_coordinate' && <GaodeCoordinateForm row={byName[activeKey]} onSaved={reload} />}
-            {activeKey === 'qiniu_storage' && <QiniuForm row={byName[activeKey]} onSaved={reload} />}
-            {activeKey === 'hcaptcha' && <HcaptchaForm row={byName[activeKey]} onSaved={reload} />}
+                  <div className="flex flex-1 flex-col overflow-hidden">
+                    <div className="flex items-center justify-between">
+                      <Typography.Text
+                        strong
+                        className={`text-xl transition-colors ${isActive ? 'text-primary' : 'text-gray-700 dark:text-gray-300'
+                          }`}
+                        ellipsis
+                      >
+                        {item.title}
+                      </Typography.Text>
+                      {isActive && (
+                        <div className="relative flex h-2.5 w-2.5 mr-1">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                        </div>
+                      )}
+                    </div>
+                    <Typography.Text
+                      type="secondary"
+                      className="text-xs mt-1"
+                      ellipsis
+                    >
+                      {item.description}
+                    </Typography.Text>
+                  </div>
+                </button>
+              );
+            })}
           </div>
-        </div>
-      </Card>
+        </Card>
+
+        {/* 右侧内容 */}
+        <Card className="lg:col-span-9 flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
+          <h2 className="text-xl pb-4 dark:text-white">{TAB_LABELS[activeKey]}</h2>
+          {activeKey === 'baidu_statis' && <BaiduForm row={byName[activeKey]} onSaved={reload} />}
+          {activeKey === 'baidu_statis_key' && <BaiduStatisKeyForm row={byName[activeKey]} onSaved={reload} />}
+          {activeKey === 'email' && <EmailForm row={byName[activeKey]} onSaved={reload} />}
+          {activeKey === 'gaode_map' && <GaodeMapForm row={byName[activeKey]} onSaved={reload} />}
+          {activeKey === 'gaode_coordinate' && <GaodeCoordinateForm row={byName[activeKey]} onSaved={reload} />}
+          {activeKey === 'qiniu_storage' && <QiniuForm row={byName[activeKey]} onSaved={reload} />}
+          {activeKey === 'hcaptcha' && <HcaptchaForm row={byName[activeKey]} onSaved={reload} />}
+        </Card>
+      </div>
     </div>
   );
 }
