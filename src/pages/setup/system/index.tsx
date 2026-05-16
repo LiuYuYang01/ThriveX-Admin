@@ -158,7 +158,7 @@ export default () => {
         </Card>
 
         {/* 右侧内容 */}
-        <Card className="lg:col-span-9 rounded-xl! flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
+        <Card className="lg:col-span-9 rounded-xl! flex flex-col border-none shadow-none dark:bg-boxdark overflow-y-scroll!" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
           {active === 'system' && <System />}
           {active === 'web' && <Web />}
           {active === 'theme' && <Theme />}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import DefaultLayout from '@/layout/DefaultLayout';
+import Layout from '@/layout/Layout';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Spin } from 'antd';
 
@@ -90,7 +90,7 @@ export default () => {
   }
 
   return (
-    <DefaultLayout>
+    <Layout>
       <Routes>
         {routes.map(({ path, title, element }) => (
           <Route
@@ -107,6 +107,6 @@ export default () => {
 
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </DefaultLayout>
+    </Layout>
   );
 };

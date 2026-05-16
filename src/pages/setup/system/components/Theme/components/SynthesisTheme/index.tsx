@@ -166,7 +166,7 @@ export default () => {
             </div>
           </div>
 
-          <Button type="primary" size="large" className="w-full mt-4" htmlType="submit" loading={loading}>
+          <Button type="primary" size="large" className="w-full mt-4 mb-6" htmlType="submit" loading={loading}>
             确定
           </Button>
         </Form>
