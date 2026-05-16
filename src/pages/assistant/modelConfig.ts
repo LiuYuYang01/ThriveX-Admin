@@ -10,54 +10,35 @@ export type AssistantModelTheme = {
 
 /** 预设模型展示信息（可继续扩展） */
 export const ASSISTANT_MODEL_INFO_MAP: Record<string, AssistantModelInfo> = {
-  'deepseek-chat': {
-    desc: '通用聊天模型',
-    label: 'DeepSeek Chat',
+  'deepseek-v3': {
+    desc: 'DeepSeek最新一代通用大模型，擅长创意写作、文案撰写和长文本生成',
+    label: 'DeepSeek V3',
   },
-  'deepseek-reasoner': {
-    desc: '多步推理优化模型',
-    label: 'DeepSeek Reasoner',
+  'qwen-max': {
+    desc: '通义千问旗舰模型，擅长文学创作、商业文案和故事写作',
+    label: '通义千问 Max',
   },
-  'moonshot-v1-128k': {
-    desc: '长上下文模型，支持128k上下文',
-    label: 'Moonshot v1 128k',
+  'glm-4-plus': {
+    desc: '智谱最新旗舰模型，擅长文章写作、创意文案和诗歌创作',
+    label: '智谱 GLM-4 Plus',
   },
-  'gpt-4o': {
-    desc: '多模态大模型',
-    label: 'OpenAI GPT-4o',
+  'ernie-4.5': {
+    desc: '百度文心一言旗舰模型，擅长中文写作、诗词创作和文案策划',
+    label: '文心一言 4.5',
   },
-  'gpt-3.5-turbo': {
-    desc: '轻量快速模型',
-    label: 'OpenAI GPT-3.5 Turbo',
-  },
-  'glm-4': {
-    desc: '中文大模型',
-    label: '智谱 GLM-4',
-  },
-  'qwen-turbo': {
-    desc: '快速对话模型',
-    label: '通义千问 Turbo',
-  },
-  'ernie-bot': {
-    desc: '文心一言大模型',
-    label: '百度文心一言大模型',
-  },
-  'doubao-chat': {
-    desc: '字节跳动豆包模型',
-    label: '豆包 Chat',
-  },
+  'doubao-pro': {
+    desc: '字节跳动豆包旗舰模型，擅长新媒体写作、短视频文案和创意写作',
+    label: '豆包 Pro',
+  }
 };
 
 const ASSISTANT_MODEL_THEME_MAP: Record<string, AssistantModelTheme> = {
-  'deepseek-chat': { color: '#1890ff', icon: 'DS' },
-  'deepseek-reasoner': { color: '#722ed1', icon: 'DR' },
-  'moonshot-v1-128k': { color: '#13c2c2', icon: 'M' },
-  'gpt-4o': { color: '#52c41a', icon: 'GPT4' },
-  'gpt-3.5-turbo': { color: '#faad14', icon: 'GPT3' },
-  'glm-4': { color: '#eb2f96', icon: 'GLM' },
-  'qwen-turbo': { color: '#f5222d', icon: 'QW' },
-  'ernie-bot': { color: '#fa8c16', icon: 'EB' },
-  'doubao-chat': { color: '#2f54eb', icon: 'DB' },
+  'deepseek-v3': { color: '#1890ff', icon: 'DS' },
+  'qwen-max': { color: '#f5222d', icon: 'QW' },
+  'glm-4-plus': { color: '#eb2f96', icon: 'GLM' },
+  'kimi-k1.5': { color: '#00b96b', icon: 'K' },
+  'ernie-4.5': { color: '#fa8c16', icon: 'EB' },
+  'doubao-pro': { color: '#2f54eb', icon: 'DB' },
 };
 
 const DEFAULT_MODEL_THEME: AssistantModelTheme = { color: '#8c8c8c', icon: 'AI' };
