@@ -11,7 +11,7 @@ import { useUserStore } from '@/stores';
 import NotFound from '../NotFound';
 import { routes } from '@/components/RouteList/route';
 import SetupInitializePage from '@/pages/initialize';
-// import { getSystemInitStatusAPI } from '@/api/initialize';
+import { getSystemInitStatusAPI } from '@/api/initialize';
 
 export default () => {
   const navigate = useNavigate();
@@ -35,8 +35,8 @@ export default () => {
 
       setInitLoading(true);
       try {
-        // const { data } = await getSystemInitStatusAPI();
-        // setProjectInitialized(Boolean(data?.is_system_init));
+        const { data } = await getSystemInitStatusAPI();
+        setProjectInitialized(Boolean(data?.is_system_init));
         setProjectInitialized(true);
       } catch (error) {
         console.error(error);

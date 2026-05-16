@@ -11,6 +11,7 @@ export default () => {
   const location = useLocation();
   const { tabs, activeTab, addTab, removeTab, setActiveTab, closeOtherTabs, closeAllTabs } = useTabsStore();
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // 监听路由变化，自动添加标签
   useEffect(() => {
@@ -25,6 +26,76 @@ export default () => {
       setActiveTab(pathname);
     }
   }, [location.pathname, addTab, setActiveTab]);
+
+  // 滚动到指定的tab
+  const scrollToTab = (path: string) => {
+    const container = tabsContainerRef.current;
+    const tabElement = tabRefs.current.get(path);
+
+    if (!container || !tabElement) {
+      console.log('scrollToTab: container or tabElement not found', {
+        hasContainer: !!container,
+        hasTabElement: !!tabElement,
+        path,
+        tabRefsKeys: Array.from(tabRefs.current.keys())
+      });
+      return;
+    }
+
+    const containerRect = container.getBoundingClientRect();
+    const tabRect = tabElement.getBoundingClientRect();
+
+    // 计算tab相对于容器的位置
+    const tabLeft = tabRect.left - containerRect.left + container.scrollLeft;
+    const tabRight = tabLeft + tabRect.width;
+
+    // 检查tab是否在可视区域内
+    const containerLeft = container.scrollLeft;
+    const containerRight = containerLeft + containerRect.width;
+
+    console.log('scrollToTab debug:', {
+      path,
+      containerScrollLeft: container.scrollLeft,
+      containerWidth: containerRect.width,
+      containerLeft,
+      containerRight,
+      tabLeft,
+      tabRight,
+      tabWidth: tabRect.width,
+      isTabVisible: tabLeft >= containerLeft && tabRight <= containerRight
+    });
+
+    // 添加一些边距
+    const padding = 20;
+
+    if (tabLeft < containerLeft + padding) {
+      // tab在左侧被隐藏，滚动到tab
+      console.log('scrolling to left:', tabLeft - padding);
+      container.scrollTo({
+        left: tabLeft - padding,
+        behavior: 'smooth',
+      });
+    } else if (tabRight > containerRight - padding) {
+      // tab在右侧被隐藏，滚动到tab
+      console.log('scrolling to right:', tabRight - containerRect.width + padding);
+      container.scrollTo({
+        left: tabRight - containerRect.width + padding,
+        behavior: 'smooth',
+      });
+    } else {
+      console.log('tab is already visible');
+    }
+  };
+
+  // 当activeTab变化时，滚动到对应的tab
+  useEffect(() => {
+    if (activeTab) {
+      // 使用setTimeout确保DOM已经更新
+      setTimeout(() => {
+        scrollToTab(activeTab);
+      }, 0);
+    }
+  }, [activeTab]);
 
   // 检查滚动状态
   const checkScroll = () => {
@@ -113,7 +184,7 @@ export default () => {
   return (
     <div className="relative flex items-center">
       {/* 标签容器 */}
-      <div ref={tabsContainerRef} className="flex-1 flex items-center" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div ref={tabsContainerRef} className="flex-1 flex items-center overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         <div className="flex items-center h-10">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.path;
@@ -122,6 +193,13 @@ export default () => {
             return (
               <Dropdown key={tab.path} trigger={['contextMenu']} menu={getContextMenuProps(tab)}>
                 <div
+                  ref={(el) => {
+                    if (el) {
+                      tabRefs.current.set(tab.path, el);
+                    } else {
+                      tabRefs.current.delete(tab.path);
+                    }
+                  }}
                   onClick={() => handleTabClick(tab)}
                   className={`
                   relative flex items-center gap-2 px-4 h-10 cursor-pointer
