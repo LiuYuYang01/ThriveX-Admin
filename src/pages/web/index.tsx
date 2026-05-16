@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 
 import { Button, Card, Empty, Form, Input, Popconfirm, Select, Spin, Modal, message } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 
 import { getLinkListAPI, addLinkDataAPI, editLinkDataAPI, delLinkDataAPI, getWebTypeListAPI } from '@/api/web';
 import Title from '@/components/Title';
@@ -186,7 +186,7 @@ export default () => {
   return (
     <div>
       <Title value="网站管理">
-        <Button type="primary" onClick={openAddModal}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
           新增网站
         </Button>
       </Title>

@@ -4,7 +4,7 @@ import { getSwiperListAPI, addSwiperDataAPI, editSwiperDataAPI, delSwiperDataAPI
 import type { Swiper } from '@/types/app/swiper';
 import Title from '@/components/Title';
 import type { ColumnsType } from 'antd/es/table';
-import { CloudUploadOutlined, DeleteOutlined, FormOutlined, PictureOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, DeleteOutlined, FormOutlined, PictureOutlined, PlusOutlined } from '@ant-design/icons';
 import Material from '@/components/Material';
 import Skeleton from './Skeleton';
 
@@ -188,7 +188,7 @@ export default function SwiperPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <Title value="轮播图管理">
-        <Button type="primary" onClick={openCreateModal}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
           新增轮播图
         </Button>
       </Title>

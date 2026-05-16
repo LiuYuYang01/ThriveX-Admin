@@ -105,8 +105,8 @@ export default function AssistantPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-2">
       <Title value="助手管理">
-        <Button type="primary" onClick={openCreateModal}>
-          添加助手
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+          新增助手
         </Button>
       </Title>
 

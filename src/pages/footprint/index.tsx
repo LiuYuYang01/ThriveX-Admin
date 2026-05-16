@@ -17,7 +17,7 @@ import type { ColumnsType } from 'antd/es/table';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
-import { CloudUploadOutlined, DeleteOutlined, FormOutlined, SearchOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, DeleteOutlined, FormOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { GiPositionMarker } from 'react-icons/gi';
 import { IoSearch } from 'react-icons/io5';
 
@@ -387,7 +387,7 @@ export default () => {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <Title value="足迹管理">
-        <Button type="primary" onClick={openCreate}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
           新增足迹
         </Button>
       </Title>

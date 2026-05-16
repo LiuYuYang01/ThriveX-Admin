@@ -212,10 +212,7 @@ export default () => {
   return (
     <div className="space-y-2">
       <Title value="分类管理">
-        <Button
-          type="primary"
-          onClick={() => addCateData(0)}
-        >
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => addCateData(0)}>
           新增分类
         </Button>
       </Title>

@@ -4,7 +4,7 @@ import { getTagListAPI, addTagDataAPI, editTagDataAPI, delTagDataAPI, getTagData
 import { Tag } from '@/types/app/tag';
 import Title from '@/components/Title';
 import { ColumnsType } from 'antd/es/table';
-import { DeleteOutlined, FormOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, FormOutlined, PlusOutlined } from '@ant-design/icons';
 import Skeleton from './Skeleton';
 
 export default () => {
@@ -168,7 +168,7 @@ export default () => {
                 </Form.Item>
 
                 <Form.Item className="mb-0!">
-                  <Button type="primary" htmlType="submit" loading={btnLoading} className="w-full">
+                  <Button type="primary" htmlType="submit" loading={btnLoading} className="w-full" icon={tag.id ? <EditOutlined /> : <PlusOutlined />}>
                     {tag.id ? '编辑标签' : '新增标签'}
                   </Button>
                 </Form.Item>
