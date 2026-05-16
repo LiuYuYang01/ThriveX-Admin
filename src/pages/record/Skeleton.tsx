@@ -1,10 +1,9 @@
 export default () => {
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-2">
-      <div className="rounded-xl border border-gray-100 bg-white px-6 py-3 shadow-xs dark:border-strokedark dark:bg-boxdark">
+      <div className="rounded-xl border border-gray-100 bg-white px-6 py-2.5 shadow-xs dark:border-strokedark dark:bg-boxdark">
         <div className="flex items-center justify-between gap-4">
           <div className="skeleton h-8" style={{ width: 200 }} />
-          <div className="skeleton h-9 rounded-md" style={{ width: 108 }} />
         </div>
       </div>
 

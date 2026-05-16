@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DoubleRightOutlined } from '@ant-design/icons';
 
 import { getCommentListAPI } from '@/api/comment';
 import { getWallListAPI } from '@/api/wall';
@@ -26,8 +27,7 @@ export default function InfoCard() {
   }, []);
 
   return (
-    <div className="bg-primary rounded-md p-6 sm:p-10 flex flex-col justify-center h-[170px] relative overflow-hidden mb-4">
-      {/* 右侧弧形背景装饰 */}
+    <div className="bg-primary rounded-xl p-6 sm:p-10 flex flex-col justify-center h-[170px] relative overflow-hidden mb-3">
       <div
         className="absolute right-[-60px] top-[-40px] w-[300px] h-[300px] bg-blue-300 opacity-40 z-0"
         style={{
@@ -44,8 +44,8 @@ export default function InfoCard() {
           当前有 <span className="text-white text-2xl font-bold">{commentCount}</span> 条评论，<span className="text-white text-2xl font-bold">{linkCount}</span> 条友链，<span className="text-white text-2xl font-bold">{wallCount}</span> 条留言。
         </p>
 
-        <button className="bg-white text-blue-400 font-bold py-1 px-4 rounded-sm transition-transform hover:scale-105 cursor-pointer" onClick={() => navigate('/work')}>
-          去处理
+        <button className="bg-white text-blue-400 font-bold py-1 px-4 rounded-sm transition-transform hover:scale-105 cursor-pointer flex items-center gap-1" onClick={() => navigate('/work')}>
+          去处理 <DoubleRightOutlined />
         </button>
       </div>
     </div>

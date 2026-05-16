@@ -88,7 +88,7 @@ export default () => {
   }, []);
 
   return (
-    <div className="sm:px-7 col-span-12 rounded-md border border-stroke bg-light-gradient dark:bg-dark-gradient px-5 pb-4 pt-7 shadow-default dark:border-transparent xl:col-span-4">
+    <div className="sm:px-7 col-span-12 rounded-xl border border-stroke bg-light-gradient dark:bg-dark-gradient px-5 pb-4 pt-7 shadow-default dark:border-transparent xl:col-span-4">
       <Spin spinning={loading}>
         <div className="mb-3 justify-between gap-4 sm:flex">
           <div>

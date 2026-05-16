@@ -8,7 +8,7 @@ interface Props {
 
 export default ({ title, total, children }: Props) => {
   return (
-    <div className="rounded-md border border-stroke py-6 px-7 shadow-default dark:border-transparent bg-light-gradient dark:bg-dark-gradient">
+    <div className="rounded-xl border border-stroke py-6 px-7 shadow-default dark:border-transparent bg-light-gradient dark:bg-dark-gradient">
       <h3 className="text-sm text-slate-700 dark:text-white">{title}</h3>
 
       <div className="flex items-center justify-between">

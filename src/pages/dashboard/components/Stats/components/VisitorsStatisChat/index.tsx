@@ -251,7 +251,7 @@ export default () => {
   };
 
   return (
-    <div className="col-span-12 rounded-md border border-stroke px-5 pt-7 pb-5 shadow-default dark:border-transparent bg-light-gradient dark:bg-dark-gradient sm:px-7 xl:col-span-8">
+    <div className="col-span-12 rounded-xl border border-stroke px-5 pt-7 pb-5 shadow-default dark:border-transparent bg-light-gradient dark:bg-dark-gradient sm:px-7 xl:col-span-8">
       <div className="flex w-full justify-between items-center mb-2">
         <h3 className="text-xl font-bold text-slate-800 dark:text-white">访客统计</h3>
 

@@ -118,7 +118,7 @@ export default () => {
         </CardDataStats>
       </div>
 
-      <div className="rounded-lg mt-2 grid grid-cols-12 gap-2">
+      <div className="rounded-xl mt-2 grid grid-cols-12 gap-2">
         <VisitorsStatisChat />
         <NewOldVisitors />
       </div>
