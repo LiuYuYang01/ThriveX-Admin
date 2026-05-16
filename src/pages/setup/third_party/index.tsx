@@ -140,7 +140,7 @@ export default function ThirdPartyConfigPage() {
 
       <div className="grid flex-1 min-h-0 grid-cols-1 gap-2 lg:grid-cols-12">
         {/* 左侧列表 */}
-        <Card className="lg:col-span-3 overflow-hidden border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: 0 } }}>
+        <Card className="lg:col-span-3 rounded-xl! overflow-hidden border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: 0 } }}>
           <div className="flex flex-col divide-y divide-gray-100 dark:divide-strokedark">
             {MENU_LIST.map((item) => {
               const isActive = activeKey === item.key;
@@ -197,7 +197,7 @@ export default function ThirdPartyConfigPage() {
         </Card>
 
         {/* 右侧内容 */}
-        <Card className="lg:col-span-9 flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
+        <Card className="lg:col-span-9 rounded-xl! flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
           <h2 className="text-xl pb-4 dark:text-white">{TAB_LABELS[activeKey]}</h2>
           {activeKey === 'baidu_statis' && <BaiduForm row={byName[activeKey]} onSaved={reload} />}
           {activeKey === 'baidu_statis_key' && <BaiduStatisKeyForm row={byName[activeKey]} onSaved={reload} />}

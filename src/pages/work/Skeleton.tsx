@@ -1,6 +1,6 @@
 export default function WorkSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col space-y-2">
+    <div className="flex min-h-0 flex-1 flex-col space-y-2 rounded-xl!">
       <div className="rounded-xl border border-gray-100 bg-white px-6 py-3 shadow-xs dark:border-strokedark dark:bg-boxdark">
         <div className="skeleton h-8" style={{ width: 150 }} />
       </div>

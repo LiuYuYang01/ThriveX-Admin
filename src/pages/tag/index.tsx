@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { Table, Button, Form, Input, Popconfirm, message, Card, Spin, Skeleton, Tooltip } from 'antd';
+import { Table, Button, Form, Input, Popconfirm, message, Card, Spin, Tooltip } from 'antd';
 import { getTagListAPI, addTagDataAPI, editTagDataAPI, delTagDataAPI, getTagDataAPI } from '@/api/tag';
 import { Tag } from '@/types/app/tag';
 import Title from '@/components/Title';
 import { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined, FormOutlined } from '@ant-design/icons';
+import Skeleton from './Skeleton';
 
 export default () => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -129,7 +130,7 @@ export default () => {
           message.success('🎉 编辑标签成功');
         } else {
           await addTagDataAPI(values);
-          
+
           message.success('🎉 新增标签成功');
         }
 
@@ -150,41 +151,7 @@ export default () => {
 
   // 初始加载时显示骨架屏
   if (initialLoading) {
-    return (
-      <div>
-        {/* Title 骨架屏 */}
-        <Card className="[&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5! mb-2">
-          <Skeleton.Input active size="large" style={{ width: 150, height: 32 }} />
-        </Card>
-
-        <div className="flex md:justify-between flex-col md:flex-row mx-auto mt-2 h-[calc(100vh-180px)]">
-          {/* 左侧表单卡片骨架屏 */}
-          <div className="w-full md:w-[40%]">
-            <Card className="border-stroke w-full h-46 [&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5!">
-              <Skeleton style={{ width: '100%', height: 30 }} />
-            </Card>
-          </div>
-
-          {/* 右侧表格卡片骨架屏 */}
-          <Card className="border-stroke w-full md:w-[59%] [&>.ant-card-body]:p-0! mt-2 md:mt-0">
-            {/* 表格行骨架屏 - 模拟多行 */}
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-              <div key={item} className="flex items-center gap-4 mb-2 py-2 px-4 border-b border-gray-100">
-                <Skeleton.Input active size="small" style={{ width: 60, height: 20 }} />
-                <Skeleton.Input active size="small" style={{ width: 150, height: 20, flex: 1 }} />
-                <Skeleton.Input active size="small" style={{ width: 100, height: 20 }} />
-                <Skeleton.Input active size="small" style={{ width: 80, height: 20 }} />
-                <Skeleton.Input active size="small" style={{ width: 110, height: 20 }} />
-              </div>
-            ))}
-            {/* 分页骨架屏 */}
-            <div className="flex justify-center my-5">
-              <Skeleton.Input active size="default" style={{ width: 300, height: 32 }} />
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
+    return <Skeleton />;
   }
 
   return (
@@ -194,7 +161,7 @@ export default () => {
       <div className="flex md:justify-between flex-col md:flex-row mx-auto mt-2">
         <div className="w-full md:w-[40%]">
           <Spin spinning={editLoading}>
-            <Card className="border-stroke w-full [&>.ant-card-body]:pt-3!">
+            <Card className="border-stroke w-full [&>.ant-card-body]:pt-3! rounded-xl!">
               <Form form={form} layout="vertical" initialValues={tag} onFinish={onSubmit} size="large">
                 <Form.Item label="标签名称" name="name" rules={[{ required: true, message: '标签名称不能为空' }]}>
                   <Input placeholder="请输入标签名称" />
@@ -210,7 +177,7 @@ export default () => {
           </Spin>
         </div>
 
-        <Card className="border-stroke w-full md:w-[59%] [&>.ant-card-body]:p-0! mt-2 md:mt-0 h-[calc(100vh-150px)]">
+        <Card className="border-stroke rounded-xl! w-full md:w-[59%] [&>.ant-card-body]:p-0! mt-2 md:mt-0 h-[calc(100vh-150px)]">
           <Table
             rowKey="id"
             dataSource={list}

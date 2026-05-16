@@ -11,7 +11,7 @@ export default function ThirdPartySkeleton() {
 
       <div className="grid flex-1 min-h-0 grid-cols-1 gap-2 lg:grid-cols-12">
         {/* 左侧列表骨架屏 */}
-        <Card className="lg:col-span-3 overflow-hidden border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: 0 } }}>
+        <Card className="lg:col-span-3 rounded-xl! overflow-hidden border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: 0 } }}>
           <div className="flex flex-col divide-y divide-gray-100 dark:divide-strokedark">
             {Array.from({ length: THIRD_PARTY_ENV_NAMES.length }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 p-4">
@@ -26,7 +26,7 @@ export default function ThirdPartySkeleton() {
         </Card>
 
         {/* 右侧内容骨架屏 */}
-        <Card className="lg:col-span-9 flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
+        <Card className="lg:col-span-9 rounded-xl! flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
           <Skeleton active paragraph={{ rows: 8 }} />
         </Card>
       </div>

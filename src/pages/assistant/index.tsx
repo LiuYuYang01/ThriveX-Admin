@@ -153,7 +153,7 @@ export default function AssistantPage() {
           return (
             <Card
               key={item.id}
-              className={`relative overflow-hidden rounded-xl p-5 shadow-xs transition-shadow duration-300 hover:shadow-md ${item.isDefault
+              className={`relative overflow-hidden rounded-xl! p-5 shadow-xs transition-shadow duration-300 hover:shadow-md ${item.isDefault
                   ? 'border-2! border-primary! bg-linear-to-br from-blue-50 via-white to-blue-50 dark:from-blue-900/30 dark:via-boxdark dark:to-blue-900/30 dark:border-primary!'
                   : 'border border-gray-200 bg-linear-to-br from-gray-50 via-white to-slate-50 dark:from-boxdark/80 dark:via-boxdark dark:to-boxdark-2/80 dark:border-strokedark'
                 }`}
@@ -229,7 +229,7 @@ export default function AssistantPage() {
 
         <Button
           type="dashed"
-          className="flex h-auto min-h-[230px] flex-col items-center justify-center gap-2 rounded-lg border-2 bg-transparent text-gray-400 hover:border-primary hover:text-primary dark:border-strokedark dark:bg-boxdark! dark:text-gray-500 dark:hover:border-primary dark:hover:text-primary"
+          className="flex h-auto min-h-[230px] flex-col items-center justify-center gap-2 rounded-xl! border-2 bg-transparent text-gray-400 hover:border-primary hover:text-primary dark:border-strokedark dark:bg-boxdark! dark:text-gray-500 dark:hover:border-primary dark:hover:text-primary"
           onClick={openCreateModal}
         >
           <PlusOutlined style={{ fontSize: 24 }} />

@@ -101,7 +101,7 @@ export default () => {
 
       <div className="grid flex-1 min-h-0 grid-cols-1 gap-2 lg:grid-cols-12">
         {/* 左侧列表 */}
-        <Card className="lg:col-span-3 overflow-hidden border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: 0 } }}>
+        <Card className="lg:col-span-3 rounded-xl! overflow-hidden border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: 0 } }}>
           <div className="flex flex-col divide-y divide-gray-100 dark:divide-strokedark">
             {list.map((item) => {
               const isActive = active === item.key;
@@ -158,7 +158,7 @@ export default () => {
         </Card>
 
         {/* 右侧内容 */}
-        <Card className="lg:col-span-9 flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
+        <Card className="lg:col-span-9 rounded-xl! flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
           {active === 'system' && <System />}
           {active === 'web' && <Web />}
           {active === 'theme' && <Theme />}

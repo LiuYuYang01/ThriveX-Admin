@@ -10,7 +10,7 @@ export default function ConfigSkeleton() {
         </div>
       </div>
 
-      <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-12">
+      <div className="grid rounded-xl! flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-12">
         {/* 左侧列表骨架 */}
         <div className="lg:col-span-3 rounded-xl border border-gray-100 bg-white dark:border-strokedark dark:bg-boxdark overflow-hidden">
           <div className="flex flex-col divide-y divide-gray-100 dark:divide-strokedark">
@@ -27,7 +27,7 @@ export default function ConfigSkeleton() {
         </div>
 
         {/* 右侧预览骨架 */}
-        <div className="lg:col-span-9 flex flex-col rounded-xl border border-gray-100 bg-white p-6 dark:border-strokedark dark:bg-boxdark">
+        <div className="lg:col-span-9 rounded-xl! flex flex-col rounded-xl border border-gray-100 bg-white p-6 dark:border-strokedark dark:bg-boxdark">
           <div className="flex flex-1 min-h-0 flex-col space-y-6">
             <div className="shrink-0 border-b border-gray-100 pb-4 dark:border-strokedark">
               <div className="space-y-2">

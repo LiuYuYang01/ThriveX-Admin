@@ -47,7 +47,7 @@ const ProjectTimelineCard = ({
 }) => {
   const { iconBg, iconColor } = CARD_STYLES[colorIndex];
   return (
-    <div className="bg-slate-100 dark:bg-boxdark-2 rounded-2xl border border-slate-200/80 dark:border-strokedark shadow-xs hover:shadow-md transition-all duration-300 flex flex-col h-full overflow-hidden group">
+    <div className="bg-slate-100 dark:bg-boxdark-2 rounded-xl border border-slate-200/80 dark:border-strokedark shadow-xs hover:shadow-md transition-all duration-300 flex flex-col h-full overflow-hidden group">
       <div className="bg-white dark:bg-boxdark p-4 flex items-center gap-3 border-b border-slate-200/60 dark:border-strokedark">
         <div className={`flex items-center justify-center w-10 h-10 rounded-xl shrink-0 ${iconBg} ${iconColor}`}>
           <Icon size={22} className={iconColor} />
@@ -214,7 +214,7 @@ const IterativePage = () => {
       </div>
 
       <div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 relative">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 relative">
           {loading && (
             <div className="absolute inset-0 z-20 bg-white/60 dark:bg-boxdark/80 backdrop-blur-[1px] rounded-3xl flex items-center justify-center transition-colors">
               <div className="bg-white dark:bg-boxdark-2 p-4 rounded-full shadow-lg border border-slate-100 dark:border-strokedark">

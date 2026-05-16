@@ -20,7 +20,7 @@ const ProjectCardSkeleton = () => (
 
 export default () => {
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-2">
       <div className="px-6 py-3 bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark">
         <div className="relative flex items-center justify-center">
           <div className="flex items-center gap-4">
@@ -34,7 +34,7 @@ export default () => {
         </div>
       </div>
 
-      <div className="px-6 py-6 bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark">
+      <div className="px-6 py-6 bg-white dark:bg-boxdark rounded-xl shadow-xs border border-gray-100 dark:border-strokedark">
         <div className="flex justify-center">
           <div className="w-full max-w-[860px] flex flex-wrap gap-1">
             {Array.from({ length: 53 * 7 }).map((_, i) => (
@@ -44,7 +44,7 @@ export default () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 h-[600px]">
         <ProjectCardSkeleton />
         <ProjectCardSkeleton />
         <ProjectCardSkeleton />

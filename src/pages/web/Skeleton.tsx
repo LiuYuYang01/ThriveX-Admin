@@ -8,7 +8,7 @@ export default function WebSkeleton() {
         </div>
       </div>
 
-      <div className="WebPage min-h-[calc(100vh-160px)] rounded-xl border border-gray-100 bg-white px-5 py-3 shadow-xs dark:border-strokedark dark:bg-boxdark">
+      <div className="rounded-xl! min-h-[calc(100vh-160px)] border border-gray-100 bg-white px-5 py-3 shadow-xs dark:border-strokedark dark:bg-boxdark">
         <div className="mb-3 flex w-full justify-center">
           <div className="skeleton h-10 rounded-md" style={{ width: 300 }} />
         </div>

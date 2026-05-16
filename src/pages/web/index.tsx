@@ -191,7 +191,7 @@ export default () => {
         </Button>
       </Title>
 
-      <Card className="WebPage border-stroke min-h-[calc(100vh-160px)] [&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5!">
+      <Card className="rounded-xl! border-stroke min-h-[calc(100vh-160px)] [&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5!">
         <div className="flex justify-center w-full mt-1 mb-2">
           <Input placeholder="请输入网站名称或描述信息进行查询" prefix={<SearchOutlined />} value={search} onChange={(e) => setSearch(e.target.value)} className="w-[300px]" />
         </div>
