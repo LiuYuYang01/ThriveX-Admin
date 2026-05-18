@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Layout from '@/layout/Layout';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Spin } from 'antd';
@@ -20,6 +20,8 @@ export default () => {
   const isLoginRoute = pathname === '/login' || pathname === '/auth';
   const [initLoading, setInitLoading] = useState(true);
   const [projectInitialized, setProjectInitialized] = useState(false);
+  const hasCheckedInitStatus = useRef(false);
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
     // 如果没有token并且不在登录相关页面就强制跳转到登录页
@@ -27,30 +29,50 @@ export default () => {
   }, [store, isLoginRoute]);
 
   useEffect(() => {
+    // 当 token 变化时，重置检查状态，以便重新检查初始化状态
+    hasCheckedInitStatus.current = false;
+    hasRedirected.current = false;
+  }, [store.token]);
+
+  useEffect(() => {
+    // 如果已经检查过初始化状态，则不再重复检查
+    if (hasCheckedInitStatus.current) {
+      return;
+    }
+
     const loadSystemInitStatus = async () => {
-      if (!store.token || isLoginRoute) {
+      // 没有 token 时，不需要检查初始化状态
+      if (!store.token) {
         setInitLoading(false);
+        hasCheckedInitStatus.current = true;
         return;
       }
 
       setInitLoading(true);
       try {
         const { data } = await getSystemInitStatusAPI();
-        setProjectInitialized(data?.is_system_init);
-
-        // 如果项目已完成了初始化，则跳转到首页
-        if (data?.is_system_init) {
-          navigate('/', { replace: true });
-        }
+        const isInitialized = data?.is_system_init ?? false;
+        setProjectInitialized(isInitialized);
       } catch (error) {
         console.error(error);
+        setProjectInitialized(false);
       } finally {
         setInitLoading(false);
+        hasCheckedInitStatus.current = true;
       }
     };
 
     loadSystemInitStatus();
-  }, [store.token, isLoginRoute, pathname]);
+  }, [store.token, navigate]);
+
+  useEffect(() => {
+    // 当初始化状态检查完成且系统已初始化时，跳转到首页
+    // 只在首次检查完成时跳转一次
+    if (!initLoading && projectInitialized && !hasRedirected.current) {
+      hasRedirected.current = true;
+      navigate('/', { replace: true });
+    }
+  }, [initLoading, projectInitialized, navigate]);
 
   if (isLoginRoute) {
     return (
