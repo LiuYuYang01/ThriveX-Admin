@@ -36,8 +36,12 @@ export default () => {
       setInitLoading(true);
       try {
         const { data } = await getSystemInitStatusAPI();
-        setProjectInitialized(Boolean(data?.is_system_init));
-        setProjectInitialized(true);
+        setProjectInitialized(data?.is_system_init);
+
+        // 如果项目已完成了初始化，则跳转到首页
+        if (data?.is_system_init) {
+          navigate('/', { replace: true });
+        }
       } catch (error) {
         console.error(error);
       } finally {

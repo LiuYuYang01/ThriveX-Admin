@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Progress, Steps, message } from 'antd';
+import { Button, Card, Popconfirm, Progress, Steps, Tooltip, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import AccountConfigForm from './components/AccountConfigForm';
 import EmailConfigForm from './components/EmailConfigForm';
@@ -8,6 +8,7 @@ import SecurityConfigForm from './components/SecurityConfigForm';
 import StorageConfigForm from './components/StorageConfigForm';
 import WebsiteConfigForm from './components/WebsiteConfigForm';
 import { completeSystemInitAPI } from '@/api/initialize';
+import { useUserStore } from '@/stores';
 
 interface InitStep {
   key: string;
@@ -61,6 +62,7 @@ export default function SetupInitializePage() {
   const [completing, setCompleting] = useState(false);
   const [shouldCompleteInit, setShouldCompleteInit] = useState(false);
   const navigate = useNavigate();
+  const store = useUserStore();
 
   const current = INIT_STEPS[currentStep];
   const progress = useMemo(() => Math.round(((currentStep + 1) / INIT_STEPS.length) * 100), [currentStep]);
@@ -118,7 +120,24 @@ export default function SetupInitializePage() {
         <div className="absolute -bottom-28 -left-36 h-[420px] w-[420px] rounded-full blur-3xl opacity-35 bg-linear-to-tr from-violet-300 via-fuchsia-200 to-transparent dark:from-violet-500/25 dark:via-fuchsia-500/15 dark:to-transparent" />
       </div>
 
-      <div className="w-full lg:max-w-6xl mx-auto rounded-xl bg-white/75 dark:bg-[#243244]/45 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-black/5 dark:ring-white/5 shadow-[0_10px_38px_rgba(15,23,42,0.12)]">
+      <div className="relative w-full lg:max-w-6xl mx-auto rounded-xl bg-white/75 dark:bg-[#243244]/45 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-black/5 dark:ring-white/5 shadow-[0_10px_38px_rgba(15,23,42,0.12)]">
+        <div className="absolute top-4 right-4 z-10">
+          <Tooltip title="退出登录">
+            <Popconfirm
+              title="确定要退出登录吗？"
+              onConfirm={() => store.quitLogin()}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button icon={
+                <svg className="fill-current" width="16" height="16" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15.5375 0.618744H11.6531C10.7594 0.618744 10.0031 1.37499 10.0031 2.26874V4.64062C10.0031 5.05312 10.3469 5.39687 10.7594 5.39687C11.1719 5.39687 11.55 5.05312 11.55 4.64062V2.23437C11.55 2.16562 11.5844 2.13124 11.6531 2.13124H15.5375C16.3625 2.13124 17.0156 2.78437 17.0156 3.60937V18.3562C17.0156 19.1812 16.3625 19.8344 15.5375 19.8344H11.6531C11.5844 19.8344 11.55 19.8 11.55 19.7312V17.3594C11.55 16.9469 11.2062 16.6031 10.7594 16.6031C10.3125 16.6031 10.0031 16.9469 10.0031 17.3594V19.7312C10.0031 20.625 10.7594 21.3812 11.6531 21.3812H15.5375C17.2219 21.3812 18.5625 20.0062 18.5625 18.3562V3.64374C18.5625 1.95937 17.1875 0.618744 15.5375 0.618744Z" fill="" />
+                  <path d="M6.05001 11.7563H12.2031C12.6156 11.7563 12.9594 11.4125 12.9594 11C12.9594 10.5875 12.6156 10.2438 12.2031 10.2438H6.08439L8.21564 8.07813C8.52501 7.76875 8.52501 7.2875 8.21564 6.97812C7.90626 6.66875 7.42501 6.66875 7.11564 6.97812L3.67814 10.4844C3.36876 10.7938 3.36876 11.275 3.67814 11.5844L7.11564 15.0906C7.25314 15.2281 7.45939 15.3312 7.66564 15.3312C7.87189 15.3312 8.04376 15.2625 8.21564 15.125C8.52501 14.8156 8.52501 14.3344 8.21564 14.025L6.05001 11.7563Z" fill="" />
+                </svg>
+              } />
+            </Popconfirm>
+          </Tooltip>
+        </div>
         <div className="px-6 md:px-10 pt-8 pb-5 border-b border-stroke dark:border-strokedark">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>

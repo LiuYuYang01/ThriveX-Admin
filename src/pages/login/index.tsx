@@ -18,6 +18,8 @@ export default () => {
   const [form] = useForm();
 
   const [isPassVisible, setIsPassVisible] = useState(false);
+
+  // 记录上个页面的路径，方便回退
   const returnUrl = new URLSearchParams(location.search).get('returnUrl') || '/';
 
   const onSubmit = async () => {
