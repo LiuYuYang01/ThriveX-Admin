@@ -5,7 +5,7 @@ import { THIRD_PARTY_ENV_NAMES } from '@/types/app/config';
 export default function ThirdPartySkeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Card className="[&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5! mb-2! border-none shadow-none">
+      <Card className="[&>.ant-card-body]:py-2! [&>.ant-card-body]:px-5! mb-2! border-none bg-transparent! shadow-none!">
         <Skeleton.Input active size="large" style={{ width: 150, height: 32 }} />
       </Card>
 

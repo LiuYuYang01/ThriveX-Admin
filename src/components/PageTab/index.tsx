@@ -210,7 +210,7 @@ export default () => {
                   {icon && <span className="shrink-0">{icon}</span>}
                   <span className="whitespace-nowrap text-sm">{tab.title}</span>
                   {tabs.length > 1 && (
-                    <button onClick={(e) => handleCloseTab(e, tab)} className="ml-1 shrink-0 w-4 h-4 flex items-center justify-center rounded-sm text-gray-300 hover:text-white hover:bg-red-500 dark:hover:bg-red-500 transition-colors" onMouseDown={(e) => e.stopPropagation()}>
+                    <button onClick={(e) => handleCloseTab(e, tab)} className="ml-1 shrink-0 w-4 h-4 flex items-center justify-center rounded-sm text-gray-300 hover:text-white hover:bg-red-500 dark:hover:bg-red-500 transition-colors cursor-pointer" onMouseDown={(e) => e.stopPropagation()}>
                       <AiOutlineClose className="text-xs" />
                     </button>
                   )}

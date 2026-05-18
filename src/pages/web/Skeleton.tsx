@@ -1,7 +1,7 @@
 export default function WebSkeleton() {
   return (
     <div className="space-y-2">
-      <div className="rounded-xl border border-gray-100 bg-white px-6 py-3 shadow-xs dark:border-strokedark dark:bg-boxdark">
+      <div className="px-3 mb-4">
         <div className="flex items-center justify-between">
           <div className="skeleton h-8" style={{ width: 150 }} />
           <div className="skeleton h-9 rounded-md" style={{ width: 108 }} />

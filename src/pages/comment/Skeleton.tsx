@@ -1,7 +1,7 @@
 export default () => {
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-2">
-      <div className="px-6 py-3 bg-white dark:bg-boxdark rounded-xl shadow-xs border border-gray-100 dark:border-strokedark">
+      <div className="px-3 mb-4">
         <div className="skeleton h-8" style={{ width: 200 }} />
       </div>
 

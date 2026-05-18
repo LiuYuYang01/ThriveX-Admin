@@ -1,7 +1,7 @@
 export default function WallSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-2">
-      <div className="rounded-xl border border-gray-100 bg-white px-6 py-3 shadow-xs dark:border-strokedark dark:bg-boxdark">
+      <div className="px-3 mb-4">
         <div className="skeleton h-8" style={{ width: 200 }} />
       </div>
 
