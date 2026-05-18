@@ -49,9 +49,8 @@ const Header = (props: { sidebarOpen: string | boolean | undefined; setSidebarOp
   }
 
   return (
-    // <header className="sticky top-0 z-99 flex w-full bg-light-gradient dark:bg-dark-gradient dark:backdrop-blur-xl">
-    <header className="sticky top-0 z-99 flex w-full dark:backdrop-blur-xl">
-      <div className="flex grow items-center justify-between px-4 py-3 shadow-2 md:px-6 2xl:px-11 overflow-scroll">
+    <header className="sticky top-0 z-99 flex w-full bg-light-gradient backdrop-blur-xl dark:bg-dark-gradient dark:backdrop-blur-xl ml-[16px] rounded-bl-2xl shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.06)] dark:shadow-[0px_30px_30px_-3px_rgba(59,130,246,0.22)] border border-gray-200/50 dark:border-transparent">
+      <div className="flex grow items-center justify-between px-4 py-1.5 shadow-2 md:px-6 2xl:px-11 overflow-scroll">
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <div className="flex items-center gap-4 lg:hidden shrink-0">
             <button
