@@ -1,4 +1,4 @@
-import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug, BiPlug } from 'react-icons/bi';
+import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiCategoryAlt, BiBug, BiPlug, BiBook, BiBookmark, BiTrash, BiListUl, BiChip, BiMessageSquareDetail, BiMessageRoundedDetail, BiCommentDetail, BiGlobe, BiImage, BiMapPin, BiCog } from 'react-icons/bi';
 import { TbBrandAirtable } from 'react-icons/tb';
 import React from 'react';
 
@@ -39,25 +39,25 @@ export interface AppRouteItem extends RouteConfig {
 export const routes: AppRouteItem[] = [
   { path: '/', title: '仪表盘', icon: <BiHomeSmile className="text-base" />, element: <Home /> },
   { path: '/create', title: '发挥灵感', icon: <BiEditAlt className="text-base" />, element: <Create /> },
-  { path: '/create_record', title: '闪念', icon: <BiEditAlt className="text-base" />, element: <CreateRecord /> },
-  { path: '/draft', title: '草稿箱', icon: <BiEditAlt className="text-base" />, element: <Draft /> },
-  { path: '/recycle', title: '回收站', icon: <BiEditAlt className="text-base" />, element: <Decycle /> },
+  { path: '/create_record', title: '闪念', icon: <BiBookmark className="text-base" />, element: <CreateRecord /> },
+  { path: '/draft', title: '草稿箱', icon: <BiBook className="text-base" />, element: <Draft /> },
+  { path: '/recycle', title: '回收站', icon: <BiTrash className="text-base" />, element: <Decycle /> },
   { path: '/cate', title: '分类管理', icon: <BiCategoryAlt className="text-base" />, element: <Cate /> },
-  { path: '/article', title: '文章管理', icon: <BiCategoryAlt className="text-base" />, element: <Article /> },
-  { path: '/record', title: '说说管理', icon: <BiCategoryAlt className="text-base" />, element: <Record /> },
-  { path: '/tag', title: '标签管理', icon: <BiCategoryAlt className="text-base" />, element: <Tag /> },
-  { path: '/comment', title: '评论管理', icon: <BiCategoryAlt className="text-base" />, element: <Comment /> },
-  { path: '/wall', title: '留言管理', icon: <BiCategoryAlt className="text-base" />, element: <Wall /> },
-  { path: '/web', title: '网站管理', icon: <BiCategoryAlt className="text-base" />, element: <Web /> },
-  { path: '/swiper', title: '轮播图管理', icon: <BiCategoryAlt className="text-base" />, element: <Swiper /> },
-  { path: '/footprint', title: '足迹管理', icon: <BiCategoryAlt className="text-base" />, element: <Footprint /> },
-  { path: '/setup/system', title: '系统配置', icon: <BiSliderAlt className="text-base" />, element: <SystemConfig /> },
+  { path: '/article', title: '文章管理', icon: <BiListUl className="text-base" />, element: <Article /> },
+  { path: '/record', title: '说说管理', icon: <BiMessageSquareDetail className="text-base" />, element: <Record /> },
+  { path: '/tag', title: '标签管理', icon: <BiBookmark className="text-base" />, element: <Tag /> },
+  { path: '/comment', title: '评论管理', icon: <BiMessageRoundedDetail className="text-base" />, element: <Comment /> },
+  { path: '/wall', title: '留言管理', icon: <BiCommentDetail className="text-base" />, element: <Wall /> },
+  { path: '/web', title: '网站管理', icon: <BiGlobe className="text-base" />, element: <Web /> },
+  { path: '/swiper', title: '轮播图管理', icon: <BiImage className="text-base" />, element: <Swiper /> },
+  { path: '/footprint', title: '足迹管理', icon: <BiMapPin className="text-base" />, element: <Footprint /> },
+  { path: '/setup/system', title: '系统配置', icon: <BiCog className="text-base" />, element: <SystemConfig /> },
   { path: '/setup/third_party', title: '第三方配置', icon: <BiPlug className="text-base" />, element: <ThirdPartyConfig /> },
   { path: '/file', title: '文件管理', icon: <BiFolderOpen className="text-base" />, element: <File /> },
   { path: '/iter', title: '项目更新记录', icon: <BiBug className="text-base" />, element: <Iterative /> },
   { path: '/work', title: '工作台', icon: <TbBrandAirtable className="text-base" />, element: <Work /> },
-  { path: '/assistant', title: '助手管理', icon: <BiCategoryAlt className="text-base" />, element: <Assistant /> },
-  { path: '/page_config', title: '页面配置', icon: <BiCategoryAlt className="text-base" />, element: <PageConfig /> },
+  { path: '/assistant', title: '助手管理', icon: <BiChip className="text-base" />, element: <Assistant /> },
+  { path: '/page_config', title: '页面配置', icon: <BiCog className="text-base" />, element: <PageConfig /> },
 ];
 
 const routeConfigMap: Record<string, RouteConfig> = Object.fromEntries(
