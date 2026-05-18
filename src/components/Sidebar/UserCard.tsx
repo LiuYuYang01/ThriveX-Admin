@@ -48,9 +48,17 @@ export default ({ isSideBarTheme }: UserCardProps) => {
     <div className="p-2">
       <Dropdown menu={{ items: dropdownItems }} placement="topRight" trigger={['click']}>
         <div className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${isSideBarTheme === 'dark' ? 'bg-[#313D4A] hover:bg-[#3d4b5c]' : 'bg-white/60 dark:bg-[#313D4A] backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-[#3d4b5c]'}`}>
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white font-bold text-lg shrink-0">
-            {user?.name?.charAt(0) || 'T'}
-          </div>
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt={user?.name || 'avatar'}
+              className="w-10 h-10 rounded-full shrink-0 object-cover"
+            />
+          ) : (
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white font-bold text-lg shrink-0">
+              {user?.name?.charAt(0) || 'T'}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <div className={`text-sm font-semibold truncate ${isSideBarTheme === 'dark' ? 'text-white' : 'text-[#444] dark:text-white'}`}>
               {user?.name || '未命名'}
@@ -59,11 +67,13 @@ export default ({ isSideBarTheme }: UserCardProps) => {
               超级管理员
             </div>
           </div>
-          <svg className="shrink-0 w-4 h-4 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-            <circle cx="10" cy="4" r="1.5" />
-            <circle cx="10" cy="10" r="1.5" />
-            <circle cx="10" cy="16" r="1.5" />
-          </svg>
+          <div className="p-2 rounded-md transition-colors hover:bg-black/5 dark:hover:bg-white/10">
+            <svg className="shrink-0 w-4 h-4 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <circle cx="10" cy="4" r="1.5" />
+              <circle cx="10" cy="10" r="1.5" />
+              <circle cx="10" cy="16" r="1.5" />
+            </svg>
+          </div>
         </div>
       </Dropdown>
     </div>
