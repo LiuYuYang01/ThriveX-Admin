@@ -182,7 +182,7 @@ export default () => {
   };
 
   return (
-    <div className="relative flex items-center">
+    <div className="relative hidden xs:flex items-center">
       {/* 标签容器 */}
       <div ref={tabsContainerRef} className="flex-1 flex items-center overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         <div className="flex items-center h-10">

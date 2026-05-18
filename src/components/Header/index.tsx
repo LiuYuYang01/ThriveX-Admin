@@ -1,28 +1,19 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Skeleton } from 'antd';
-import { useUserStore } from '@/stores';
-import DropdownUser from './DropdownUser';
 import DarkModeSwitcher from './DarkModeSwitcher';
 import logo from '/logo.png';
 import PageTab from '../PageTab';
 
 const Header = (props: { sidebarOpen: string | boolean | undefined; setSidebarOpen: (arg0: boolean) => void }) => {
-  const user = useUserStore((state) => state.user);
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
 
-  // 等待用户信息加载完成后，取消初始加载状态
   useEffect(() => {
-    if (user?.name) {
+    const timer = setTimeout(() => {
       setInitialLoading(false);
-    } else {
-      // 如果用户信息未加载，等待最多 500ms 后显示内容
-      const timer = setTimeout(() => {
-        setInitialLoading(false);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [user]);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // 初始加载时显示骨架屏
   if (initialLoading) {
@@ -51,17 +42,6 @@ const Header = (props: { sidebarOpen: string | boolean | undefined; setSidebarOp
             <ul className="flex items-center gap-2 2xsm:gap-4 sm:mr-4">
               <Skeleton.Button active size="default" style={{ width: 32, height: 30 }} />
             </ul>
-
-            <div className="sm:block hidden">
-              <div className="flex items-center gap-2">
-                <div className="hidden text-right lg:block space-x-4">
-                  <Skeleton.Input active size="small" style={{ width: 80, height: 30, marginBottom: 4 }} />
-                  <Skeleton.Input active size="small" style={{ width: 60, height: 30 }} />
-                </div>
-
-                <Skeleton.Avatar active size={32} shape="circle" className="ml-4" />
-              </div>
-            </div>
           </div>
         </div>
       </header>
@@ -109,10 +89,6 @@ const Header = (props: { sidebarOpen: string | boolean | undefined; setSidebarOp
           <ul className="flex items-center gap-2 2xsm:gap-4 sm:mr-4">
             <DarkModeSwitcher />
           </ul>
-
-          <div className="sm:block hidden">
-            <DropdownUser />
-          </div>
         </div>
       </div>
     </header>
