@@ -10,7 +10,7 @@ import System from './components/System';
 import Theme from './components/Theme';
 import Web from './components/Web';
 import Other from './components/Other';
-import SystemSetupSkeleton from './Skeleton';
+import Skeleton from './Skeleton';
 
 interface Setup {
   title: string;
@@ -92,7 +92,7 @@ export default () => {
 
   // 初始加载时显示骨架屏
   if (initialLoading) {
-    return <SystemSetupSkeleton />;
+    return <Skeleton />;
   }
 
   return (

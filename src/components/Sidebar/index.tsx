@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import SidebarLinkGroup from './SidebarLinkGroup';
-import SidebarSkeleton from './Skeleton';
+import Skeleton from './Skeleton';
 import UserCard from './UserCard';
 
 import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug, BiBook, BiTrash, BiChip, BiMessageSquareDetail, BiCommentDetail, BiGlobe, BiImage, BiMapPin, BiCog, BiPlug } from 'react-icons/bi';
@@ -289,7 +289,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   // 初始加载时显示骨架屏
   if (initialLoading) {
-    return <SidebarSkeleton />;
+    return <Skeleton />;
   }
 
   // 渲染侧边栏组件
