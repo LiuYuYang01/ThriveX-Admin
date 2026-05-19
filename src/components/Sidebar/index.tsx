@@ -3,36 +3,17 @@ import { NavLink, useLocation } from 'react-router-dom';
 import SidebarLinkGroup from './SidebarLinkGroup';
 import Skeleton from './Skeleton';
 import UserCard from './UserCard';
-
-import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug, BiBook, BiTrash, BiChip, BiMessageSquareDetail, BiCommentDetail, BiGlobe, BiImage, BiMapPin, BiCog, BiPlug } from 'react-icons/bi';
-import { TbBrandAirtable, TbWriting } from 'react-icons/tb';
-import { FaRegComments } from 'react-icons/fa';
-import { FaInstagram } from 'react-icons/fa';
-import { MdOutlineArticle } from 'react-icons/md';
+import { sidebarRoutes, type MenuItemConfig, type SubMenuConfig } from '@/config/routes.tsx';
 
 import logo from '/logo.png';
-import { AiOutlineTags } from 'react-icons/ai';
 
 interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (arg: boolean) => void;
 }
 
-// 定义导航项的类型
-interface MenuItem {
-  to: string;
-  path: string;
-  icon: React.ReactNode;
-  name: string | React.ReactNode;
-  subMenu?: SubMenuItem[];
-}
-
-interface SubMenuItem {
-  to: string;
-  path: string;
-  name: string;
-  icon: React.ReactNode;
-}
+type SidebarSubMenuItem = SubMenuConfig & { to: string };
+type MenuItem = MenuItemConfig & { to: string; subMenu?: SidebarSubMenuItem[] };
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const location = useLocation();
@@ -118,174 +99,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     );
   };
 
-  // 定义完整的路由列表配置
-  const routes: { group: string; list: MenuItem[] }[] = [
-    {
-      group: '',
-      list: [
-        {
-          to: '/',
-          path: 'dashboard',
-          icon: <BiHomeSmile className="text-lg" />,
-          name: '仪表盘',
-        },
-        {
-          to: '#',
-          path: 'write',
-          icon: <BiEditAlt className="text-lg" />,
-          name: '创作',
-          subMenu: [
-            {
-              to: '/create',
-              path: 'create',
-              name: '谱写',
-              icon: <TbWriting className="text-base" />,
-            },
-            {
-              to: '/create_record',
-              path: 'create_record',
-              name: '闪念',
-              icon: <FaInstagram className="text-base" />,
-            },
-            {
-              to: '/draft',
-              path: 'draft',
-              name: '草稿箱',
-              icon: <BiBook className="text-base" />,
-            },
-            {
-              to: '/recycle',
-              path: 'recycle',
-              name: '回收站',
-              icon: <BiTrash className="text-base" />,
-            },
-          ],
-        },
-        {
-          to: '#',
-          path: 'manage',
-          icon: <BiCategoryAlt className="text-lg" />,
-          name: '管理',
-          subMenu: [
-            {
-              to: '/article',
-              path: 'article',
-              name: '文章管理',
-              icon: <MdOutlineArticle className="text-base" />,
-            },
-            {
-              to: '/assistant',
-              path: 'assistant',
-              name: '助手管理',
-              icon: <BiChip className="text-base" />,
-            },
-            {
-              to: '/record',
-              path: 'record',
-              name: '说说管理',
-              icon: <BiMessageSquareDetail className="text-base" />,
-            },
-            {
-              to: '/tag',
-              path: 'tag',
-              name: '标签管理',
-              icon: <AiOutlineTags className="text-base" />,
-            },
-            {
-              to: '/comment',
-              path: 'comment',
-              name: '评论管理',
-              icon: <FaRegComments className="text-base" />,
-            },
-            {
-              to: '/wall',
-              path: 'wall',
-              name: '留言管理',
-              icon: <BiCommentDetail className="text-base" />,
-            },
-            {
-              to: '/cate',
-              path: 'cate',
-              name: '分类管理',
-              icon: <BiCategoryAlt className="text-base" />,
-            },
-            {
-              to: '/web',
-              path: 'web',
-              name: '网站管理',
-              icon: <BiGlobe className="text-base" />,
-            },
-            {
-              to: '/swiper',
-              path: 'swiper',
-              name: '轮播图管理',
-              icon: <BiImage className="text-base" />,
-            },
-            {
-              to: '/footprint',
-              path: 'footprint',
-              name: '足迹管理',
-              icon: <BiMapPin className="text-base" />,
-            },
-            {
-              to: '/page_config',
-              path: 'page_config',
-              name: '页面配置',
-              icon: <BiCog className="text-base" />,
-            },
-          ],
-        },
-        {
-          to: '#',
-          path: 'system',
-          icon: <BiSliderAlt className="text-lg" />,
-          name: '系统',
-          subMenu: [
-            {
-              to: '/setup/system',
-              path: 'system',
-              name: '系统配置',
-              icon: <BiCog className="text-base" />,
-            },
-            {
-              to: '/setup/third_party',
-              path: 'third_party',
-              name: '第三方配置',
-              icon: <BiPlug className="text-base" />,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      group: 'New',
-      list: [
-        {
-          to: '/work',
-          path: 'work',
-          icon: <TbBrandAirtable className="text-lg" />,
-          name: '工作台',
-        },
-        {
-          to: '/file',
-          path: 'file',
-          icon: <BiFolderOpen className="text-lg" />,
-          name: '文件系统',
-        },
-        {
-          to: '/iter',
-          path: 'iter',
-          icon: <BiBug className="text-lg" />,
-          name: (
-            <div className="flex items-center w-full justify-between">
-              <span>更新日志</span>
-              <div className="flex items-center gap-1" />
-            </div>
-          ),
-        },
-      ],
-    },
-  ];
+  // 将统一路由配置转换为侧边栏所需格式
+  const routes: { group: string; list: MenuItem[] }[] = sidebarRoutes.map((group) => ({
+    ...group,
+    list: group.list.map((item) => ({
+      ...item,
+      to: item.subMenu ? '#' : item.path,
+      subMenu: item.subMenu?.map((sub) => ({ ...sub, to: sub.path })),
+    })),
+  }));
 
   // 初始加载时显示骨架屏
   if (initialLoading) {
@@ -326,12 +148,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                       activeCondition={
                         // 默认展开「创作」；其余分组在子路由匹配时展开
                         item.path === 'write' ||
-                        (item.subMenu && item.subMenu.some((subItem) => pathname === subItem.to || pathname.startsWith(`${subItem.to}/`)))
+                        (item.subMenu && item.subMenu.some((subItem: SidebarSubMenuItem) => pathname === subItem.to || pathname.startsWith(`${subItem.to}/`)))
                       }
                     >
                       {(handleClick, open) => {
                         const isParentActive = item.subMenu!.some(
-                          (subItem) => pathname === subItem.to || pathname.startsWith(`${subItem.to}/`),
+                          (subItem: SidebarSubMenuItem) => pathname === subItem.to || pathname.startsWith(`${subItem.to}/`),
                         );
                         return (
                           <React.Fragment>
@@ -357,7 +179,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             {/* 子菜单列表 */}
                             <div className={`translate transform overflow-hidden ${!open && 'hidden'}`}>
                               <ul className="mt-4 mb-5.5 flex flex-col gap-2.5 pl-6">
-                                {item.subMenu!.map((subItem, subSubIndex) => (
+                                {item.subMenu!.map((subItem: SidebarSubMenuItem, subSubIndex) => (
                                   <li key={subSubIndex}>
                                     <NavLink
                                       to={subItem.to}
