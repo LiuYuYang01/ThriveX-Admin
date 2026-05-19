@@ -7,7 +7,7 @@ import UserCard from './UserCard';
 import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug, BiBook, BiTrash, BiChip, BiMessageSquareDetail, BiCommentDetail, BiGlobe, BiImage, BiMapPin, BiCog, BiPlug } from 'react-icons/bi';
 import { TbBrandAirtable, TbWriting } from 'react-icons/tb';
 import { FaRegComments } from 'react-icons/fa';
-import { FaInstagram } from "react-icons/fa";
+import { FaInstagram } from 'react-icons/fa';
 import { MdOutlineArticle } from 'react-icons/md';
 
 import logo from '/logo.png';
