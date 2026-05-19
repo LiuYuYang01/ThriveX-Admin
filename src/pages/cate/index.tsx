@@ -25,6 +25,19 @@ export default () => {
   const [isCateShow, setIsCateShow] = useState(false);
   const [form] = Form.useForm();
 
+  const normalizeIsHide = (value: unknown): boolean => {
+    if (value === true) return true;
+    if (value === false) return false;
+    if (typeof value === 'string') {
+      const v = value.trim().toLowerCase();
+      if (v === 'true') return true;
+      if (v === 'false') return false;
+    }
+    const num = Number(value);
+    if (!Number.isNaN(num)) return num === 1;
+    return false;
+  };
+
   const getCateList = async () => {
     try {
       if (isFirstLoadRef.current) {
@@ -55,7 +68,9 @@ export default () => {
     setIsModelOpen(true);
     setIsCateShow(false);
     form.resetFields();
-    setCate({ ...cate, level: id, type: 'cate' });
+    const nextCate = { ...cate, level: id, type: 'cate', isHide: false };
+    setCate(nextCate);
+    form.setFieldsValue({ level: id, type: 'cate', isHide: false });
   };
 
   const editCateData = async (id: number) => {
@@ -95,13 +110,16 @@ export default () => {
 
     try {
       form.validateFields().then(async (values: Cate) => {
-        if (values.type === 'cate') values.url = '/';
+        const normalizedValues = {
+          ...values,
+          url: values.type === 'cate' ? '/' : values.url,
+        };
 
         if (isMethod === 'edit') {
-          await editCateDataAPI({ ...cate, ...values });
+          await editCateDataAPI({ ...cate, ...normalizedValues });
           message.success('🎉 修改分类成功');
         } else {
-          await addCateDataAPI({ ...cate, ...values });
+          await addCateDataAPI({ ...cate, ...normalizedValues });
           message.success('🎉 新增分类成功');
         }
 
@@ -265,6 +283,17 @@ export default () => {
               <Input placeholder="值越小越靠前" />
             </Form.Item>
           </div>
+
+          <Form.Item label="是否隐藏" name="isHide">
+            <Radio.Group className="flex! gap-4!">
+              <Radio value={false} className="m-0!">
+                显示
+              </Radio>
+              <Radio value={true} className="m-0!">
+                隐藏
+              </Radio>
+            </Radio.Group>
+          </Form.Item>
 
           <Form.Item label="分类模式" name="type">
             <Radio.Group

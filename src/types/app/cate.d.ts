@@ -6,6 +6,7 @@ export interface Cate {
   level: number;
   order: number;
   type: string;
+  isHide?: boolean;
   count?: number;
   children?: Cate[];
 }
