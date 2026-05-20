@@ -214,7 +214,7 @@ const IterativePage = () => {
       </div>
 
       <div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 relative">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 relative mb-4">
           {loading && (
             <div className="absolute inset-0 z-20 bg-white/60 dark:bg-boxdark/80 backdrop-blur-[1px] rounded-3xl flex items-center justify-center transition-colors">
               <div className="bg-white dark:bg-boxdark-2 p-4 rounded-full shadow-lg border border-slate-100 dark:border-strokedark">

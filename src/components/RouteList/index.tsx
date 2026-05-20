@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Layout from '@/layout/Layout';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { Spin } from 'antd';
 
 import Login from '@/pages/login';
 
@@ -13,13 +12,26 @@ import { routes } from '@/components/RouteList/route';
 import SetupInitializePage from '@/pages/initialize';
 import { getSystemInitStatusAPI } from '@/api/initialize';
 
+const INIT_CACHE_KEY = 'thrivex_system_initialized';
+
+const readInitCache = (): boolean => {
+  try {
+    return sessionStorage.getItem(INIT_CACHE_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+const writeInitCache = (initialized: boolean) => {
+  sessionStorage.setItem(INIT_CACHE_KEY, initialized ? '1' : '0');
+};
+
 export default () => {
   const navigate = useNavigate();
   const store = useUserStore();
   const { pathname } = useLocation();
   const isLoginRoute = pathname === '/login' || pathname === '/auth';
-  const [initLoading, setInitLoading] = useState(true);
-  const [projectInitialized, setProjectInitialized] = useState(false);
+  const [projectInitialized, setProjectInitialized] = useState(readInitCache);
   const hasCheckedInitStatus = useRef(false);
   const hasRedirected = useRef(false);
 
@@ -43,21 +55,20 @@ export default () => {
     const loadSystemInitStatus = async () => {
       // 没有 token 时，不需要检查初始化状态
       if (!store.token) {
-        setInitLoading(false);
         hasCheckedInitStatus.current = true;
         return;
       }
 
-      setInitLoading(true);
       try {
         const { data } = await getSystemInitStatusAPI();
         const isInitialized = data?.is_system_init ?? false;
         setProjectInitialized(isInitialized);
+        writeInitCache(isInitialized);
       } catch (error) {
         console.error(error);
         setProjectInitialized(false);
+        writeInitCache(false);
       } finally {
-        setInitLoading(false);
         hasCheckedInitStatus.current = true;
       }
     };
@@ -66,12 +77,12 @@ export default () => {
   }, [store.token, navigate]);
 
   useEffect(() => {
-    // 系统已初始化时，仅从初始化页跳转到首页，避免刷新其他页面时被重定向
-    if (!initLoading && projectInitialized && pathname === '/initialize' && !hasRedirected.current) {
+     // 系统已初始化时，仅从初始化页跳转到首页，避免刷新其他页面时被重定向
+    if (projectInitialized && pathname === '/initialize' && !hasRedirected.current) {
       hasRedirected.current = true;
       navigate('/', { replace: true });
     }
-  }, [initLoading, projectInitialized, navigate, pathname]);
+  }, [projectInitialized, navigate, pathname]);
 
   if (isLoginRoute) {
     return (
@@ -86,14 +97,6 @@ export default () => {
           }
         />
       </Routes>
-    );
-  }
-
-  if (initLoading) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <Spin size="large" />
-      </div>
     );
   }
 

@@ -59,9 +59,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     }
   }, [sidebarExpanded]);
 
-  // 版本数据加载完成后，取消初始加载状态
+  // 首屏骨架屏展示时长（与 Header 一致，避免挂载后立即切真实内容导致“看不见”）
   useEffect(() => {
-    setInitialLoading(false);
+    const timer = setTimeout(() => setInitialLoading(false), 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const [isSideBarTheme] = useState<'dark' | 'light'>('light');
@@ -109,9 +110,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     })),
   }));
 
-  // 初始加载时显示骨架屏
+  // 初始加载时显示骨架屏（传入 sidebarOpen 以与真实侧栏定位一致）
   if (initialLoading) {
-    return <Skeleton />;
+    return <Skeleton sidebarOpen={sidebarOpen} />;
   }
 
   // 渲染侧边栏组件

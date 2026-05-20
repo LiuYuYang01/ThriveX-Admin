@@ -241,7 +241,7 @@ export default () => {
       </Title>
 
       <Spin spinning={loading}>
-        <Card className={`${titleSty} overflow-hidden rounded-2xl! min-h-[calc(100vh-160px)]`}>
+        <Card className={`${titleSty} overflow-hidden rounded-2xl! min-h-[calc(100vh-150px)]`}>
           <Editor value={content} onChange={(value) => setContent(value)} />
 
           <Drawer title={id && !isDraftParams ? '编辑文章' : '发布文章'} open={publishOpen} onClose={() => setPublishOpen(false)}>

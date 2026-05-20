@@ -1,44 +1,42 @@
-/** 助手管理首屏骨架（与文章模块一致使用 custom.scss 的 .skeleton） */
+/** 助手管理首屏骨架 */
 export default function AssistantPageSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col space-y-2">
-      <div className="px-3 mb-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="px-3">
         <div className="flex items-center justify-between">
-          <div className="skeleton h-8" style={{ width: 160 }} />
-          <div className="skeleton h-9 rounded-md" style={{ width: 100 }} />
+          <div className="skeleton h-8 rounded-md" style={{ width: 160 }} />
+          <div className="skeleton h-9 rounded-lg" style={{ width: 108 }} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 px-3 md:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 5 }, (_, i) => (
           <div
             key={i}
-            className="rounded-xl border border-gray-100 bg-white p-5 shadow-xs dark:border-strokedark dark:bg-boxdark"
+            className="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-5 dark:border-strokedark dark:bg-boxdark"
           >
             <div className="mb-4 flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="skeleton shrink-0 rounded-md" style={{ width: 48, height: 48 }} />
+                <div className="skeleton size-12 shrink-0 rounded-xl" />
                 <div className="space-y-2">
-                  <div className="skeleton h-4 rounded-sm" style={{ width: 120 }} />
-                  <div className="skeleton h-3 rounded-sm" style={{ width: 88 }} />
+                  <div className="skeleton h-4 rounded-md" style={{ width: 120 }} />
+                  <div className="skeleton h-5 rounded-full" style={{ width: 88 }} />
                 </div>
               </div>
-              <div className="skeleton h-8 rounded-md" style={{ width: 32 }} />
+              <div className="skeleton size-8 rounded-lg" />
             </div>
-            <div className="mb-4 rounded-md border border-gray-100 bg-gray-50/80 p-3 dark:border-strokedark dark:bg-boxdark-2/50">
-              <div className="skeleton mb-2 h-3 rounded-sm" style={{ width: 96 }} />
-              <div className="skeleton h-4 w-full rounded-sm" />
-              <div className="skeleton mt-1.5 h-4 rounded-sm" style={{ width: '85%' }} />
+            <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-strokedark dark:bg-boxdark-2/50">
+              <div className="skeleton mb-2 h-3 rounded-md" style={{ width: 96 }} />
+              <div className="skeleton h-4 w-full rounded-md" />
+              <div className="skeleton mt-1.5 h-4 rounded-md" style={{ width: '85%' }} />
             </div>
-            <div className="border-t border-gray-100 pt-2 dark:border-strokedark">
-              <div className="skeleton h-9 w-full rounded-md" />
-            </div>
+            <div className="skeleton mt-auto h-10 w-full rounded-xl" />
           </div>
         ))}
 
-        <div className="flex min-h-[230px] flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-gray-200 bg-transparent p-5 dark:border-strokedark">
-          <div className="skeleton size-8 rounded-md" />
-          <div className="skeleton h-4 rounded-sm" style={{ width: 88 }} />
+        <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 p-5 dark:border-strokedark">
+          <div className="skeleton size-10 rounded-xl" />
+          <div className="skeleton h-4 rounded-md" style={{ width: 96 }} />
         </div>
       </div>
     </div>
