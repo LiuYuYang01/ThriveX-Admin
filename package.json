@@ -4,7 +4,7 @@
   "version": "3.0",
   "type": "module",
   "scripts": {
-    "dev": "eslint . && vite",
+    "dev": "vite",
     "build": "eslint . && vite build",
     "preview": "vite preview",
     "lint": "eslint ."

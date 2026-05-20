@@ -3,7 +3,7 @@ import { Modal, Button, message } from 'antd';
 import type { UploadFile } from 'antd/es/upload/interface';
 import type { RcFile } from 'antd/es/upload/interface';
 import type { UploadFileStatus } from 'antd/es/upload/interface';
-import { InboxOutlined } from '@ant-design/icons';
+import { FiUploadCloud, FiFileText, FiX, FiDownload } from 'react-icons/fi';
 
 const ACCEPT_EXT = ['.md', '.json'];
 const MAX_FILES = 5;
@@ -28,13 +28,12 @@ interface ArticleImportModalProps {
   onImport: (files: File[]) => Promise<void>;
 }
 
-export default ({ open, onClose, onImport }: ArticleImportModalProps) => {
+export default function ArticleImportModal({ open, onClose, onImport }: ArticleImportModalProps) {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // 关闭时清空文件列表
   useEffect(() => {
     if (!open) {
       setFileList([]);
@@ -63,40 +62,46 @@ export default ({ open, onClose, onImport }: ArticleImportModalProps) => {
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files);
-    const valid = files.filter((f) => isValidFile(f.name));
-    if (!valid.length) {
-      message.error('仅支持 Markdown(.md) 或 JSON(.json) 文件');
-      return;
-    }
-    if (fileList.length + valid.length > MAX_FILES) {
-      message.error(`最多只能上传 ${MAX_FILES} 个文件`);
-      return;
-    }
-    setFileList((prev) => [...prev, ...valid.map(createUploadFile)]);
-    message.success(`成功添加 ${valid.length} 个文件`);
-  }, [fileList.length]);
+  const handleDrop = useCallback(
+    (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      const files = Array.from(e.dataTransfer.files);
+      const valid = files.filter((f) => isValidFile(f.name));
+      if (!valid.length) {
+        message.error('仅支持 Markdown(.md) 或 JSON(.json) 文件');
+        return;
+      }
+      if (fileList.length + valid.length > MAX_FILES) {
+        message.error(`最多只能上传 ${MAX_FILES} 个文件`);
+        return;
+      }
+      setFileList((prev) => [...prev, ...valid.map(createUploadFile)]);
+      message.success(`成功添加 ${valid.length} 个文件`);
+    },
+    [fileList.length],
+  );
 
-  const handleFileInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const valid = files.filter((f) => isValidFile(f.name));
-    if (!valid.length) {
-      message.error('仅支持 Markdown(.md) 或 JSON(.json) 文件');
+  const handleFileInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files || []);
+      const valid = files.filter((f) => isValidFile(f.name));
+      if (!valid.length) {
+        message.error('仅支持 Markdown(.md) 或 JSON(.json) 文件');
+        e.target.value = '';
+        return;
+      }
+      if (fileList.length + valid.length > MAX_FILES) {
+        message.error(`最多只能上传 ${MAX_FILES} 个文件`);
+        e.target.value = '';
+        return;
+      }
+      setFileList((prev) => [...prev, ...valid.map(createUploadFile)]);
       e.target.value = '';
-      return;
-    }
-    if (fileList.length + valid.length > MAX_FILES) {
-      message.error(`最多只能上传 ${MAX_FILES} 个文件`);
-      e.target.value = '';
-      return;
-    }
-    setFileList((prev) => [...prev, ...valid.map(createUploadFile)]);
-    e.target.value = '';
-  }, [fileList.length]);
+    },
+    [fileList.length],
+  );
 
   const removeFile = useCallback((uid: string) => {
     setFileList((prev) => prev.filter((f) => f.uid !== uid));
@@ -146,9 +151,7 @@ export default ({ open, onClose, onImport }: ArticleImportModalProps) => {
       message.warning('请上传至少一个 .md 或 .json 文件');
       return;
     }
-    const files = fileList
-      .map((f) => f.originFileObj as File)
-      .filter(Boolean);
+    const files = fileList.map((f) => f.originFileObj as File).filter(Boolean);
     if (!files.length) return;
     setImportLoading(true);
     try {
@@ -161,7 +164,12 @@ export default ({ open, onClose, onImport }: ArticleImportModalProps) => {
 
   return (
     <Modal
-      title="导入文章"
+      title={
+        <span className="inline-flex items-center gap-2">
+          <FiUploadCloud className="text-primary" />
+          导入文章
+        </span>
+      }
       open={open}
       onCancel={handleCancel}
       footer={[
@@ -171,15 +179,16 @@ export default ({ open, onClose, onImport }: ArticleImportModalProps) => {
         <Button
           key="import"
           type="primary"
-          onClick={handleImport}
+          onClick={() => void handleImport()}
           loading={importLoading}
           disabled={fileList.length === 0}
+          icon={<FiUploadCloud />}
         >
           开始导入
         </Button>,
       ]}
     >
-      <div className="py-4">
+      <div className="space-y-4 py-2">
         <div
           role="button"
           tabIndex={0}
@@ -189,19 +198,19 @@ export default ({ open, onClose, onImport }: ArticleImportModalProps) => {
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`w-full h-40 p-4 border border-dashed rounded-lg transition-all duration-300 ${isDragging
-            ? 'border-primary bg-primary/5'
-            : 'border-[#D7D7D7] hover:border-primary bg-[#FAFAFA]'
-            } space-y-2 cursor-pointer`}
+          className={`flex h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-4 transition-colors duration-200 ${isDragging
+              ? 'border-primary bg-primary/5 dark:bg-primary/10'
+              : 'border-slate-200 bg-slate-50/80 hover:border-primary hover:bg-slate-50 dark:border-strokedark dark:bg-boxdark-2/50 dark:hover:border-primary'
+            }`}
         >
-          <div className="flex justify-center">
-            <InboxOutlined className="text-5xl text-primary" />
+          <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/20">
+            <FiUploadCloud size={24} />
           </div>
-          <p className="text-base text-center">
-            {isDragging ? '文件放在此处即上传' : '点击或拖动文件到此区域'}
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            {isDragging ? '松开鼠标即可上传' : '点击或拖拽文件到此处'}
           </p>
-          <p className="text-sm text-[#999] text-center">
-            仅支持 Markdown 或 JSON 格式
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            支持 Markdown / JSON，单次最多 {MAX_FILES} 个文件
           </p>
         </div>
 
@@ -214,42 +223,41 @@ export default ({ open, onClose, onImport }: ArticleImportModalProps) => {
           accept=".md,.json"
         />
 
-        {fileList.length > 0 && (
-          <div className="mt-4">
-            <p className="text-sm text-gray-500 mb-2">已选择的文件：</p>
-            <ul className="space-y-2">
-              {fileList.map((file) => (
-                <li
-                  key={file.uid}
-                  className="flex items-center justify-between bg-gray-50 p-2 rounded-sm"
+        {fileList.length > 0 ? (
+          <ul className="space-y-2">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">已选择 {fileList.length} 个文件</p>
+            {fileList.map((file) => (
+              <li
+                key={file.uid}
+                className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 dark:border-strokedark dark:bg-boxdark-2"
+              >
+                <span className="inline-flex min-w-0 items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                  <FiFileText className="shrink-0 text-slate-400" />
+                  <span className="truncate">{file.name}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile(file.uid);
+                  }}
+                  className="flex size-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 cursor-pointer"
+                  aria-label={`移除 ${file.name}`}
                 >
-                  <span className="text-sm">{file.name}</span>
-                  <Button
-                    type="text"
-                    danger
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFile(file.uid);
-                    }}
-                  >
-                    删除
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {fileList.length === 0 && (
-          <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
-            <span>你可以下载模板后填写再导入：</span>
-            <div className="space-x-2">
-              <Button type="link" size="small" onClick={downloadMarkdownTemplate}>
-                下载 Markdown 模板
+                  <FiX size={16} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 dark:border-strokedark dark:bg-boxdark-2/30">
+            <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">可先下载模板，填写后再导入：</p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="link" size="small" icon={<FiDownload />} onClick={downloadMarkdownTemplate} className="px-0!">
+                Markdown 模板
               </Button>
-              <Button type="link" size="small" onClick={downloadJsonTemplate}>
-                下载 JSON 模板
+              <Button type="link" size="small" icon={<FiDownload />} onClick={downloadJsonTemplate} className="px-0!">
+                JSON 模板
               </Button>
             </div>
           </div>
@@ -257,4 +265,4 @@ export default ({ open, onClose, onImport }: ArticleImportModalProps) => {
       </div>
     </Modal>
   );
-};
+}

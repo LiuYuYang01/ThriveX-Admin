@@ -1,12 +1,33 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Table, Button, Tag, notification, Popconfirm, Form, Input, Select, message, Tooltip, Space } from 'antd';
-
+import {
+  Table,
+  Button,
+  notification,
+  Popconfirm,
+  Form,
+  Input,
+  Select,
+  message,
+  Tooltip,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { TableRowSelection } from 'antd/es/table/interface';
-import { DeleteOutlined, FormOutlined, InboxOutlined, EyeOutlined, CommentOutlined } from '@ant-design/icons';
-import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
+import {
+  FiFileText,
+  FiSearch,
+  FiEye,
+  FiMessageSquare,
+  FiEdit2,
+  FiTrash2,
+  FiUpload,
+  FiPlus,
+  FiExternalLink,
+  FiLock,
+  FiCalendar,
+  FiCheckSquare,
+} from 'react-icons/fi';
 import dayjs from 'dayjs';
 
 import Title from '@/components/Title';
@@ -26,52 +47,69 @@ import { useWebStore } from '@/stores';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
 import RangePicker from '@/components/RangePicker';
 
-import {
-  renderCollapsibleTags,
-  sortArticleByComment,
-  sortArticleByView,
-} from './articleTableShared';
+import { renderCollapsibleTags, sortArticleByComment, sortArticleByView } from './articleTableShared';
 
-const ARTICLE_STATUS_LABEL: Record<string, string> = {
-  1: '正常显示',
-  2: '首页隐藏',
-  3: '全站隐藏',
-};
-
-const ARTICLE_STATUS_COLOR: Record<string, string> = {
-  1: 'success',
-  2: 'warning',
-  3: 'default',
+const ARTICLE_STATUS_META: Record<
+  string,
+  { label: string; className: string }
+> = {
+  1: {
+    label: '正常显示',
+    className: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
+  },
+  2: {
+    label: '首页隐藏',
+    className: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
+  },
+  3: {
+    label: '全站隐藏',
+    className: 'bg-slate-100 text-slate-600 dark:bg-boxdark-2 dark:text-slate-400',
+  },
 };
 
 function renderArticleStatusCell(config: Config) {
   const hasPassword = Boolean(config.password?.trim());
-  const label = hasPassword ? '文章加密' : ARTICLE_STATUS_LABEL[config.status];
-  const color = hasPassword ? 'processing' : ARTICLE_STATUS_COLOR[config.status] ?? 'default';
-  return <Tag color={color} className="m-0! border-0! whitespace-nowrap">{label}</Tag>;
+  if (hasPassword) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
+        <FiLock size={11} />
+        文章加密
+      </span>
+    );
+  }
+  const meta = ARTICLE_STATUS_META[config.status] ?? ARTICLE_STATUS_META['3'];
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${meta.className}`}>
+      {meta.label}
+    </span>
+  );
 }
 
-/** 批量导入时每批并发提交篇数，批内并行、批间顺序，减轻服务端压力 */
 const IMPORT_ARTICLE_CONCURRENCY = 5;
 
-export default () => {
+export default function ArticlePage() {
   const [loading, setLoading] = useState(false);
   const [skeletonLoading, setSkeletonLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
   const [batchDeleteLoading, setBatchDeleteLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [form] = Form.useForm();
   const web = useWebStore((state) => state.web);
   const [articleList, setArticleList] = useState<Article[]>([]);
-
-  const [total, setTotal] = useState<number>(0);
-
+  const [total, setTotal] = useState(0);
   const [filter, setFilter] = useState<ArticleFilterQueryParams>();
-  const [showBatchActions, setShowBatchActions] = useState<boolean>(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [cateList, setCateList] = useState<ArticleCate[]>([]);
+  const [tagList, setTagList] = useState<ArticleTag[]>([]);
 
-  // 分页获取文章
+  const selectedCount = selectedRowKeys.length;
+  const pageViews = useMemo(
+    () => articleList.reduce((sum, item) => sum + (item.view ?? 0), 0),
+    [articleList],
+  );
+
   const getArticleList = useCallback(async () => {
     try {
       setLoading(true);
@@ -109,51 +147,52 @@ export default () => {
         dataIndex: 'title',
         key: 'title',
         width: 280,
-        render: (text: string, record: Article) => (
-          <>
-            {text ? (
-              <Tooltip title={text} placement="topLeft">
-                <a
-                  href={`${web.url}/article/${record.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="max-w-[280px] truncate block text-gray-700 dark:text-gray-200 font-medium hover:text-primary dark:hover:text-primary"
-                >
+        render: (text: string, record: Article) =>
+          text ? (
+            <Tooltip title={text} placement="topLeft">
+              <a
+                href={`${web.url}/article/${record.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="group inline-flex max-w-[280px] items-center gap-2 truncate"
+              >
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20">
+                  <FiFileText size={14} />
+                </span>
+                <span className="truncate font-medium text-slate-700 transition-colors group-hover:text-primary dark:text-slate-200">
                   {text}
-                </a>
-              </Tooltip>
-            )
-              : (
-                <span className="text-gray-300 dark:text-gray-500 italic">暂无标题</span>
-              )
-            }
-          </>
-        ),
+                </span>
+                <FiExternalLink
+                  size={12}
+                  className="shrink-0 text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-slate-500"
+                />
+              </a>
+            </Tooltip>
+          ) : (
+            <span className="text-xs italic text-slate-400 dark:text-slate-500">暂无标题</span>
+          ),
       },
       {
         title: '摘要',
         dataIndex: 'description',
         key: 'description',
-        width: 320,
-        render: (text: string) => (
-          <>
-            {text ? (
-              <Tooltip title={text}>
-                <div className="max-w-[320px] truncate text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary cursor-pointer">
-                  {text}
-                </div>
-              </Tooltip>
-            ) : (
-              <span className="text-gray-300 dark:text-gray-500 italic">暂无</span>
-            )}
-          </>
-        ),
+        width: 300,
+        render: (text: string) =>
+          text ? (
+            <Tooltip title={text}>
+              <p className="line-clamp-2 max-w-[300px] text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                {text}
+              </p>
+            </Tooltip>
+          ) : (
+            <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
+          ),
       },
       {
         title: '分类',
         dataIndex: 'cateList',
         key: 'cateList',
-        width: 150,
+        width: 140,
         render: (cates: ArticleCate[]) => renderCollapsibleTags(cates || [], 'cate'),
       },
       {
@@ -164,14 +203,14 @@ export default () => {
         render: (tags: ArticleTag[]) => renderCollapsibleTags(tags || [], 'tag'),
       },
       {
-        title: '浏览量',
+        title: '浏览',
         dataIndex: 'view',
         key: 'view',
-        width: 100,
+        width: 96,
         render: (v) => (
-          <span className="inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-300 tabular-nums">
-            <EyeOutlined className="text-gray-400 dark:text-gray-500 text-xs" />
-            <span className="font-medium">{v ?? 0}</span>
+          <span className="inline-flex items-center gap-1.5 tabular-nums text-slate-600 dark:text-slate-300">
+            <FiEye size={13} className="text-slate-400" />
+            <span className="text-sm font-medium">{v ?? 0}</span>
           </span>
         ),
         sorter: sortArticleByView,
@@ -181,11 +220,11 @@ export default () => {
         title: '评论',
         dataIndex: 'comment',
         key: 'comment',
-        width: 90,
+        width: 88,
         render: (v) => (
-          <span className="inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-300 tabular-nums">
-            <CommentOutlined className="text-gray-400 dark:text-gray-500 text-xs" />
-            <span className="font-medium">{v ?? 0}</span>
+          <span className="inline-flex items-center gap-1.5 tabular-nums text-slate-600 dark:text-slate-300">
+            <FiMessageSquare size={13} className="text-slate-400" />
+            <span className="text-sm font-medium">{v ?? 0}</span>
           </span>
         ),
         sorter: sortArticleByComment,
@@ -195,17 +234,25 @@ export default () => {
         title: '状态',
         dataIndex: 'config',
         key: 'config',
-        width: 130,
+        width: 120,
         render: (config: Config) => renderArticleStatusCell(config),
       },
       {
         title: '发布时间',
         dataIndex: 'createTime',
         key: 'createTime',
+        width: 140,
         render: (date: number) => (
-          <div className="flex flex-col">
-            <span className="text-gray-700 dark:text-gray-200 font-medium">{dayjs(date).format('YYYY-MM-DD')}</span>
-            <span className="text-gray-400 dark:text-gray-500 text-xs">{dayjs(date).format('HH:mm:ss')}</span>
+          <div className="flex gap-2 text-sm">
+            <FiCalendar size={13} className="shrink-0 text-slate-400 mt-0.5" />
+            <div className="flex flex-col leading-tight">
+              <span className="font-medium text-slate-700 dark:text-slate-200">
+                {dayjs(date).format('YYYY-MM-DD')}
+              </span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                {dayjs(date).format('HH:mm')}
+              </span>
+            </div>
           </div>
         ),
       },
@@ -213,40 +260,39 @@ export default () => {
         title: '操作',
         key: 'action',
         fixed: 'right',
-        width: 130,
+        width: 120,
         align: 'center',
         render: (_, record: Article) => (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-0.5">
             <ArticleExport.Single article={record} />
-
             <Tooltip title="编辑">
-              <Link to={`/create?id=${record.id}`}>
-                <Button
-                  type="text"
-                  icon={<FormOutlined className="text-blue-500" />}
-                  className="text-blue-500 dark:text-gray-300 dark:hover:text-blue-500! hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                />
+              <Link
+                to={`/create?id=${record.id}`}
+                className="flex size-8 items-center justify-center rounded-lg text-slate-400! transition-colors hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary!"
+                aria-label={`编辑 ${record.title}`}
+              >
+                <FiEdit2 size={16} />
               </Link>
             </Tooltip>
-
-            <Tooltip title="删除">
-              <Popconfirm
-                title="删除确认"
-                description="该操作可从回收站恢复，确定删除吗？"
-                okText="删除"
-                okButtonProps={{ danger: true }}
-                cancelText="取消"
-                onConfirm={() => delArticleData(record.id!)}
-              >
-                <Button
-                  type="text"
-                  danger
-                  loading={btnLoading}
-                  icon={<DeleteOutlined />}
-                  className="hover:bg-red-50 dark:hover:bg-red-900/20"
-                />
-              </Popconfirm>
-            </Tooltip>
+            <Popconfirm
+              title="删除文章"
+              description="文章将移入回收站，可随时恢复。确定删除吗？"
+              okText="删除"
+              okButtonProps={{ danger: true }}
+              cancelText="取消"
+              onConfirm={() => delArticleData(record.id!)}
+            >
+              <Tooltip title="删除">
+                <button
+                  type="button"
+                  disabled={btnLoading}
+                  className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50 dark:hover:bg-red-500/10 dark:hover:text-red-400 cursor-pointer"
+                  aria-label={`删除 ${record.title}`}
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              </Tooltip>
+            </Popconfirm>
           </div>
         ),
       },
@@ -254,25 +300,22 @@ export default () => {
     [web.url, btnLoading, delArticleData],
   );
 
-  const { onValuesChange: onFilterChange } =
-    useDebouncedChange<ArticleFilterDataForm>({
-      debouncedKeys: ['title'],
-      debounceMs: 400,
-      getValues: () => form.getFieldsValue() as ArticleFilterDataForm,
-      onApply: (values) => {
-        setFilter((prev) => ({
-          ...prev,
-          title: values.title,
-          cateId: values.cateId,
-          tagId: values.tagId,
-          startDate: values.createTime?.[0] ? values.createTime[0].valueOf() : undefined,
-          endDate: values.createTime?.[1] ? values.createTime[1].valueOf() : undefined,
-        }));
-      },
-    });
-
-  const [cateList, setCateList] = useState<ArticleCate[]>([]);
-  const [tagList, setTagList] = useState<ArticleTag[]>([]);
+  const { onValuesChange: onFilterChange } = useDebouncedChange<ArticleFilterDataForm>({
+    debouncedKeys: ['title'],
+    debounceMs: 400,
+    getValues: () => form.getFieldsValue() as ArticleFilterDataForm,
+    onApply: (values) => {
+      setFilter((prev) => ({
+        ...prev,
+        pageNum: 1,
+        title: values.title,
+        cateId: values.cateId,
+        tagId: values.tagId,
+        startDate: values.createTime?.[0] ? values.createTime[0].valueOf() : undefined,
+        endDate: values.createTime?.[1] ? values.createTime[1].valueOf() : undefined,
+      }));
+    },
+  });
 
   const getCateList = async () => {
     const { data } = await getCateListAPI();
@@ -284,15 +327,84 @@ export default () => {
     setTagList(data.result);
   };
 
-  // 导入文章：收集文件后调用，仅负责解析与提交
+  const getTagOrCateIdsByNames = (names: string[], allTags: ArticleTag[] | ArticleCate[]) => {
+    const lowerCaseMap = new Map<string, number>();
+    for (const item of allTags) {
+      lowerCaseMap.set(item.name.toLowerCase(), item.id as number);
+    }
+    return names
+      .map((name) => lowerCaseMap.get(name.toLowerCase()))
+      .filter((id): id is number => id !== undefined);
+  };
+
+  const parseMarkdownToArticle = (mdText: string): Article => {
+    const frontmatterMatch = mdText.match(/^---\n([\s\S]*?)\n---/);
+    if (!frontmatterMatch) throw new Error('Markdown 文件格式错误，缺少 frontmatter');
+
+    const frontmatterText = frontmatterMatch[1];
+    const content = mdText.replace(frontmatterMatch[0], '').trim();
+    const meta: Record<string, string> = {};
+
+    frontmatterText.split('\n').forEach((line) => {
+      const [key, ...rest] = line.split(':');
+      meta[key.trim()] = rest.join(':').trim();
+    });
+
+    const parseDateToTimestamp = (str: string): number => {
+      const d = new Date(str);
+      if (isNaN(d.getTime())) return Date.now();
+      return d.getTime();
+    };
+    const tagNames = meta.tags?.split(/\s+/).filter(Boolean) || [];
+    const tagIds = getTagOrCateIdsByNames(tagNames, tagList);
+    const cateNames = meta.categories?.split(/\s+/).filter(Boolean) || [];
+    const cateIds = getTagOrCateIdsByNames(cateNames, cateList);
+
+    return {
+      title: meta.title || '未命名文章',
+      description: meta.description || '',
+      content,
+      cover: meta.cover || '',
+      createTime: parseDateToTimestamp(meta.date || ''),
+      cateIds,
+      tagIds,
+      config: {
+        status: 1,
+        password: '',
+        isDraft: false,
+        isEncrypt: false,
+        isDel: false,
+      },
+    };
+  };
+
+  const parseJsonToArticles = (raw: Article | Article[]): Article[] => {
+    const parseSingle = (item: Article): Article => ({
+      title: item.title || '未命名文章',
+      description: item.description || '',
+      content: item.content || '',
+      cover: item.cover || '',
+      createTime: item.createTime,
+      cateIds: (item.cateList || []).map((cate) => cate.id).filter((id): id is number => id !== undefined),
+      tagIds: (item.tagList || []).map((tag) => tag.id).filter((id): id is number => id !== undefined),
+      config: {
+        status: item.config?.status || 1,
+        password: item.config?.password || '',
+        isDraft: item.config?.isDraft || false,
+        isEncrypt: item.config?.isEncrypt || false,
+        isDel: item.config?.isDel || false,
+      },
+    });
+    return Array.isArray(raw) ? raw.map(parseSingle) : [parseSingle(raw)];
+  };
+
   const handleArticleImport = async (files: File[]) => {
     const articles: Article[] = [];
 
     for (const file of files) {
       const text = await file.text();
       if (file.name.endsWith('.md')) {
-        const article = parseMarkdownToArticle(text);
-        articles.push(article);
+        articles.push(parseMarkdownToArticle(text));
       } else if (file.name.endsWith('.json')) {
         const json = JSON.parse(text);
         articles.push(...parseJsonToArticles(json));
@@ -311,16 +423,16 @@ export default () => {
           batch.map(async (article) => {
             try {
               const { code } = await addArticleDataAPI(article);
-              if (code === 200) message.success(`${article.title}--导入成功~`);
+              if (code === 200) message.success(`${article.title} — 导入成功`);
             } catch (error) {
               console.error(error);
-              message.error(`${article.title}--导入失败~`);
+              message.error(`${article.title} — 导入失败`);
             }
           }),
         );
       }
       await getArticleList();
-      notification.success({ message: `🎉 成功导入 ${articles.length} 篇文章` });
+      notification.success({ message: `成功导入 ${articles.length} 篇文章` });
     } catch (err) {
       console.error(err);
       notification.error({ message: '导入失败，请检查文件格式或控制台报错' });
@@ -328,98 +440,9 @@ export default () => {
     }
   };
 
-  const getTagOrCateIdsByNames = (names: string[], allTags: ArticleTag[] | ArticleCate[]) => {
-    const lowerCaseMap = new Map<string, number>();
-
-    // 忽略大小写
-    for (const item of allTags) {
-      lowerCaseMap.set(item.name.toLowerCase(), item.id as number);
-    }
-
-    return (
-      names
-        .map((name) => lowerCaseMap.get(name.toLowerCase()))
-        // 去除未匹配项
-        .filter((id): id is number => id !== undefined)
-    );
-  };
-
-  // 从 markdown 字符串解析为 Article JSON
-  const parseMarkdownToArticle = (mdText: string): Article => {
-    // 提取 frontmatter 块
-    const frontmatterMatch = mdText.match(/^---\n([\s\S]*?)\n---/);
-    if (!frontmatterMatch) throw new Error('Markdown 文件格式错误，缺少 frontmatter');
-
-    const frontmatterText = frontmatterMatch[1];
-    // 去除 frontmatter 后的正文
-    const content = mdText.replace(frontmatterMatch[0], '').trim();
-
-    const meta: Record<string, string> = {};
-
-    // 解析 frontmatter 每一行 key: value
-    frontmatterText.split('\n').forEach((line) => {
-      const [key, ...rest] = line.split(':');
-      meta[key.trim()] = rest.join(':').trim();
-    });
-
-    // 时间戳（从 YYYY-MM-DD HH:mm:ss 转为毫秒时间戳）
-    const parseDateToTimestamp = (str: string): number => {
-      const d = new Date(str);
-      if (isNaN(d.getTime())) return Date.now();
-      return d.getTime();
-    };
-    const tagNames = meta.tags?.split(/\s+/).filter(Boolean) || [];
-    const tagIds = getTagOrCateIdsByNames(tagNames, tagList);
-    const cateNames = meta.categories?.split(/\s+/).filter(Boolean) || [];
-    const cateIds = getTagOrCateIdsByNames(cateNames, cateList);
-
-    const article: Article = {
-      title: meta.title || '未命名文章',
-      description: meta.description || '',
-      content,
-      cover: meta.cover || '',
-      createTime: parseDateToTimestamp(meta.date || ''),
-      cateIds,
-      tagIds,
-      config: {
-        status: 1,
-        password: '',
-        isDraft: false,
-        isEncrypt: false,
-        isDel: false,
-      },
-    };
-
-    return article;
-  };
-
-  // 解析 JSON 内容为文章数据列表
-  const parseJsonToArticles = (raw: Article | Article[]): Article[] => {
-    const parseSingle = (item: Article): Article => ({
-      title: item.title || '未命名文章',
-      description: item.description || '',
-      content: item.content || '',
-      cover: item.cover || '',
-      createTime: item.createTime,
-      cateIds: (item.cateList || []).map((cate) => cate.id).filter((id): id is number => id !== undefined),
-      tagIds: (item.tagList || []).map((tag) => tag.id).filter((id): id is number => id !== undefined),
-      config: {
-        status: item.config?.status || 1,
-        password: item.config?.password || '',
-        isDraft: item.config?.isDraft || false,
-        isEncrypt: item.config?.isEncrypt || false,
-        isDel: item.config?.isDel || false,
-      },
-    });
-
-    // 如果是数组则批量解析，否则解析单个
-    return Array.isArray(raw) ? raw.map(parseSingle) : [parseSingle(raw)];
-  };
-
-  // 删除选中
   const delSelected = async () => {
     if (!selectedRowKeys.length) {
-      message.warning('请选择要删除的文章');
+      message.warning('请先勾选要删除的文章');
       return;
     }
 
@@ -440,34 +463,33 @@ export default () => {
     }
   };
 
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-
-  const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
-    setSelectedRowKeys(newSelectedRowKeys);
-  };
-
-  // 选择行
   const rowSelection: TableRowSelection<Article> = {
     selectedRowKeys,
-    onChange: onSelectChange,
+    onChange: setSelectedRowKeys,
     fixed: 'left',
   };
 
-  // 导出全部时拉取所有文章
   const loadAllArticles = async (): Promise<Article[]> => {
     const { data } = await getArticlePagingAPI();
     return data.result;
   };
 
+  const resetFilters = () => {
+    form.resetFields();
+    setFilter((prev) => ({
+      pageNum: 1,
+      pageSize: prev?.pageSize ?? 8,
+    }));
+  };
+
   useEffect(() => {
-    getArticleList();
+    void getArticleList();
   }, [getArticleList]);
 
   useEffect(() => {
-    Promise.all([getCateList(), getTagList()]);
+    void Promise.all([getCateList(), getTagList()]);
   }, []);
 
-  // 首屏骨架（与部门管理 Skeleton 用法一致）
   if (skeletonLoading) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
@@ -476,85 +498,138 @@ export default () => {
     );
   }
 
-  return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <Title value="文章管理" />
+  const statCards = [
+    {
+      label: '已选',
+      value: selectedCount,
+      icon: FiCheckSquare,
+      accent:
+        selectedCount > 0
+          ? 'text-amber-600 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300'
+          : 'text-slate-500 bg-slate-100 dark:bg-boxdark-2 dark:text-slate-400',
+    },
+    {
+      label: '文章总数',
+      value: total,
+      icon: FiFileText,
+      accent: 'text-primary bg-primary/10 dark:bg-primary/20',
+    },
+    {
+      label: '本页浏览量',
+      value: pageViews,
+      icon: FiEye,
+      accent: 'text-sky-600 bg-sky-50 dark:bg-sky-500/10 dark:text-sky-300',
+    }
+  ];
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xs dark:border-strokedark dark:bg-boxdark">
-        <div className="shrink-0 space-y-4 border-b border-gray-100 bg-gray-50/30 p-5 dark:border-strokedark dark:bg-boxdark-2/50">
-          <Form form={form} layout="inline" onValuesChange={onFilterChange} className="flex! flex-wrap! items-center! gap-y-2.5!">
-            <Form.Item name="title" className="mb-0!">
+  return (
+    <div className="flex min-h-0 flex-1 flex-col text-slate-600 dark:text-slate-300">
+      <Title value="文章管理">
+        <Link to="/create">
+          <Button type="primary" icon={<FiPlus />} className="inline-flex items-center gap-1">
+            写文章
+          </Button>
+        </Link>
+      </Title>
+
+      <div className="mb-2 grid grid-cols-2 gap-3 px-3 sm:grid-cols-3">
+        {statCards.map(({ label, value, icon: Icon, accent }) => (
+          <div
+            key={label}
+            className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3.5 dark:border-strokedark dark:bg-boxdark"
+          >
+            <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${accent}`}>
+              <Icon size={18} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+              <p className="text-xl font-semibold tabular-nums text-slate-800 dark:text-slate-100">{value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <section className="mx-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        <header className="shrink-0 border-b border-slate-100 px-5 py-4 dark:border-strokedark">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div></div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <ArticleExport.Dropdown
+                selectedArticles={articleList.filter((a) => selectedRowKeys.includes(a.id as number))}
+                onLoadAll={loadAllArticles}
+                exportLoading={exportLoading}
+                setExportLoading={setExportLoading}
+              />
+              <Button icon={<FiUpload />} onClick={() => setIsModalOpen(true)}>
+                导入
+              </Button>
+              <Popconfirm
+                title="警告"
+                description={`确定删除已选的 ${selectedCount} 篇文章吗？可从回收站恢复。`}
+                okText="删除"
+                cancelText="取消"
+                okButtonProps={{ danger: true }}
+                disabled={selectedCount === 0}
+                onConfirm={() => void delSelected()}
+              >
+                <Button danger icon={<FiTrash2 />} loading={batchDeleteLoading} disabled={selectedCount === 0}>
+                  删除选中{selectedCount > 0 ? ` (${selectedCount})` : ''}
+                </Button>
+              </Popconfirm>
+            </div>
+          </div>
+
+          <Form
+            form={form}
+            layout="inline"
+            onValuesChange={onFilterChange}
+            className="flex! flex-wrap! items-center! gap-x-3! gap-y-2.5!"
+          >
+            <Form.Item name="title" className="mb-0! min-w-[200px] flex-1!">
               <Input
-                placeholder="搜索文章标题..."
-                className="w-[220px]!"
                 allowClear
+                placeholder="搜索文章标题…"
+                prefix={<FiSearch className="text-slate-400" />}
+                className="w-full min-w-[200px]!"
               />
             </Form.Item>
-
             <Form.Item name="cateId" className="mb-0!">
               <Select
                 allowClear
                 options={cateList}
                 fieldNames={{ label: 'name', value: 'id' }}
                 placeholder="选择分类"
-                className="w-[160px]!"
+                className="w-[140px]!"
               />
             </Form.Item>
-
             <Form.Item name="tagId" className="mb-0!">
               <Select
                 allowClear
                 showSearch
                 options={tagList}
                 fieldNames={{ label: 'name', value: 'id' }}
-                placeholder="选择标签"
-                className="w-[140px]!"
-                filterOption={(input, option) => (option?.name ?? '').toLowerCase().includes(input.toLowerCase())}
+                placeholder="标签"
+                className="w-[130px]!"
+                filterOption={(input, option) =>
+                  (option?.name ?? '').toLowerCase().includes(input.toLowerCase())
+                }
               />
             </Form.Item>
-
             <Form.Item name="createTime" className="mb-0!">
               <RangePicker
-                className="w-[260px]!"
+                className="w-[250px]!"
                 placeholder={['开始日期', '结束日期']}
                 disabledDate={(current) => current && current > dayjs().endOf('day')}
               />
             </Form.Item>
-
-            <Space className="sm:flex-nowrap">
-              <Button
-                icon={showBatchActions ? <HiOutlineChevronUp /> : <HiOutlineChevronDown />}
-                onClick={() => setShowBatchActions((v) => !v)}
-              >
-                {showBatchActions ? '收起' : '功能'}
+            <Form.Item className="mb-0!">
+              <Button type="link" onClick={resetFilters} className="px-2! text-slate-500">
+                重置筛选
               </Button>
-            </Space>
+            </Form.Item>
           </Form>
-
-          {showBatchActions && (
-            <div className="flex justify-between items-center pt-2 mt-2! border-t border-gray-100 dark:border-strokedark gap-2">
-              <div></div>
-
-              <div className="flex space-x-3">
-                <ArticleExport.Dropdown
-                  selectedArticles={articleList.filter((a) => selectedRowKeys.includes(a.id as number))}
-                  onLoadAll={loadAllArticles}
-                  exportLoading={exportLoading}
-                  setExportLoading={setExportLoading}
-                />
-
-                <Button type="primary" icon={<InboxOutlined />} onClick={() => setIsModalOpen(true)}>
-                  导入文章
-                </Button>
-                <Popconfirm title="警告" description="你确定要删除选中的文章吗？" okText="确定" cancelText="取消" onConfirm={() => delSelected()}>
-                  <Button danger icon={<DeleteOutlined />} loading={batchDeleteLoading}>
-                    删除选中
-                  </Button>
-                </Popconfirm>
-              </div>
-            </div>
-          )}
-        </div>
+        </header>
 
         <div className="min-h-0 flex-1">
           <Table
@@ -563,25 +638,42 @@ export default () => {
             dataSource={articleList}
             columns={columns}
             loading={loading}
+            scroll={{ x: 1420 }}
             pagination={{
               position: ['bottomRight'],
               current: filter?.pageNum,
               pageSize: filter?.pageSize,
               total,
-              showTotal: (totalCount) => (
-                <div className="mt-[9px] text-xs text-gray-500 dark:text-gray-400">
-                  当前第 {filter?.pageNum ?? 1} / {Math.ceil(totalCount / (filter?.pageSize ?? 8))} 页 | 共 {totalCount} 条数据
+              showTotal: (totalCount) => {
+                const pageSize = filter?.pageSize ?? 8;
+                const pageNum = filter?.pageNum ?? 1;
+                const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+                return (
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    第 {pageNum} / {totalPages} 页 · 共 {totalCount} 篇
+                  </span>
+                );
+              },
+              onChange: (page, size) =>
+                setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev?.pageSize ?? 8 })),
+              onShowSizeChange: (_, size) =>
+                setFilter((prev) => ({ ...prev, pageNum: 1, pageSize: size ?? prev?.pageSize ?? 8 })),
+              className: 'px-5! py-3!',
+            }}
+            className="min-h-0 flex-1 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! dark:[&_.ant-table-thead>tr>th]:text-slate-400!"
+            locale={{
+              emptyText: (
+                <div className="py-14 text-center">
+                  <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-boxdark-2 dark:text-slate-500">
+                    <FiFileText size={22} />
+                  </div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">暂无文章，点击右上角「写文章」开始创作</p>
                 </div>
               ),
-              onChange: (page, size) => setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev?.pageSize ?? 8 })),
-              onShowSizeChange: (_, size) => setFilter((prev) => ({ ...prev, pageNum: 1, pageSize: size ?? prev?.pageSize ?? 8 })),
-              className: 'px-6!',
             }}
-            className="[&_.ant-table-thead>tr>th]:bg-gray-50! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-gray-500! dark:[&_.ant-table-thead>tr>th]:text-gray-400!"
-            scroll={{ x: 1480 }}
           />
         </div>
-      </div>
+      </section>
 
       <ArticleImportModal
         open={isModalOpen}
@@ -590,4 +682,4 @@ export default () => {
       />
     </div>
   );
-};
+}

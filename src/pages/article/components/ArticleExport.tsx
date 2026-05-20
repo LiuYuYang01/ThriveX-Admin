@@ -1,12 +1,11 @@
 import { useCallback } from 'react';
 import { Button, Dropdown, Popconfirm, Tooltip, message } from 'antd';
-import { DownloadOutlined } from '@ant-design/icons';
+import { FiDownload, FiChevronDown } from 'react-icons/fi';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
 import type { Article } from '@/types/app/article';
 
-// 文章 → Markdown
 function articleToMarkdown(article: Article): string {
   const { title, description, content, cover, createTime, cateList, tagList } = article;
   const formatDate = (timestamp: number) => {
@@ -48,7 +47,6 @@ async function downloadArticlesZip(articles: Article[]) {
   saveAs(blob, `导出文章_${Date.now()}.zip`);
 }
 
-// 单篇导出
 interface ArticleExportSingleProps {
   article: Article;
 }
@@ -60,30 +58,29 @@ export const ArticleExportSingle = ({ article }: ArticleExportSingleProps) => {
   }, [article]);
 
   return (
-    <Tooltip title="导出文章">
+    <Tooltip title="导出 Markdown">
       <Popconfirm
-        title="提醒"
-        description="确定要导出该文章吗？"
-        okText="确定"
+        title="导出文章"
+        description="确定要导出该文章为 Markdown 文件吗？"
+        okText="导出"
         cancelText="取消"
         onConfirm={handleExport}
       >
-        <Button
-          type="text"
-          icon={<DownloadOutlined />}
-          className="hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800/50"
-        />
+        <button
+          type="button"
+          className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/5 dark:hover:text-slate-200 cursor-pointer"
+          aria-label={`导出 ${article.title}`}
+        >
+          <FiDownload size={16} />
+        </button>
       </Popconfirm>
     </Tooltip>
   );
 };
 
-
-// 批量导出
 export interface ArticleExportDropdownProps {
   selectedArticles: Article[];
   onLoadAll: () => Promise<Article[]>;
-  /** 导出全部时的加载态（仅用于导出按钮，避免整表转圈） */
   exportLoading?: boolean;
   setExportLoading?: (loading: boolean) => void;
 }
@@ -96,7 +93,7 @@ export const ArticleExportDropdown = ({
 }: ArticleExportDropdownProps) => {
   const handleExportSelected = useCallback(() => {
     if (!selectedArticles.length) {
-      message.warning('请选择要导出的文章');
+      message.warning('请先勾选要导出的文章');
       return;
     }
     downloadArticlesZip(selectedArticles);
@@ -116,19 +113,20 @@ export const ArticleExportDropdown = ({
   }, [onLoadAll, setExportLoading]);
 
   return (
-    <Dropdown.Button
-      icon={<DownloadOutlined />}
-      className="w-[120px]"
-      loading={exportLoading}
+    <Dropdown
       menu={{
         items: [
           { label: '导出选中', key: 'selected', onClick: handleExportSelected },
-          { label: '导出全部', key: 'all', onClick: () => handleExportAll() },
+          { label: '导出全部', key: 'all', onClick: () => void handleExportAll() },
         ],
       }}
+      trigger={['click']}
     >
-      导出文章
-    </Dropdown.Button>
+      <Button loading={exportLoading} icon={<FiDownload />} className="inline-flex items-center gap-1">
+        导出
+        <FiChevronDown size={14} className="opacity-60" />
+      </Button>
+    </Dropdown>
   );
 };
 
