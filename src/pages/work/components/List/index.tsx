@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, type ReactNode, type ComponentType } from 'react';
 
-import { Button, Dropdown, message, Modal } from 'antd';
+import { Button, message, Modal, Tooltip } from 'antd';
 import dayjs from 'dayjs';
+import { BiBook, BiCheck, BiGlobe, BiLinkExternal, BiReply, BiTag, BiX } from 'react-icons/bi';
+import { HiOutlineMail } from 'react-icons/hi';
 
 import { auditCommentDataAPI, delCommentDataAPI, addCommentDataAPI } from '@/api/comment';
 import { auditWallDataAPI, delWallDataAPI } from '@/api/wall';
@@ -22,6 +24,34 @@ interface ListItemProps {
   setLoading: (loading: boolean) => void;
 }
 
+const ExternalLink = ({ href, children }: { href: string; children: ReactNode }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noreferrer"
+    className="inline-flex min-w-0 items-center gap-1 text-primary hover:underline"
+  >
+    <span className="truncate">{children}</span>
+    <BiLinkExternal size={13} className="shrink-0 opacity-60" />
+  </a>
+);
+
+const MetaRow = ({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  children: ReactNode;
+}) => (
+  <div className="flex min-w-0 items-start gap-2.5 text-xs">
+    <Icon size={14} className="mt-0.5 shrink-0 text-slate-400 dark:text-slate-500" />
+    <span className="w-7 shrink-0 text-slate-400 dark:text-slate-500">{label}</span>
+    <div className="min-w-0 flex-1 text-slate-600 dark:text-slate-300">{children}</div>
+  </div>
+);
+
 export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
   const [btnLoading, setBtnLoading] = useState<boolean>(false);
 
@@ -30,7 +60,6 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
 
   const [btnType, setBtnType] = useState<'reply' | 'dismiss' | string>('');
 
-  // 通过
   const handleApproval = async () => {
     setLoading(true);
 
@@ -51,18 +80,16 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
     }
   };
 
-  // 回复
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [replyInfo, setReplyInfo] = useState('');
+
   const handleReply = async () => {
     setBtnLoading(true);
 
     try {
-      // 审核通过
       await handleApproval();
 
       if (type === 'comment') {
-        // 发送回复内容
         await addCommentDataAPI({
           avatar: user.avatar,
           url: web.url,
@@ -72,7 +99,7 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
           email: user.email ? user.email : null,
           name: user.name,
           articleId: item.articleId!,
-          createTime: new Date().getTime().toString(),
+          createTime: new Date().getTime(),
         });
       }
 
@@ -100,8 +127,8 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
     setBtnLoading(false);
   };
 
-  // 驳回
   const [dismissInfo, setDismissInfo] = useState('');
+
   const handleDismiss = async () => {
     setBtnLoading(true);
 
@@ -114,7 +141,6 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
         await delWallDataAPI(item.id);
       }
 
-      // 有内容就发送驳回通知邮件，反之直接删除
       if (dismissInfo.trim().length) await sendDismissEmail();
 
       await fetchData(type);
@@ -130,9 +156,7 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
     setBtnLoading(false);
   };
 
-  // 发送驳回通知邮件
   const sendDismissEmail = async () => {
-    // 类型名称
     let email_info = {
       name: '',
       type: '',
@@ -163,7 +187,6 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
         break;
     }
 
-    // 有邮箱才会邮件通知
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     item.email != null &&
       (await sendDismissEmailAPI({
@@ -177,99 +200,174 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
       }));
   };
 
+  const displayName = type === 'link' ? item.title : item.name;
+  const canReply = type === 'comment' || type === 'wall';
+
+  const openModal = (mode: 'reply' | 'dismiss') => {
+    setBtnType(mode);
+    setIsModalOpen(true);
+  };
+
+  const actionBtnClass =
+    'flex size-8 items-center justify-center rounded-md text-slate-500 transition-colors disabled:pointer-events-none disabled:opacity-40';
+
+  const ActionToolbar = () => (
+    <div
+      role="toolbar"
+      aria-label="审核操作"
+      className="inline-flex shrink-0 items-center gap-0.5 rounded-lg border border-slate-200/70 bg-slate-50/80 p-0.5 dark:border-strokedark dark:bg-boxdark-2"
+    >
+      <Tooltip title="通过">
+        <button
+          type="button"
+          onClick={handleApproval}
+          aria-label="通过"
+          className={`${actionBtnClass} hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-400 cursor-pointer`}
+        >
+          <BiCheck size={18} />
+        </button>
+      </Tooltip>
+      {canReply && (
+        <>
+          <span className="h-4 w-px bg-slate-200/80 dark:bg-strokedark" aria-hidden />
+          <Tooltip title="回复">
+            <button
+              type="button"
+              onClick={() => openModal('reply')}
+              aria-label="回复"
+              className={`${actionBtnClass} hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-950/30 dark:hover:text-sky-400 cursor-pointer`}
+            >
+              <BiReply size={18} />
+            </button>
+          </Tooltip>
+        </>
+      )}
+      <span className="h-4 w-px bg-slate-200/80 dark:bg-strokedark" aria-hidden />
+      <Tooltip title="驳回">
+        <button
+          type="button"
+          onClick={() => openModal('dismiss')}
+          aria-label="驳回"
+          className={`${actionBtnClass} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 cursor-pointer`}
+        >
+          <BiX size={18} />
+        </button>
+      </Tooltip>
+    </div>
+  );
+
+  const hasMetaFooter =
+    (type === 'comment' && (item?.url || item.articleId)) ||
+    (type === 'link' && (item?.url || item.type?.name));
+
+  const Avatar = () =>
+    item.avatar || item.image ? (
+      <img
+        src={item.avatar || item.image}
+        alt=""
+        className="size-9 shrink-0 rounded-full border border-slate-200/80 object-cover dark:border-strokedark"
+      />
+    ) : (
+      <RandomAvatar className="size-9 shrink-0 rounded-full border border-slate-200/80 dark:border-strokedark" />
+    );
+
   return (
-    <div key={item.id}>
-      <div className="text-center text-xs text-[#e0e0e0]">{dayjs(+item.createTime!).format('YYYY-MM-DD HH:mm:ss')}</div>
-
-      <div className="flex justify-between md:p-7 pt-3! rounded-md transition-colors">
-        <div className="flex">
-          {item.avatar || item.image ? <img src={item.avatar || item.image} alt="" className="w-12 h-12 p-0.5 border border-stroke rounded-full" /> : <RandomAvatar className="w-12 h-12 p-0.5 border border-stroke rounded-full" />}
-
-          <div className="flex flex-col justify-center ml-4 px-4 py-2 min-w-[300px] text-xs md:text-sm bg-[#F9F9FD] dark:bg-[#4e5969] rounded-md">
-            {type === 'link' ? (
-              <>
-                <div>名称：{item.title}</div>
-                <div>介绍：{item.description}</div>
-                <div>类型：{item.type.name}</div>
-                <div>
-                  网站：
-                  {item?.url ? (
-                    <a href={item?.url} target="_blank" className="hover:text-primary font-bold" rel="noreferrer">
-                      {item?.url}
-                    </a>
-                  ) : (
-                    '无网站'
-                  )}
-                </div>
-              </>
-            ) : type === 'comment' ? (
-              <>
-                <div>名称：{item.name}</div>
-                <div>内容：{item.content}</div>
-                <div>
-                  网站：
-                  {item?.url ? (
-                    <a href={item?.url} target="_blank" className="hover:text-primary font-bold transition-none" rel="noreferrer">
-                      {item?.url}
-                    </a>
-                  ) : (
-                    '无网站'
-                  )}
-                </div>
-                <div>
-                  所属文章：
-                  <a href={`${web.url}/article/${item.articleId}`} target="_blank" className="hover:text-primary transition-none" rel="noreferrer">
-                    {item.articleTitle || '暂无'}
-                  </a>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>名称：{item.name}</div>
-                <div>内容：{item.content}</div>
-              </>
-            )}
-
-            <div>邮箱：{item.email || '暂无'}</div>
+    <article className="overflow-hidden rounded-xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+      {/* 顶栏：身份 · 时间 · 操作 */}
+      <header className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-strokedark dark:bg-boxdark-2/60">
+        <Avatar />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-3">
+            <h4 className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+              {displayName || '匿名'}
+            </h4>
+            <time className="shrink-0 text-[11px] font-mono tabular-nums text-slate-400 dark:text-slate-500">
+              {dayjs(+item.createTime!).format('MM-DD HH:mm')}
+            </time>
           </div>
+          {(item.email || (type !== 'link' && !item.email)) && (
+            <p className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-xs text-slate-400 dark:text-slate-500">
+              <HiOutlineMail size={11} className="shrink-0" />
+              <span className="truncate">{item.email || '暂无邮箱'}</span>
+            </p>
+          )}
         </div>
+        <ActionToolbar />
+      </header>
 
-        <div className="flex items-end ml-15">
-          <Dropdown
-            menu={{
-              items:
-                type === 'comment' || type === 'wall'
-                  ? [
-                      { key: 'ok', label: '通过', onClick: handleApproval },
-                      { key: 'reply', label: '回复', onClick: () => [setIsModalOpen(true), setBtnType('reply')] },
-                      { key: 'dismiss', label: '驳回', onClick: () => [setIsModalOpen(true), setBtnType('dismiss')] },
-                    ]
-                  : [
-                      { key: 'ok', label: '通过', onClick: handleApproval },
-                      { key: 'dismiss', label: '驳回', onClick: () => [setIsModalOpen(true), setBtnType('dismiss')] },
-                    ],
-            }}
-          >
-            <div className="flex justify-evenly items-center bg-[#F9F9FD] dark:bg-[#4e5969] w-10 h-5 mb-2 rounded-md cursor-pointer">
-              <span className="inline-block w-2 h-2 bg-[#b5c2d3] rounded-full"></span>
-              <span className="inline-block w-2 h-2 bg-[#b5c2d3] rounded-full"></span>
-            </div>
-          </Dropdown>
-        </div>
+      {/* 正文 */}
+      <div className="px-4 py-3.5">
+        {type === 'link' ? (
+          <p className="border-l-2 border-slate-200 pl-3 text-[15px] leading-relaxed whitespace-pre-wrap text-slate-700 break-words dark:border-strokedark dark:text-slate-200">
+            {item.description || '—'}
+          </p>
+        ) : (
+          <p className="border-l-2 border-primary/40 pl-3 text-[15px] leading-relaxed whitespace-pre-wrap text-slate-800 break-words dark:text-slate-100">
+            {item.content || '—'}
+          </p>
+        )}
       </div>
 
-      <Modal title={btnType === 'reply' ? '回复内容' : '驳回原因'} open={isModalOpen} footer={null} onCancel={() => setIsModalOpen(false)}>
-        <TextArea value={btnType === 'reply' ? replyInfo : dismissInfo} onChange={(e) => (btnType === 'reply' ? setReplyInfo(e.target.value) : setDismissInfo(e.target.value))} placeholder={btnType === 'reply' ? '请输入回复内容' : '请输入驳回原因'} autoSize={{ minRows: 3, maxRows: 5 }} />
+      {/* 附加信息 */}
+      {hasMetaFooter && (
+        <footer className="space-y-2 border-t border-slate-100 bg-slate-50/40 px-4 py-3 dark:border-strokedark dark:bg-boxdark-2/30">
+          {type === 'link' && item.type?.name && (
+            <MetaRow icon={BiTag} label="类型">
+              {item.type.name}
+            </MetaRow>
+          )}
+          {type === 'link' && item?.url && (
+            <MetaRow icon={BiGlobe} label="网站">
+              <ExternalLink href={item.url}>{item.url}</ExternalLink>
+            </MetaRow>
+          )}
+          {type === 'comment' && item?.url && (
+            <MetaRow icon={BiGlobe} label="网站">
+              <ExternalLink href={item.url}>{item.url}</ExternalLink>
+            </MetaRow>
+          )}
+          {type === 'comment' && item.articleId && (
+            <MetaRow icon={BiBook} label="文章">
+              <ExternalLink href={`${web.url}/article/${item.articleId}`}>
+                {item.articleTitle || '暂无'}
+              </ExternalLink>
+            </MetaRow>
+          )}
+        </footer>
+      )}
 
-        <div className="flex space-x-4">
-          <Button className="w-full mt-2" onClick={() => setIsModalOpen(false)}>
+      <Modal
+        title={btnType === 'reply' ? '回复内容' : '驳回原因'}
+        open={isModalOpen}
+        footer={null}
+        onCancel={() => setIsModalOpen(false)}
+        destroyOnClose
+      >
+        <TextArea
+          value={btnType === 'reply' ? replyInfo : dismissInfo}
+          onChange={(e) =>
+            btnType === 'reply' ? setReplyInfo(e.target.value) : setDismissInfo(e.target.value)
+          }
+          placeholder={btnType === 'reply' ? '请输入回复内容' : '请输入驳回原因（可选，将邮件通知对方）'}
+          autoSize={{ minRows: 4, maxRows: 8 }}
+          className="!rounded-lg"
+        />
+
+        <div className="mt-4 flex gap-3">
+          <Button className="flex-1" onClick={() => setIsModalOpen(false)}>
             取消
           </Button>
-          <Button type="primary" onClick={btnType === 'reply' ? handleReply : handleDismiss} loading={btnLoading} className="w-full mt-2">
+          <Button
+            type="primary"
+            danger={btnType === 'dismiss'}
+            onClick={btnType === 'reply' ? handleReply : handleDismiss}
+            loading={btnLoading}
+            className="flex-1"
+          >
             确定
           </Button>
         </div>
       </Modal>
-    </div>
+    </article>
   );
 };

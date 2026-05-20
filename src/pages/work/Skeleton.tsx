@@ -1,30 +1,49 @@
 export default function WorkSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col space-y-2 rounded-xl!">
-      <div className="px-3 mb-4">
-        <div className="skeleton h-8" style={{ width: 150 }} />
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="mb-4 px-3">
+        <div className="skeleton h-8 rounded-md" style={{ width: 150 }} />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xs dark:border-strokedark dark:bg-boxdark">
-        <div className="min-h-0 flex-1 p-5">
-          <div className="flex w-full flex-col md:flex-row">
-            <div className="mb-5 w-full min-w-[200px] border-stroke pr-4 md:mb-0 md:min-h-96 md:w-2/12 md:border-r md:border-b-transparent dark:border-strokedark">
-              <ul className="space-y-1">
-                {[1, 2, 3].map((item) => (
-                  <li key={item} className="flex w-full items-center px-4 py-3">
-                    <div className="skeleton mr-4 h-8 w-8 rounded-md" />
-                    <div className="skeleton h-5 rounded-sm" style={{ width: 64 }} />
-                  </li>
-                ))}
-              </ul>
+      <div className="mt-2 flex min-h-[calc(100vh-160px)] flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        <div className="flex flex-1 flex-col lg:flex-row">
+          <aside className="shrink-0 border-b border-slate-200/80 p-4 lg:w-56 lg:border-r lg:border-b-0 dark:border-strokedark">
+            <div className="skeleton mb-3 h-3 w-16 rounded-sm" />
+            <ul className="flex gap-2 lg:flex-col lg:gap-1">
+              {[1, 2, 3].map((item) => (
+                <li key={item} className="flex flex-1 items-center gap-3 rounded-lg px-3 py-3 lg:w-full">
+                  <div className="skeleton size-9 shrink-0 rounded-lg" />
+                  <div className="skeleton h-4 flex-1 rounded-sm" />
+                </li>
+              ))}
+            </ul>
+          </aside>
+
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="flex items-center gap-3 border-b border-slate-200/80 px-5 py-4 dark:border-strokedark">
+              <div className="skeleton size-10 rounded-lg" />
+              <div className="space-y-2">
+                <div className="skeleton h-4 w-28 rounded-sm" />
+                <div className="skeleton h-3 w-40 rounded-sm" />
+              </div>
             </div>
 
-            <div className="w-full space-y-6 py-4 md:w-10/12 md:pl-6">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <div key={item} className="border-b border-gray-100 pb-4 dark:border-strokedark">
-                  <div className="space-y-2">
+            <div className="space-y-3 px-5 py-5">
+              {[1, 2, 3, 4].map((item) => (
+                <div key={item} className="overflow-hidden rounded-xl border border-slate-200/80 dark:border-strokedark">
+                  <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
+                    <div className="skeleton size-9 shrink-0 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <div className="skeleton h-4 w-24 rounded-sm" />
+                      <div className="skeleton h-3 w-40 rounded-sm" />
+                    </div>
+                    <div className="skeleton h-9 w-24 shrink-0 rounded-lg" />
+                  </div>
+                  <div className="px-4 py-3.5">
                     <div className="skeleton h-4 w-full rounded-sm" />
-                    <div className="skeleton h-4 rounded-sm" style={{ width: '72%' }} />
+                  </div>
+                  <div className="space-y-2 border-t border-slate-100 px-4 py-3 dark:border-strokedark">
+                    <div className="skeleton h-3 w-4/5 rounded-sm" />
                   </div>
                 </div>
               ))}
