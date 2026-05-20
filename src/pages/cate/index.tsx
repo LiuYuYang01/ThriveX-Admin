@@ -25,19 +25,6 @@ export default () => {
   const [isCateShow, setIsCateShow] = useState(false);
   const [form] = Form.useForm();
 
-  const normalizeIsHide = (value: unknown): boolean => {
-    if (value === true) return true;
-    if (value === false) return false;
-    if (typeof value === 'string') {
-      const v = value.trim().toLowerCase();
-      if (v === 'true') return true;
-      if (v === 'false') return false;
-    }
-    const num = Number(value);
-    if (!Number.isNaN(num)) return num === 1;
-    return false;
-  };
-
   const getCateList = async () => {
     try {
       if (isFirstLoadRef.current) {
@@ -236,7 +223,7 @@ export default () => {
       </Title>
 
       <Card
-        className={`CatePage min-h-[calc(100vh-160px)]! rounded-xl! border! border-stroke! bg-white! shadow-xs! [&>.ant-card-body]:p-6! dark:border-strokedark! dark:bg-boxdark!`}
+        className={`CatePage min-h-[calc(100vh-145px)]! rounded-xl! border! border-stroke! bg-white! shadow-xs! [&>.ant-card-body]:p-6! dark:border-strokedark! dark:bg-boxdark!`}
       >
         <Spin spinning={loading} className="min-h-[280px]">
           <Tree

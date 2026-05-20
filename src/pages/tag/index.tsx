@@ -177,7 +177,7 @@ export default () => {
           </Spin>
         </div>
 
-        <Card className="border-stroke rounded-xl! w-full md:w-[59%] [&>.ant-card-body]:p-0! mt-2 md:mt-0 h-[calc(100vh-150px)]">
+        <Card className="border-stroke rounded-xl! w-full md:w-[59%] [&>.ant-card-body]:p-0! mt-2 md:mt-0 h-[calc(100vh-145px)]">
           <Table
             rowKey="id"
             dataSource={list}

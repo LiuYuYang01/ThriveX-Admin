@@ -66,13 +66,12 @@ export default () => {
   }, [store.token, navigate]);
 
   useEffect(() => {
-    // 当初始化状态检查完成且系统已初始化时，跳转到首页
-    // 只在首次检查完成时跳转一次
-    if (!initLoading && projectInitialized && !hasRedirected.current) {
+    // 系统已初始化时，仅从初始化页跳转到首页，避免刷新其他页面时被重定向
+    if (!initLoading && projectInitialized && pathname === '/initialize' && !hasRedirected.current) {
       hasRedirected.current = true;
       navigate('/', { replace: true });
     }
-  }, [initLoading, projectInitialized, navigate]);
+  }, [initLoading, projectInitialized, navigate, pathname]);
 
   if (isLoginRoute) {
     return (

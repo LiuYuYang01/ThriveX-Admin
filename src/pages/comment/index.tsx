@@ -241,7 +241,7 @@ export default () => {
     <div>
       <Title value="评论管理" />
 
-      <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark overflow-hidden h-[calc(100vh-150px)]">
+      <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xs border border-gray-100 dark:border-strokedark overflow-hidden h-[calc(100vh-145px)]">
         <div className="p-5 border-b border-gray-100 dark:border-strokedark bg-gray-50/30 dark:bg-boxdark-2/50 space-y-4">
           <Form
             form={filterForm}
