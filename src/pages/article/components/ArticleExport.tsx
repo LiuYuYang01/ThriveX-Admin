@@ -122,9 +122,15 @@ export const ArticleExportDropdown = ({
       }}
       trigger={['click']}
     >
-      <Button loading={exportLoading} icon={<FiDownload />} className="inline-flex items-center gap-1">
+      <Button
+        type="text"
+        size="small"
+        loading={exportLoading}
+        icon={<FiDownload size={15} />}
+        className="inline-flex items-center gap-0.5 text-slate-600 dark:text-slate-300"
+      >
         导出
-        <FiChevronDown size={14} className="opacity-60" />
+        <FiChevronDown size={13} className="opacity-50" />
       </Button>
     </Dropdown>
   );

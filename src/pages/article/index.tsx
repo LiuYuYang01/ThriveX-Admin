@@ -27,6 +27,7 @@ import {
   FiLock,
   FiCalendar,
   FiCheckSquare,
+  FiRotateCcw,
 } from 'react-icons/fi';
 import dayjs from 'dayjs';
 
@@ -532,102 +533,119 @@ export default function ArticlePage() {
         </Link>
       </Title>
 
-      <div className="mb-2 grid grid-cols-2 gap-3 px-3 sm:grid-cols-3">
+      <div className="mb-2 grid grid-cols-3 gap-2 sm:gap-3">
         {statCards.map(({ label, value, icon: Icon, accent }) => (
           <div
             key={label}
-            className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3.5 dark:border-strokedark dark:bg-boxdark"
+            className="flex flex-col items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3 py-3.5 text-center sm:flex-row sm:items-center sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5 sm:text-left dark:border-strokedark dark:bg-boxdark"
           >
             <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${accent}`}>
               <Icon size={18} />
             </div>
-            <div className="min-w-0">
-              <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+            <div className="flex min-w-0 flex-col items-center gap-0.5 sm:items-start sm:flex-col-reverse">
               <p className="text-xl font-semibold tabular-nums text-slate-800 dark:text-slate-100">{value}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <section className="mx-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
-        <header className="shrink-0 border-b border-slate-100 px-5 py-4 dark:border-strokedark">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <div></div>
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        <header className="shrink-0 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
+          <Form form={form} onValuesChange={onFilterChange}>
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                <Form.Item name="title" className="mb-0! w-full sm:w-52">
+                  <Input
+                    allowClear
+                    placeholder="搜索标题"
+                    prefix={<FiSearch className="text-slate-400" size={15} />}
+                  />
+                </Form.Item>
+                <Form.Item name="cateId" className="mb-0! w-[calc(50%-4px)] sm:w-32">
+                  <Select
+                    allowClear
+                    options={cateList}
+                    fieldNames={{ label: 'name', value: 'id' }}
+                    placeholder="分类"
+                  />
+                </Form.Item>
+                <Form.Item name="tagId" className="mb-0! w-[calc(50%-4px)] sm:w-28">
+                  <Select
+                    allowClear
+                    showSearch
+                    options={tagList}
+                    fieldNames={{ label: 'name', value: 'id' }}
+                    placeholder="标签"
+                    filterOption={(input, option) =>
+                      (option?.name ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                  />
+                </Form.Item>
+                <Form.Item name="createTime" className="mb-0! w-full sm:w-auto">
+                  <RangePicker
+                    className="w-full sm:w-56!"
+                    placeholder={['开始', '结束']}
+                    disabledDate={(current) => current && current > dayjs().endOf('day')}
+                  />
+                </Form.Item>
+                <Tooltip title="重置筛选">
+                  <Button
+                    type="text"
+                    icon={<FiRotateCcw size={15} />}
+                    onClick={resetFilters}
+                    className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  />
+                </Tooltip>
+              </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <ArticleExport.Dropdown
-                selectedArticles={articleList.filter((a) => selectedRowKeys.includes(a.id as number))}
-                onLoadAll={loadAllArticles}
-                exportLoading={exportLoading}
-                setExportLoading={setExportLoading}
-              />
-              <Button icon={<FiUpload />} onClick={() => setIsModalOpen(true)}>
-                导入
-              </Button>
-              <Popconfirm
-                title="警告"
-                description={`确定删除已选的 ${selectedCount} 篇文章吗？可从回收站恢复。`}
-                okText="删除"
-                cancelText="取消"
-                okButtonProps={{ danger: true }}
-                disabled={selectedCount === 0}
-                onConfirm={() => void delSelected()}
-              >
-                <Button danger icon={<FiTrash2 />} loading={batchDeleteLoading} disabled={selectedCount === 0}>
-                  删除选中{selectedCount > 0 ? ` (${selectedCount})` : ''}
-                </Button>
-              </Popconfirm>
+              <div className="flex shrink-0 flex-wrap items-center gap-2 self-end xl:self-auto">
+                <div className="flex items-center gap-1.5 rounded-xl border border-slate-100 bg-slate-50/80 p-1 dark:border-strokedark dark:bg-boxdark-2/50">
+                  <ArticleExport.Dropdown
+                    selectedArticles={articleList.filter((a) =>
+                      selectedRowKeys.includes(a.id as number),
+                    )}
+                    onLoadAll={loadAllArticles}
+                    exportLoading={exportLoading}
+                    setExportLoading={setExportLoading}
+                  />
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<FiUpload size={15} />}
+                    onClick={() => setIsModalOpen(true)}
+                    className="text-slate-600 dark:text-slate-300"
+                  >
+                    导入
+                  </Button>
+                  <Popconfirm
+                    title="批量删除"
+                    description={
+                      selectedCount > 0
+                        ? `确定删除已选的 ${selectedCount} 篇文章？可从回收站恢复。`
+                        : undefined
+                    }
+                    okText="删除"
+                    cancelText="取消"
+                    okButtonProps={{ danger: true }}
+                    disabled={selectedCount === 0}
+                    onConfirm={() => void delSelected()}
+                  >
+                    <Button
+                      type="text"
+                      size="small"
+                      danger={selectedCount > 0}
+                      icon={<FiTrash2 size={15} />}
+                      loading={batchDeleteLoading}
+                      disabled={selectedCount === 0}
+                      className={selectedCount === 0 ? 'text-slate-400' : ''}
+                    >
+                      删除{selectedCount > 0 ? ` · ${selectedCount}` : ''}
+                    </Button>
+                  </Popconfirm>
+                </div>
+              </div>
             </div>
-          </div>
-
-          <Form
-            form={form}
-            layout="inline"
-            onValuesChange={onFilterChange}
-            className="flex! flex-wrap! items-center! gap-x-3! gap-y-2.5!"
-          >
-            <Form.Item name="title" className="mb-0! min-w-[200px] flex-1!">
-              <Input
-                allowClear
-                placeholder="搜索文章标题…"
-                prefix={<FiSearch className="text-slate-400" />}
-                className="w-full min-w-[200px]!"
-              />
-            </Form.Item>
-            <Form.Item name="cateId" className="mb-0!">
-              <Select
-                allowClear
-                options={cateList}
-                fieldNames={{ label: 'name', value: 'id' }}
-                placeholder="选择分类"
-                className="w-[140px]!"
-              />
-            </Form.Item>
-            <Form.Item name="tagId" className="mb-0!">
-              <Select
-                allowClear
-                showSearch
-                options={tagList}
-                fieldNames={{ label: 'name', value: 'id' }}
-                placeholder="标签"
-                className="w-[130px]!"
-                filterOption={(input, option) =>
-                  (option?.name ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-              />
-            </Form.Item>
-            <Form.Item name="createTime" className="mb-0!">
-              <RangePicker
-                className="w-[250px]!"
-                placeholder={['开始日期', '结束日期']}
-                disabledDate={(current) => current && current > dayjs().endOf('day')}
-              />
-            </Form.Item>
-            <Form.Item className="mb-0!">
-              <Button type="link" onClick={resetFilters} className="px-2! text-slate-500">
-                重置筛选
-              </Button>
-            </Form.Item>
           </Form>
         </header>
 
@@ -667,7 +685,9 @@ export default function ArticlePage() {
                   <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-boxdark-2 dark:text-slate-500">
                     <FiFileText size={22} />
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">暂无文章，点击右上角「写文章」开始创作</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    暂无文章，点击右上角「写文章」开始创作
+                  </p>
                 </div>
               ),
             }}
