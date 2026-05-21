@@ -157,9 +157,6 @@ export default function ArticlePage() {
                 rel="noreferrer"
                 className="group inline-flex max-w-[280px] items-center gap-2 truncate"
               >
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20">
-                  <FiFileText size={14} />
-                </span>
                 <span className="truncate font-medium text-slate-700 transition-colors group-hover:text-primary dark:text-slate-200">
                   {text}
                 </span>

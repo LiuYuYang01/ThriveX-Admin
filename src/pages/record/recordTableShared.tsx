@@ -1,4 +1,5 @@
 import { Image, Popover } from 'antd';
+import { FiImage } from 'react-icons/fi';
 
 export function parseRecordImages(raw: string | string[] | undefined): string[] {
   if (Array.isArray(raw)) {
@@ -14,70 +15,64 @@ export function parseRecordImages(raw: string | string[] | undefined): string[] 
   }
 }
 
-const IMAGE_BOX = { width: 60, height: 60 } as const;
-const POPOVER_THUMB = { width: 56, height: 56 } as const;
+const imageCellClass =
+  '[&_.ant-image]:block! [&_.ant-image]:size-full! [&_.ant-image-img]:size-full! [&_.ant-image-img]:object-cover! [&_.ant-image-mask]:size-full!';
 
 export function RecordImagesCell({ imagesRaw }: { imagesRaw: string | string[] | undefined }) {
   const list = parseRecordImages(imagesRaw);
+
   if (list.length === 0) {
-    return <span className="text-xs text-gray-300 dark:text-gray-500">无图片</span>;
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+        <FiImage size={13} />
+        无图片
+      </span>
+    );
   }
 
   const trigger = (
-    <div className="record-images-collapse flex items-center gap-2">
+    <div className="flex items-center gap-2">
       <div
-        className="record-image-container group/img relative overflow-hidden rounded-lg border border-gray-100 shadow-xs dark:border-strokedark"
-        style={IMAGE_BOX}
+        className={`group/img relative size-14 shrink-0 overflow-hidden rounded-xl border border-slate-200/80 dark:border-strokedark ${imageCellClass}`}
       >
         <Image
           src={list[0]}
-          width={IMAGE_BOX.width}
-          height={IMAGE_BOX.height}
-          className="object-cover transition-transform duration-300 group-hover/img:scale-110"
-          style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }}
+          width={56}
+          height={56}
+          className="object-cover transition-transform duration-200 group-hover/img:scale-105"
           preview={{ mask: '预览' }}
         />
       </div>
       {list.length > 1 && (
-        <div
-          className="flex shrink-0 cursor-pointer items-center justify-center rounded-lg border border-gray-100 bg-gray-100 text-sm font-medium text-gray-500 dark:border-strokedark dark:bg-boxdark-2 dark:text-gray-400"
-          style={IMAGE_BOX}
-        >
-          +
-          {list.length - 1}
-        </div>
+        <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-medium text-slate-500 dark:border-strokedark dark:bg-boxdark-2 dark:text-slate-400">
+          +{list.length - 1}
+        </span>
       )}
     </div>
   );
 
   if (list.length <= 1) {
-    return (
-      <Image.PreviewGroup>
-        {trigger}
-      </Image.PreviewGroup>
-    );
+    return <Image.PreviewGroup>{trigger}</Image.PreviewGroup>;
   }
 
   return (
     <Popover
       trigger="hover"
       placement="bottomLeft"
-      overlayClassName="record-images-popover"
+      overlayClassName="[&_.ant-popover-inner]:rounded-xl! [&_.ant-popover-inner]:border! [&_.ant-popover-inner]:border-slate-200/80! [&_.ant-popover-inner]:p-2.5! [&_.ant-popover-inner]:shadow-sm! dark:[&_.ant-popover-inner]:border-strokedark!"
       content={(
         <Image.PreviewGroup>
-          <div className="flex max-w-[280px] flex-wrap items-center gap-1.5">
+          <div className="flex max-w-[280px] flex-wrap gap-1.5">
             {list.map((src, idx) => (
               <div
                 key={idx}
-                className="record-image-container shrink-0 overflow-hidden rounded-sm border border-gray-100 dark:border-strokedark"
-                style={POPOVER_THUMB}
+                className={`size-14 shrink-0 overflow-hidden rounded-lg border border-slate-200/80 dark:border-strokedark ${imageCellClass}`}
               >
                 <Image
                   src={src}
-                  width={POPOVER_THUMB.width}
-                  height={POPOVER_THUMB.height}
+                  width={56}
+                  height={56}
                   className="object-cover"
-                  style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }}
                   preview={{ mask: '预览' }}
                 />
               </div>
@@ -86,37 +81,9 @@ export function RecordImagesCell({ imagesRaw }: { imagesRaw: string | string[] |
         </Image.PreviewGroup>
       )}
     >
-      <span className="inline-block">
-        <Image.PreviewGroup>
-          {trigger}
-        </Image.PreviewGroup>
+      <span className="inline-block cursor-default">
+        <Image.PreviewGroup>{trigger}</Image.PreviewGroup>
       </span>
     </Popover>
-  );
-}
-
-export function RecordImageStyles() {
-  return (
-    <style>
-      {`
-        .record-image-container .ant-image,
-        .record-image-container .ant-image-img,
-        .record-image-container .ant-image-mask {
-          width: 100% !important;
-          height: 100% !important;
-        }
-        .record-image-container .ant-image {
-          display: block !important;
-        }
-        .record-image-container .ant-image-img {
-          object-fit: cover !important;
-        }
-        .record-images-popover.ant-popover .ant-popover-inner {
-          padding: 10px;
-          border-radius: 10px;
-          box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-        }
-      `}
-    </style>
   );
 }

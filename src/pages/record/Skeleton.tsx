@@ -1,35 +1,39 @@
-export default () => {
+export default function RecordSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col space-y-2">
-      <div className="px-3 mb-4">
+    <div className="flex min-h-0 flex-1 flex-col space-y-3">
+      <div className="px-3">
         <div className="flex items-center justify-between gap-4">
-          <div className="skeleton h-8" style={{ width: 200 }} />
+          <div className="skeleton h-8 rounded-lg" style={{ width: 160 }} />
+          <div className="skeleton h-9 rounded-lg" style={{ width: 108 }} />
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xs dark:border-strokedark dark:bg-boxdark">
-        <div className="shrink-0 px-6 py-3 space-y-4 border-b border-gray-100 bg-gray-50/30 dark:border-strokedark dark:bg-boxdark-2/50">
-          <div className="mb-6 flex flex-wrap gap-4">
-            <div className="flex flex-wrap gap-4">
-              <div className="skeleton h-9 rounded-md" style={{ width: 220 }} />
-              <div className="skeleton h-9 rounded-md" style={{ width: 260 }} />
-            </div>
+
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        <div className="shrink-0 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
+          <div className="flex flex-wrap gap-2">
+            <div className="skeleton h-9 w-full rounded-lg sm:w-52" />
+            <div className="skeleton h-9 w-full rounded-lg sm:w-56" />
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 px-6 py-3">
+        <div className="min-h-0 flex-1 px-5 py-4">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="mb-4 flex items-center gap-4">
-              <div className="skeleton h-4 w-[72px] shrink-0 rounded-sm" />
-              <div className="min-w-0 flex-1 space-y-2">
+            <div key={i} className="mb-5 flex items-start gap-4 last:mb-0">
+              <div className="skeleton size-14 shrink-0 rounded-xl" />
+              <div className="min-w-0 flex-1 space-y-2 pt-1">
                 <div className="skeleton h-4 w-full rounded-sm" />
-                <div className="skeleton h-3 rounded-sm" style={{ width: '68%' }} />
+                <div className="skeleton h-3 rounded-sm" style={{ width: '72%' }} />
+                <div className="skeleton h-3 rounded-sm" style={{ width: '40%' }} />
               </div>
-              <div className="skeleton h-8 w-[84px] shrink-0 rounded-md" />
+              <div className="flex shrink-0 gap-1 pt-1">
+                <div className="skeleton size-8 rounded-lg" />
+                <div className="skeleton size-8 rounded-lg" />
+              </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
     </div>
   );
-};
+}

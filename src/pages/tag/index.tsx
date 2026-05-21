@@ -136,9 +136,6 @@ export default function TagPage() {
         render: (text: string) => (
           <Tooltip title={text}>
             <span className="inline-flex max-w-[240px] items-center gap-2 truncate">
-              <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20">
-                <FiTag size={14} />
-              </span>
               <span className="truncate font-medium text-slate-700 transition-colors hover:text-primary dark:text-slate-200">
                 {text}
               </span>
@@ -258,7 +255,7 @@ export default function TagPage() {
                 </div>
               )}
 
-              <div className="p-5">
+              <div className="p-5 pt-2">
                 <Form form={form} layout="vertical" onFinish={onSubmit} size="large" requiredMark="optional">
                   <Form.Item
                     label="标签名称"
