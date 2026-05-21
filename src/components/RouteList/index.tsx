@@ -65,9 +65,8 @@ export default () => {
         setProjectInitialized(isInitialized);
         writeInitCache(isInitialized);
       } catch (error) {
+        // 网络或后端异常时不更新初始化状态，保留缓存值，避免误跳转到初始化页
         console.error(error);
-        setProjectInitialized(false);
-        writeInitCache(false);
       } finally {
         hasCheckedInitStatus.current = true;
       }
