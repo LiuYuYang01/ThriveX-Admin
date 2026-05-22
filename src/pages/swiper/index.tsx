@@ -1,11 +1,42 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Table, Button, Image, Form, Input, Popconfirm, message, Modal, Tooltip, Spin } from 'antd';
-import { getSwiperListAPI, addSwiperDataAPI, editSwiperDataAPI, delSwiperDataAPI, getSwiperDataAPI } from '@/api/swiper';
-import type { Swiper } from '@/types/app/swiper';
-import Title from '@/components/Title';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Button,
+  Form,
+  Image,
+  Input,
+  Popconfirm,
+  Spin,
+  Table,
+  Tooltip,
+  message,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { CloudUploadOutlined, DeleteOutlined, FormOutlined, PictureOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  FiAlignLeft,
+  FiEdit2,
+  FiExternalLink,
+  FiHash,
+  FiImage,
+  FiLayers,
+  FiLink,
+  FiPlus,
+  FiSearch,
+  FiTrash2,
+  FiUploadCloud,
+  FiX,
+} from 'react-icons/fi';
+
+import {
+  addSwiperDataAPI,
+  delSwiperDataAPI,
+  editSwiperDataAPI,
+  getSwiperDataAPI,
+  getSwiperListAPI,
+} from '@/api/swiper';
 import Material from '@/components/Material';
+import Title from '@/components/Title';
+import type { Swiper } from '@/types/app/swiper';
+
 import Skeleton from './Skeleton';
 
 const EMPTY_SWIPER: Swiper = {
@@ -15,169 +46,250 @@ const EMPTY_SWIPER: Swiper = {
   image: '',
 };
 
+const imageCellClass =
+  '[&_.ant-image]:block! [&_.ant-image]:size-full! [&_.ant-image-img]:size-full! [&_.ant-image-img]:object-cover! [&_.ant-image-mask]:size-full!';
+
 export default function SwiperPage() {
   const [loading, setLoading] = useState(false);
-  const [skeletonLoading, setSkeletonLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
-  const [editingSwiper, setEditingSwiper] = useState<Swiper>(EMPTY_SWIPER);
-  const [swiperList, setSwiperList] = useState<Swiper[]>([]);
-  const [pagination, setPagination] = useState({ current: 1, pageSize: 8 });
-  const total = swiperList.length;
+  const [search, setSearch] = useState('');
+  const isFirstLoadRef = useRef(true);
 
   const [form] = Form.useForm();
+  const [swiper, setSwiper] = useState<Swiper>(EMPTY_SWIPER);
+  const [swiperList, setSwiperList] = useState<Swiper[]>([]);
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 8 });
+
+  const isEditing = Boolean(swiper.id);
+  const imagePreview = Form.useWatch('image', form) as string | undefined;
+
+  const filteredList = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return swiperList;
+    return swiperList.filter(
+      (item) =>
+        item.title?.toLowerCase().includes(keyword) ||
+        item.description?.toLowerCase().includes(keyword),
+    );
+  }, [swiperList, search]);
+
+  const withLinkCount = useMemo(
+    () => swiperList.filter((item) => item.url?.trim()).length,
+    [swiperList],
+  );
 
   const fetchSwiperList = useCallback(async () => {
     try {
-      setLoading(true);
+      if (isFirstLoadRef.current) {
+        setInitialLoading(true);
+      } else {
+        setLoading(true);
+      }
       const { data } = await getSwiperListAPI();
       setSwiperList(data.result);
+      isFirstLoadRef.current = false;
     } catch (error) {
       console.error(error);
     } finally {
+      setInitialLoading(false);
       setLoading(false);
-      setSkeletonLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchSwiperList();
+    void fetchSwiperList();
   }, [fetchSwiperList]);
 
-  const openCreateModal = useCallback(() => {
-    setEditingSwiper(EMPTY_SWIPER);
+  const resetFormState = useCallback(() => {
     form.resetFields();
-    setIsFormModalOpen(true);
+    setSwiper(EMPTY_SWIPER);
   }, [form]);
 
-  const openEditModal = useCallback(async (record: Swiper) => {
-    try {
-      setEditLoading(true);
-      setIsFormModalOpen(true);
-      const { data } = await getSwiperDataAPI(record.id);
-      const normalizedData: Swiper = { ...EMPTY_SWIPER, ...data };
-      setEditingSwiper(normalizedData);
-      form.setFieldsValue(normalizedData);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setEditLoading(false);
-    }
-  }, [form]);
+  const editSwiperData = useCallback(
+    async (record: Swiper) => {
+      try {
+        setEditLoading(true);
+        const { data } = await getSwiperDataAPI(record.id!);
+        const normalized: Swiper = { ...EMPTY_SWIPER, ...data };
+        setSwiper(normalized);
+        form.setFieldsValue(normalized);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setEditLoading(false);
+      }
+    },
+    [form],
+  );
 
-  const closeFormModal = useCallback(() => {
-    setIsFormModalOpen(false);
-    setEditingSwiper(EMPTY_SWIPER);
-    form.resetFields();
-  }, [form]);
+  const deleteSwiperItem = useCallback(
+    async (id: number) => {
+      try {
+        setLoading(true);
+        await delSwiperDataAPI(id);
+        if (swiper.id === id) resetFormState();
+        await fetchSwiperList();
+        message.success('🎉 删除轮播图成功');
+      } catch (error) {
+        console.error(error);
+        setLoading(false);
+      }
+    },
+    [fetchSwiperList, resetFormState, swiper.id],
+  );
 
-  const deleteSwiperItem = useCallback(async (id: number) => {
-    try {
-      setLoading(true);
-      await delSwiperDataAPI(id);
-      await fetchSwiperList();
-      message.success('🎉 删除轮播图成功');
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchSwiperList]);
-
-  const handleSubmit = useCallback(async () => {
+  const onSubmit = async () => {
     try {
       setSubmitLoading(true);
       const values = await form.validateFields();
-      if (editingSwiper.id) {
-        await editSwiperDataAPI({ ...editingSwiper, ...values });
+      if (swiper.id) {
+        await editSwiperDataAPI({ ...swiper, ...values });
         message.success('🎉 编辑轮播图成功');
       } else {
-        await addSwiperDataAPI({ ...values });
+        await addSwiperDataAPI(values);
         message.success('🎉 新增轮播图成功');
       }
-
       await fetchSwiperList();
-      closeFormModal();
+      resetFormState();
     } catch (error) {
       console.error(error);
     } finally {
       setSubmitLoading(false);
     }
-  }, [closeFormModal, editingSwiper, fetchSwiperList, form]);
+  };
 
-  const UploadButton = () => (
-    <CloudUploadOutlined className="cursor-pointer text-xl" onClick={() => setIsMaterialModalOpen(true)} />
+  const columns: ColumnsType<Swiper> = useMemo(
+    () => [
+      {
+        title: 'ID',
+        dataIndex: 'id',
+        key: 'id',
+        width: 72,
+        align: 'center',
+        render: (id: number) => (
+          <span className="inline-flex items-center gap-0.5 font-mono text-xs text-slate-400 dark:text-slate-500">
+            <FiHash size={11} />
+            {id}
+          </span>
+        ),
+      },
+      {
+        title: '封面',
+        dataIndex: 'image',
+        key: 'image',
+        width: 148,
+        render: (url: string) =>
+          url ? (
+            <div
+              className={`group/cover relative aspect-21/9 w-[132px] shrink-0 overflow-hidden rounded-xl border border-slate-200/80 dark:border-strokedark ${imageCellClass}`}
+            >
+              <Image
+                src={url}
+                alt=""
+                className="object-cover transition-transform duration-200 group-hover/cover:scale-[1.02]"
+                preview={{ mask: '预览' }}
+              />
+            </div>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+              <FiImage size={13} />
+              无封面
+            </span>
+          ),
+      },
+      {
+        title: '文案',
+        key: 'copy',
+        ellipsis: true,
+        render: (_: unknown, row: Swiper) => (
+          <div className="max-w-md py-0.5">
+            <Tooltip title={row.title} placement="topLeft">
+              <p className="line-clamp-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+                {row.title || '—'}
+              </p>
+            </Tooltip>
+            {row.description ? (
+              <Tooltip title={row.description} placement="topLeft">
+                <p className="mt-0.5 line-clamp-1 text-xs text-slate-500 dark:text-slate-400">
+                  {row.description}
+                </p>
+              </Tooltip>
+            ) : (
+              <p className="mt-0.5 text-xs italic text-slate-400 dark:text-slate-500">暂无副标题</p>
+            )}
+          </div>
+        ),
+      },
+      {
+        title: '跳转链接',
+        dataIndex: 'url',
+        key: 'url',
+        width: 200,
+        ellipsis: true,
+        render: (url: string) =>
+          url?.trim() ? (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex max-w-full items-center gap-1.5 text-sm text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FiLink size={13} className="shrink-0" />
+              <span className="truncate">{url}</span>
+              <FiExternalLink size={12} className="shrink-0 opacity-60" />
+            </a>
+          ) : (
+            <span className="text-xs text-slate-400 dark:text-slate-500">未设置</span>
+          ),
+      },
+      {
+        title: '操作',
+        key: 'action',
+        align: 'center',
+        fixed: 'right',
+        width: 100,
+        render: (_: unknown, record: Swiper) => (
+          <div className="flex items-center justify-center gap-1">
+            <Tooltip title="编辑">
+              <button
+                type="button"
+                onClick={() => editSwiperData(record)}
+                className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary dark:hover:bg-white/5 dark:hover:text-primary"
+                aria-label={`编辑 ${record.title}`}
+              >
+                <FiEdit2 size={16} />
+              </button>
+            </Tooltip>
+            <Popconfirm
+              title="删除轮播图"
+              description={`确定删除「${record.title || '未命名'}」吗？前台首页将不再展示该条目。`}
+              okText="删除"
+              cancelText="取消"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => deleteSwiperItem(record.id!)}
+            >
+              <Tooltip title="删除">
+                <button
+                  type="button"
+                  className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                  aria-label={`删除 ${record.title}`}
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              </Tooltip>
+            </Popconfirm>
+          </div>
+        ),
+      },
+    ],
+    [deleteSwiperItem, editSwiperData],
   );
 
-  const columns: ColumnsType<Swiper> = useMemo(() => [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      align: 'center',
-      width: 80,
-      render: (text: number) => <span className="text-gray-400 dark:text-gray-500 font-mono">#{text}</span>,
-    },
-    {
-      title: '图片',
-      dataIndex: 'image',
-      key: 'image',
-      width: 200,
-      align: 'center',
-      render: (url: string) => <Image width={180} src={url} className="w-full cursor-pointer rounded-sm" alt="" />,
-    },
-    {
-      title: '标题',
-      dataIndex: 'title',
-      key: 'title',
-      width: 300,
-      render: (text: string) => (
-        <Tooltip title={text}>
-          <span className="line-clamp-1 cursor-pointer font-medium text-gray-700 hover:text-primary dark:text-gray-200">{text || '-'}</span>
-        </Tooltip>
-      ),
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
-      render: (text: string) => (
-        <>
-          {text ? (
-            <Tooltip title={text}>
-              <span className="line-clamp-1 text-gray-600 dark:text-gray-300 hover:text-primary cursor-pointer">{text}</span>
-            </Tooltip>
-          ) : (
-            <span className="text-gray-300 dark:text-gray-500 italic">暂无描述</span>
-          )}
-        </>
-      ),
-    },
-    {
-      title: '操作',
-      key: 'action',
-      align: 'center',
-      fixed: 'right',
-      width: 110,
-      render: (_: string, record: Swiper) => (
-        <>
-          <Tooltip title="编辑">
-            <Button type="text" onClick={() => openEditModal(record)} icon={<FormOutlined className="text-blue-500" />} />
-          </Tooltip>
-
-          <Tooltip title="删除">
-            <Popconfirm title="警告" description="你确定要删除该轮播图吗?" okText="确定" cancelText="取消" onConfirm={() => deleteSwiperItem(record.id!)}>
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
-          </Tooltip>
-        </>
-      ),
-    },
-  ], [deleteSwiperItem, openEditModal]);
-
-  if (skeletonLoading) {
+  if (initialLoading) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
         <Skeleton />
@@ -186,92 +298,208 @@ export default function SwiperPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <Title value="轮播图管理">
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
-          新增轮播图
-        </Button>
-      </Title>
+    <div className="flex min-h-0 flex-1 flex-col text-slate-600 dark:text-slate-300">
+      <Title value="轮播图管理" />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xs dark:border-strokedark dark:bg-boxdark">
-        <div className="min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
+        {/* 列表区 */}
+        <section className="flex min-w-0 flex-1 flex-col rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+          <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">全部轮播图</h3>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-boxdark-2 dark:text-slate-300">
+                {filteredList.length}
+              </span>
+            </div>
+            <Input
+              allowClear
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="搜索标题或描述…"
+              prefix={<FiSearch className="text-slate-400" />}
+              className="w-full max-w-[220px]!"
+            />
+          </header>
+
           <Table
             rowKey="id"
-            dataSource={swiperList}
+            dataSource={filteredList}
             columns={columns}
             loading={loading}
-            scroll={{ x: 900 }}
+            scroll={{ x: 'max-content' }}
             pagination={{
               position: ['bottomRight'],
               current: pagination.current,
               pageSize: pagination.pageSize,
-              total,
-              showTotal: (totalCount) => (
-                <div className="mt-[9px] text-xs text-gray-500 dark:text-gray-400">
-                  当前第 {pagination.current} / {Math.ceil(totalCount / pagination.pageSize)} 页 | 共 {totalCount} 条数据
+              total: filteredList.length,
+              showSizeChanger: false,
+              className: 'px-5! py-3!',
+              showTotal: (totalCount) => {
+                const pageSize = pagination.pageSize;
+                const pageNum = pagination.current;
+                const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+                return (
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    第 {pageNum} / {totalPages} 页 · 共 {totalCount} 条
+                  </span>
+                );
+              },
+              onChange: (page, pageSize) =>
+                setPagination({ current: page, pageSize: pageSize ?? 8 }),
+            }}
+            className="min-h-0 flex-1 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! dark:[&_.ant-table-thead>tr>th]:text-slate-400!"
+            locale={{
+              emptyText: (
+                <div className="py-14 text-center">
+                  <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-boxdark-2 dark:text-slate-500">
+                    <FiLayers size={22} />
+                  </div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {search.trim()
+                      ? '没有匹配的轮播，试试其他关键词'
+                      : '还没有轮播图，在左侧创建第一条首页展示内容吧'}
+                  </p>
                 </div>
               ),
-              onChange: (page, pageSize) => setPagination({ current: page, pageSize: pageSize ?? 8 }),
-              onShowSizeChange: (page, pageSize) => setPagination({ current: page, pageSize: pageSize ?? 8 }),
-              className: 'px-6!',
             }}
-            className="[&_.ant-table-thead>tr>th]:bg-gray-50! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-gray-500! dark:[&_.ant-table-thead>tr>th]:text-gray-400! w-full"
           />
-        </div>
+        </section>
+
+        {/* 表单区 */}
+        <aside className="w-full shrink-0 lg:w-[360px] xl:w-[380px]">
+          <Spin spinning={editLoading}>
+            <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+              <header className="flex items-start gap-3 border-b border-slate-100 px-5 py-4 dark:border-strokedark">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/20">
+                  <FiLayers size={20} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100">
+                    {isEditing ? '编辑轮播' : '新建轮播'}
+                  </h3>
+                  <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                    {isEditing
+                      ? '修改后保存，右侧列表与前台首页轮播同步更新'
+                      : '配置首页轮播的封面、文案与点击跳转地址'}
+                  </p>
+                </div>
+              </header>
+
+              {isEditing && (
+                <div className="mx-5 mt-4 flex items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 dark:border-primary/30 dark:bg-primary/10">
+                  <span className="truncate text-sm font-medium text-primary">
+                    {swiper.title || '未命名轮播'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={resetFormState}
+                    className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-white/80 hover:text-slate-700 dark:hover:bg-boxdark dark:hover:text-slate-200"
+                  >
+                    <FiX size={14} />
+                    取消
+                  </button>
+                </div>
+              )}
+
+              <div className="p-5 pt-2">
+                <Form
+                  form={form}
+                  layout="vertical"
+                  onFinish={onSubmit}
+                  size="large"
+                  requiredMark="optional"
+                  preserve={false}
+                >
+                  <Form.Item
+                    label="主标题"
+                    name="title"
+                    rules={[{ required: true, message: '轮播图标题不能为空' }]}
+                    className="mb-4!"
+                  >
+                    <Input
+                      placeholder="例如：欢迎来到我的博客"
+                      allowClear
+                      prefix={<FiAlignLeft className="text-slate-400" />}
+                    />
+                  </Form.Item>
+
+                  <Form.Item label="副标题 / 描述" name="description" className="mb-4!">
+                    <Input placeholder="一句话补充说明，可留空" allowClear />
+                  </Form.Item>
+
+                  <Form.Item label="跳转链接" name="url" className="mb-4!">
+                    <Input
+                      placeholder="https://example.com/article/1"
+                      allowClear
+                      prefix={<FiLink className="text-slate-400" />}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="封面图"
+                    name="image"
+                    rules={[{ required: true, message: '轮播图地址不能为空' }]}
+                    className="mb-3!"
+                  >
+                    <Input
+                      placeholder="图片 URL 或从素材库选择"
+                      allowClear
+                      prefix={<FiImage className="text-slate-400" />}
+                      addonAfter={
+                        <button
+                          type="button"
+                          onClick={() => setIsMaterialModalOpen(true)}
+                          className="inline-flex cursor-pointer items-center justify-center px-3 py-2 text-slate-500 transition-colors hover:text-primary"
+                          aria-label="从素材库选择"
+                        >
+                          <FiUploadCloud size={18} />
+                        </button>
+                      }
+                      className="customizeAntdInputAddonAfter"
+                    />
+                  </Form.Item>
+
+                  {imagePreview?.trim() ? (
+                    <div className="mb-4 overflow-hidden rounded-xl border border-slate-200/80 dark:border-strokedark">
+                      <div className="border-b border-slate-100 px-3 py-1.5 text-xs text-slate-500 dark:border-strokedark dark:text-slate-400">
+                        封面预览 · 建议 21:9
+                      </div>
+                      <div className={`aspect-21/9 w-full bg-slate-50 dark:bg-boxdark-2 ${imageCellClass}`}>
+                        <Image
+                          src={imagePreview}
+                          alt="封面预览"
+                          className="object-cover"
+                          fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='171' viewBox='0 0 400 171'%3E%3Crect fill='%23f1f5f9' width='400' height='171'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-size='14' font-family='system-ui'%3E加载失败%3C/text%3E%3C/svg%3E"
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <Form.Item className="mb-0!">
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={submitLoading}
+                      block
+                      icon={isEditing ? <FiEdit2 /> : <FiPlus />}
+                      className="h-11!"
+                    >
+                      {isEditing ? '保存修改' : '新增轮播图'}
+                    </Button>
+                  </Form.Item>
+                </Form>
+              </div>
+            </section>
+          </Spin>
+        </aside>
       </div>
-
-      <Modal
-        open={isFormModalOpen}
-        onCancel={closeFormModal}
-        footer={null}
-        title={editingSwiper.id ? '编辑轮播图' : '新增轮播图'}
-        className="[&_.ant-modal-content]:rounded-2xl!"
-      >
-        <Spin spinning={editLoading}>
-          <Form
-            form={form}
-            layout="vertical"
-            initialValues={editingSwiper}
-            size="large"
-            preserve={false}
-            className="mt-2 [&_.ant-input]:rounded-lg! [&_.ant-select-selector]:rounded-lg!"
-          >
-            <Form.Item label="标题" name="title" rules={[{ required: true, message: '轮播图标题不能为空' }]}>
-              <Input placeholder="要么沉沦 要么巅峰!" />
-            </Form.Item>
-
-            <Form.Item label="描述" name="description">
-              <Input placeholder="Either sink or peak!" />
-            </Form.Item>
-
-            <Form.Item label="链接" name="url">
-              <Input placeholder="https://liuyuyang.net/" />
-            </Form.Item>
-
-            <Form.Item label="图片" name="image" rules={[{ required: true, message: '轮播图地址不能为空' }]}>
-              <Input
-                placeholder="https://liuyuyang.net/swiper.jpg"
-                prefix={<PictureOutlined />}
-                addonAfter={<UploadButton />}
-                className="customizeAntdInputAddonAfter"
-              />
-            </Form.Item>
-
-            <Form.Item className="mb-0!">
-              <Button type="primary" onClick={handleSubmit} loading={submitLoading} className="w-full">
-                确定
-              </Button>
-            </Form.Item>
-          </Form>
-        </Spin>
-      </Modal>
 
       <Material
         open={isMaterialModalOpen}
         onClose={() => setIsMaterialModalOpen(false)}
         onSelect={(url) => {
           form.setFieldValue('image', url.join('\n'));
-          form.validateFields(['image']); // 手动触发 image 字段的校验
+          void form.validateFields(['image']);
         }}
       />
     </div>

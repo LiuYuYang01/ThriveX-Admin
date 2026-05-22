@@ -230,14 +230,14 @@ export default () => {
         </Card>
 
         {/* 右侧预览 */}
-        <Card className="lg:col-span-9 rounded-xl! flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
+        <Card className="lg:col-span-9 min-h-0 rounded-xl! flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
           {!activeConfig ? (
             <div className="flex h-full items-center justify-center">
               <Empty description="请选择一个配置项" />
             </div>
           ) : (
             <div className="flex flex-1 min-h-0 flex-col gap-6">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-5 dark:border-strokedark">
+              <div className="flex shrink-0 items-center justify-between border-b border-gray-100 pb-5 dark:border-strokedark">
                 <div className="flex items-center gap-4">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-primary/20">
                     <span className="text-2xl">{getConfigIcon(activeConfig.name)}</span>
@@ -248,8 +248,8 @@ export default () => {
                 </div>
               </div>
 
-              <div className="relative group flex flex-1 min-h-0 flex-col">
-                <div className="mb-4 flex items-center justify-between">
+              <div className="relative group flex min-h-0 flex-1 flex-col">
+                <div className="mb-4 flex shrink-0 items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="h-4 w-1 rounded-full bg-primary" />
                     <Typography.Text strong className="text-gray-700 dark:text-gray-300">
@@ -265,8 +265,9 @@ export default () => {
                     </Tooltip>
                   </div>
                 </div>
-                <div className="flex-1 min-h-0 overflow-hidden rounded-2xl border border-gray-800 bg-[#1e1e1e] shadow-lg transition-all">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-800 bg-[#1e1e1e] shadow-lg transition-all">
                   <CodeMirror
+                    className="h-full min-h-0 [&_.cm-editor]:h-full"
                     value={prettyValue}
                     extensions={[json()]}
                     theme="dark"

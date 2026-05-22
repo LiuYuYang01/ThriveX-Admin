@@ -152,8 +152,8 @@ export default function TagPage() {
         render: (count: number) => (
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${count > 0
-                ? 'bg-slate-100 text-slate-600 dark:bg-boxdark-2 dark:text-slate-300'
-                : 'bg-slate-50 text-slate-400 dark:bg-boxdark/60 dark:text-slate-500'
+              ? 'bg-slate-100 text-slate-600 dark:bg-boxdark-2 dark:text-slate-300'
+              : 'bg-slate-50 text-slate-400 dark:bg-boxdark/60 dark:text-slate-500'
               }`}
           >
             <FiFileText size={12} />
@@ -221,6 +221,56 @@ export default function TagPage() {
       <Title value="标签管理" />
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
+        {/* 列表区 */}
+        <section className="flex min-w-0 flex-1 flex-col rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+          <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">全部标签</h3>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-boxdark-2 dark:text-slate-300">
+                {filteredList.length}
+              </span>
+            </div>
+            <Input
+              allowClear
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="搜索标签名称…"
+              prefix={<FiSearch className="text-slate-400" />}
+              className="w-full max-w-[220px]!"
+            />
+          </header>
+
+          <Table
+            rowKey="id"
+            dataSource={filteredList}
+            columns={columns}
+            loading={loading}
+            scroll={{ x: 'max-content' }}
+            pagination={{
+              position: ['bottomRight'],
+              pageSize: 8,
+              showSizeChanger: false,
+              className: 'px-5! py-3!',
+              showTotal: (total) => (
+                <span className="text-xs text-slate-500 dark:text-slate-400">共 {total} 条</span>
+              ),
+            }}
+            className="min-h-0 flex-1 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! dark:[&_.ant-table-thead>tr>th]:text-slate-400!"
+            locale={{
+              emptyText: (
+                <div className="py-12 text-center">
+                  <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-boxdark-2 dark:text-slate-500">
+                    <FiTag size={22} />
+                  </div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {search.trim() ? '没有匹配的标签，试试其他关键词' : '还没有标签，在左侧创建第一个吧'}
+                  </p>
+                </div>
+              ),
+            }}
+          />
+        </section>
+
         {/* 表单区 */}
         <aside className="w-full shrink-0 lg:w-[340px] xl:w-[360px]">
           <Spin spinning={editLoading}>
@@ -287,56 +337,6 @@ export default function TagPage() {
             </section>
           </Spin>
         </aside>
-
-        {/* 列表区 */}
-        <section className="flex min-w-0 flex-1 flex-col rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
-          <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">全部标签</h3>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-boxdark-2 dark:text-slate-300">
-                {filteredList.length}
-              </span>
-            </div>
-            <Input
-              allowClear
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="搜索标签名称…"
-              prefix={<FiSearch className="text-slate-400" />}
-              className="w-full max-w-[220px]!"
-            />
-          </header>
-
-          <Table
-            rowKey="id"
-            dataSource={filteredList}
-            columns={columns}
-            loading={loading}
-            scroll={{ x: 'max-content' }}
-            pagination={{
-              position: ['bottomRight'],
-              pageSize: 8,
-              showSizeChanger: false,
-              className: 'px-5! py-3!',
-              showTotal: (total) => (
-                <span className="text-xs text-slate-500 dark:text-slate-400">共 {total} 条</span>
-              ),
-            }}
-            className="min-h-0 flex-1 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! dark:[&_.ant-table-thead>tr>th]:text-slate-400!"
-            locale={{
-              emptyText: (
-                <div className="py-12 text-center">
-                  <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-boxdark-2 dark:text-slate-500">
-                    <FiTag size={22} />
-                  </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {search.trim() ? '没有匹配的标签，试试其他关键词' : '还没有标签，在左侧创建第一个吧'}
-                  </p>
-                </div>
-              ),
-            }}
-          />
-        </section>
       </div>
     </div>
   );

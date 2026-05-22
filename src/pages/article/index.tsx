@@ -11,6 +11,7 @@ import {
   Select,
   message,
   Tooltip,
+  Image,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { TableRowSelection } from 'antd/es/table/interface';
@@ -28,6 +29,7 @@ import {
   FiCalendar,
   FiCheckSquare,
   FiRotateCcw,
+  FiImage,
 } from 'react-icons/fi';
 import dayjs from 'dayjs';
 
@@ -88,6 +90,9 @@ function renderArticleStatusCell(config: Config) {
 
 const IMPORT_ARTICLE_CONCURRENCY = 5;
 
+const articleCoverCellClass =
+  '[&_.ant-image]:block! [&_.ant-image]:size-full! [&_.ant-image-img]:size-full! [&_.ant-image-img]:object-cover! [&_.ant-image-mask]:size-full!';
+
 export default function ArticlePage() {
   const [loading, setLoading] = useState(false);
   const [skeletonLoading, setSkeletonLoading] = useState(true);
@@ -144,6 +149,30 @@ export default function ArticlePage() {
   const columns: ColumnsType<Article> = useMemo(
     () => [
       {
+        title: '封面',
+        dataIndex: 'cover',
+        key: 'cover',
+        width: 108,
+        render: (url: string, record: Article) =>
+          url ? (
+            <div
+              className={`group/cover relative aspect-video w-[88px] shrink-0 overflow-hidden rounded-lg border border-slate-200/80 dark:border-strokedark ${articleCoverCellClass}`}
+            >
+              <Image
+                src={url}
+                alt={record.title || '文章封面'}
+                className="object-cover transition-transform duration-200 group-hover/cover:scale-[1.02]"
+                preview={{ mask: '预览' }}
+              />
+            </div>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+              <FiImage size={13} />
+              无封面
+            </span>
+          ),
+      },
+      {
         title: '标题',
         dataIndex: 'title',
         key: 'title',
@@ -190,7 +219,7 @@ export default function ArticlePage() {
         title: '分类',
         dataIndex: 'cateList',
         key: 'cateList',
-        width: 140,
+        width: 160,
         render: (cates: ArticleCate[]) => renderCollapsibleTags(cates || [], 'cate'),
       },
       {
@@ -530,23 +559,6 @@ export default function ArticlePage() {
         </Link>
       </Title>
 
-      <div className="mb-2 grid grid-cols-3 gap-2 sm:gap-3">
-        {statCards.map(({ label, value, icon: Icon, accent }) => (
-          <div
-            key={label}
-            className="flex flex-col items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3 py-3.5 text-center sm:flex-row sm:items-center sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5 sm:text-left dark:border-strokedark dark:bg-boxdark"
-          >
-            <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${accent}`}>
-              <Icon size={18} />
-            </div>
-            <div className="flex min-w-0 flex-col items-center gap-0.5 sm:items-start sm:flex-col-reverse">
-              <p className="text-xl font-semibold tabular-nums text-slate-800 dark:text-slate-100">{value}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
         <header className="shrink-0 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
           <Form form={form} onValuesChange={onFilterChange}>
@@ -586,18 +598,32 @@ export default function ArticlePage() {
                     disabledDate={(current) => current && current > dayjs().endOf('day')}
                   />
                 </Form.Item>
-                <Tooltip title="重置筛选">
-                  <Button
-                    type="text"
-                    icon={<FiRotateCcw size={15} />}
-                    onClick={resetFilters}
-                    className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                  />
-                </Tooltip>
+                {/* 电脑端：日期选择器右侧 */}
+                <div className="hidden shrink-0 xl:block">
+                  <Tooltip title="重置筛选">
+                    <Button
+                      type="text"
+                      icon={<FiRotateCcw size={15} />}
+                      onClick={resetFilters}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    />
+                  </Tooltip>
+                </div>
               </div>
 
-              <div className="flex shrink-0 flex-wrap items-center gap-2 self-end xl:self-auto">
-                <div className="flex items-center gap-1.5 rounded-xl border border-slate-100 bg-slate-50/80 p-1 dark:border-strokedark dark:bg-boxdark-2/50">
+              <div className="flex w-full shrink-0 flex-wrap items-center gap-2 xl:w-auto">
+                {/* 移动端：与导出/导入/删除同一行左侧 */}
+                <div className="shrink-0 xl:hidden">
+                  <Tooltip title="重置筛选">
+                    <Button
+                      type="text"
+                      icon={<FiRotateCcw size={15} />}
+                      onClick={resetFilters}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    />
+                  </Tooltip>
+                </div>
+                <div className="ml-auto flex items-center gap-1.5 rounded-xl border border-slate-100 bg-slate-50/80 p-1 xl:ml-0 dark:border-strokedark dark:bg-boxdark-2/50">
                   <ArticleExport.Dropdown
                     selectedArticles={articleList.filter((a) =>
                       selectedRowKeys.includes(a.id as number),
@@ -653,7 +679,7 @@ export default function ArticlePage() {
             dataSource={articleList}
             columns={columns}
             loading={loading}
-            scroll={{ x: 1420 }}
+            scroll={{ x: 1528 }}
             pagination={{
               position: ['bottomRight'],
               current: filter?.pageNum,

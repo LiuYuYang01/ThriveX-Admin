@@ -119,10 +119,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   return (
     <aside ref={sidebar} className={`absolute z-999 flex h-[calc(100vh-0.9rem)] xs:h-[calc(100vh-1.6rem)] w-56 xs:mt-2.5 xs:ml-2.5 flex-col overflow-y-hidden rounded-2xl duration-300 ease-linear lg:static lg:translate-x-0 ${sidebarOpen ? 'left-1 top-1.5 xs:left-2 xs:top-2 translate-x-0' : '-left-56 -top-1.5 xs:-left-56 xs:-top-2 -translate-x-full'} ${isSideBarTheme === 'dark' ? 'bg-black dark:bg-boxdark' : 'bg-light-gradient dark:bg-dark-gradient border border-gray-200/50 dark:border-gray-800 transition-all duration-300 backdrop-blur-2xl shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.06)] dark:shadow-[0px_0px_0px_0px_rgba(0,0,0,0)]'}`}>
       {/* Logo 和标题区域 */}
-      <div className="flex justify-center items-center gap-2 px-6 py-5 pb-0 lg:pt-6">
+      <div className="flex justify-center items-center gap-2 px-6 py-5 pb-0">
         <NavLink to="/" className={`flex items-center ${isSideBarTheme === 'dark' ? 'font-bold text-white' : 'font-medium text-[#555]! dark:text-white!'}`}>
           <img src={logo} alt="logo" className="w-8 mr-2.5" />
-          <div>Thrive X</div>
+          <div className="flex flex-col">
+            <span>Thrive X</span>
+            <span className='text-[10px] text-gray-500'>现代化 CMS 管理系统</span>
+          </div>
         </NavLink>
 
         {/* 移动端侧边栏触发器按钮 */}
