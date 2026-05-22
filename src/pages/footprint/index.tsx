@@ -10,17 +10,26 @@ import {
   Popconfirm,
   Spin,
   Table,
-  Tag,
   Tooltip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
-import { CloudUploadOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
-import { FiEdit2, FiTrash2 } from 'react-icons/fi';
-import { GiPositionMarker } from 'react-icons/gi';
-import { IoSearch } from 'react-icons/io5';
+import {
+  FiAlignLeft,
+  FiCrosshair,
+  FiEdit2,
+  FiHash,
+  FiMapPin,
+  FiNavigation,
+  FiPlus,
+  FiRotateCcw,
+  FiSearch,
+  FiTrash2,
+  FiUploadCloud,
+} from 'react-icons/fi';
+import { HiOutlineLocationMarker } from 'react-icons/hi';
 
 import {
   addFootprintDataAPI,
@@ -33,16 +42,22 @@ import { getEnvConfigDataAPI } from '@/api/config';
 import Material from '@/components/Material';
 import Title from '@/components/Title';
 import RangePicker from '@/components/RangePicker';
-import Skeleton from './Skeleton';
-import type { Footprint, FootprintFilterQueryParams } from '@/types/app/footprint';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
+import type { Footprint, FootprintFilterQueryParams } from '@/types/app/footprint';
+
+import Skeleton from './Skeleton';
 
 const DEFAULT_PAGE_SIZE = 8;
 
-export default () => {
+interface FootprintFilterFormValues {
+  address?: string;
+  createTime?: [Dayjs, Dayjs];
+}
+
+export default function FootprintPage() {
   const [loading, setLoading] = useState(false);
   const [skeletonLoading, setSkeletonLoading] = useState(true);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [btnLoading, setBtnLoading] = useState<number | null>(null);
   const [modalSubmitLoading, setModalSubmitLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -59,11 +74,17 @@ export default () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [editingId, setEditingId] = useState<number | null>(null);
-
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
 
   const [form] = Form.useForm<Footprint>();
-  const [filterForm] = Form.useForm<FootprintFilterQueryParams>();
+  const [filterForm] = Form.useForm<FootprintFilterFormValues>();
+
+  const isEditing = modalMode === 'edit' && editingId != null;
+  const editingTitle = Form.useWatch('title', form);
+
+  const hasActiveFilters = Boolean(
+    filter.address?.trim() || filter.startDate || filter.endDate,
+  );
 
   const getEnvConfigData = useCallback(async () => {
     const { data } = await getEnvConfigDataAPI('gaode_coordinate');
@@ -74,6 +95,12 @@ export default () => {
     try {
       setLoading(true);
       const { data } = await getFootprintListAPI(filter);
+
+      if (data.result.length === 0 && (filter.pageNum ?? 1) > 1) {
+        setFilter((prev) => ({ ...prev, pageNum: (prev.pageNum ?? 1) - 1 }));
+        return;
+      }
+
       setFootprintList(data.result);
       setTotal(data.total);
     } catch (error) {
@@ -85,11 +112,11 @@ export default () => {
   }, [filter]);
 
   useEffect(() => {
-    getEnvConfigData();
+    void getEnvConfigData();
   }, [getEnvConfigData]);
 
   useEffect(() => {
-    getFootprintList();
+    void getFootprintList();
   }, [getFootprintList]);
 
   const closeModal = useCallback(() => {
@@ -112,6 +139,7 @@ export default () => {
 
   const openEdit = useCallback(
     (id: number) => {
+      detailRequestSeqRef.current += 1;
       setModalMode('edit');
       setEditingId(id);
       setIsModalOpen(true);
@@ -132,7 +160,9 @@ export default () => {
 
         const normalized: Partial<Footprint> = {
           ...data,
-          images: Array.isArray(data.images) ? (data.images as string[]).join('\n') : (data.images as string),
+          images: Array.isArray(data.images)
+            ? (data.images as string[]).join('\n')
+            : (data.images as string),
           createTime: data.createTime ? dayjs(+data.createTime) : undefined,
         };
 
@@ -144,39 +174,47 @@ export default () => {
       }
     };
 
-    run();
+    void run();
   }, [editingId, form, isModalOpen, modalMode]);
 
-  const { onValuesChange: onFilterValuesChange } =
-    useDebouncedChange({
-      debouncedKeys: ['address'],
-      debounceMs: 400,
-      getValues: () => filterForm.getFieldsValue(),
-      onApply: (values) => {
-        setFilter((prev) => ({
-          ...prev,
-          pageNum: 1,
-          address: values.address,
-          startDate: values.createTime?.[0]?.valueOf(),
-          endDate: values.createTime?.[1]?.valueOf(),
-        }));
-      },
-    });
+  const { onValuesChange: onFilterValuesChange } = useDebouncedChange<FootprintFilterFormValues>({
+    debouncedKeys: ['address'],
+    debounceMs: 400,
+    getValues: () => filterForm.getFieldsValue(),
+    onApply: (values) => {
+      setFilter((prev) => ({
+        ...prev,
+        pageNum: 1,
+        address: values.address,
+        startDate: values.createTime?.[0]?.valueOf(),
+        endDate: values.createTime?.[1]?.valueOf(),
+      }));
+    },
+  });
+
+  const resetFilters = () => {
+    filterForm.resetFields();
+    setFilter((prev) => ({
+      pageNum: 1,
+      pageSize: prev.pageSize ?? DEFAULT_PAGE_SIZE,
+    }));
+  };
 
   const delFootprintData = useCallback(
     async (id: number) => {
       try {
-        setDeleteLoading(true);
+        setBtnLoading(id);
         await delFootprintDataAPI(id);
         notification.success({ message: '删除成功' });
+        if (editingId === id) closeModal();
         await getFootprintList();
       } catch (error) {
         console.error('删除足迹失败：', error);
       } finally {
-        setDeleteLoading(false);
+        setBtnLoading(null);
       }
     },
-    [getFootprintList],
+    [closeModal, editingId, getFootprintList],
   );
 
   const onSubmit = useCallback(async () => {
@@ -187,7 +225,9 @@ export default () => {
       const payload: Footprint = {
         ...(values as Footprint),
         createTime: (values.createTime as Dayjs | undefined)?.valueOf?.() ?? values.createTime,
-        images: values.images ? (values.images as string).split('\n').map((s) => s.trim()).filter(Boolean) : [],
+        images: values.images
+          ? (values.images as string).split('\n').map((s) => s.trim()).filter(Boolean)
+          : [],
       };
 
       if (modalMode === 'edit') {
@@ -225,14 +265,15 @@ export default () => {
       });
 
       if (data?.infocode === '10001') {
-        message.error('请确保高德API密钥正确');
+        message.error('请确保高德 API 密钥正确');
         return;
       }
 
       if (data.geocodes.length > 0) {
         const location = data.geocodes[0].location;
         form.setFieldValue('position', location);
-        form.validateFields(['position']);
+        void form.validateFields(['position']);
+        message.success('已自动填入坐标');
         return location;
       }
 
@@ -252,24 +293,25 @@ export default () => {
         key: 'id',
         align: 'center',
         width: 80,
-        render: (text: number) => <span className="text-gray-400 dark:text-gray-500 font-mono">#{text}</span>,
+        render: (id: number) => (
+          <span className="font-mono text-xs text-slate-400 dark:text-slate-500">#{id}</span>
+        ),
       },
       {
         title: '标题',
         dataIndex: 'title',
         key: 'title',
         width: 180,
-        render: (text: string) => (
-          <>
-            {text ? (
-              <Tooltip title={text} placement="topLeft">
-                <span className="max-w-[180px] truncate block text-gray-700 dark:text-gray-200 font-medium">{text}</span>
-              </Tooltip>
-            ) : (
-              <span className="text-gray-300 dark:text-gray-500 italic">暂无标题</span>
-            )}
-          </>
-        ),
+        render: (text: string) =>
+          text ? (
+            <Tooltip title={text} placement="topLeft">
+              <span className="block max-w-[180px] truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                {text}
+              </span>
+            </Tooltip>
+          ) : (
+            <span className="text-sm italic text-slate-400 dark:text-slate-500">暂无标题</span>
+          ),
       },
       {
         title: '地址',
@@ -277,38 +319,32 @@ export default () => {
         key: 'address',
         width: 220,
         ellipsis: true,
-        render: (text: string) => (
-          <>
-            {text ? (
-              <Tooltip title={text}>
-                <div className="max-w-[220px] truncate text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary cursor-pointer">
-                  {text}
-                </div>
-              </Tooltip>
-            ) : (
-              <span className="text-gray-300 dark:text-gray-500 italic">暂无地址</span>
-            )}
-          </>
-        ),
+        render: (text: string) =>
+          text ? (
+            <Tooltip title={text}>
+              <span className="block max-w-[220px] truncate text-sm text-slate-700 dark:text-slate-200">
+                {text}
+              </span>
+            </Tooltip>
+          ) : (
+            <span className="text-sm italic text-slate-400 dark:text-slate-500">暂无地址</span>
+          ),
       },
       {
         title: '内容',
         dataIndex: 'content',
         key: 'content',
         width: 320,
-        render: (value: string) => (
-          <>
-            {value ? (
-              <Tooltip title={value}>
-                <div className="max-w-[320px] truncate text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary cursor-pointer">
-                  {value}
-                </div>
-              </Tooltip>
-            ) : (
-              <span className="text-gray-300 dark:text-gray-500 italic">暂无内容</span>
-            )}
-          </>
-        ),
+        render: (text: string) =>
+          text ? (
+            <Tooltip title={text}>
+              <span className="block max-w-[320px] truncate text-sm text-slate-700 dark:text-slate-200">
+                {text}
+              </span>
+            </Tooltip>
+          ) : (
+            <span className="text-sm italic text-slate-400 dark:text-slate-500">暂无内容</span>
+          ),
       },
       {
         title: '坐标',
@@ -316,21 +352,34 @@ export default () => {
         key: 'position',
         align: 'center',
         width: 160,
-        render: (value: string) => <Tag className="m-0! border-0!">{value || '-'}</Tag>,
+        render: (value: string) =>
+          value ? (
+            <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 bg-slate-50 px-2 py-1 font-mono text-[11px] tabular-nums text-slate-600 dark:border-strokedark dark:bg-boxdark-2 dark:text-slate-300">
+              <FiCrosshair size={12} className="shrink-0 text-slate-400" />
+              {value}
+            </span>
+          ) : (
+            <span className="text-slate-400">—</span>
+          ),
       },
       {
         title: '发布时间',
         dataIndex: 'createTime',
         key: 'createTime',
+        width: 140,
         render: (text: number | string) => {
           const ms = typeof text === 'number' ? text : Number(text);
           if (!ms || Number.isNaN(ms)) {
-            return <span className="text-gray-400 dark:text-gray-500">-</span>;
+            return <span className="text-slate-400">—</span>;
           }
           return (
-            <div className="flex flex-col">
-              <span className="text-gray-700 dark:text-gray-200 font-medium">{dayjs(ms).format('YYYY-MM-DD')}</span>
-              <span className="text-gray-400 dark:text-gray-500 text-xs">{dayjs(ms).format('HH:mm:ss')}</span>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                {dayjs(ms).format('YYYY-MM-DD')}
+              </span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                {dayjs(ms).format('HH:mm:ss')}
+              </span>
             </div>
           );
         },
@@ -340,22 +389,28 @@ export default () => {
         key: 'action',
         fixed: 'right',
         align: 'center',
-        width: 120,
+        width: 100,
         render: (_: unknown, record: Footprint) => (
           <div className="flex items-center justify-center gap-0.5">
             <Tooltip title="编辑">
               <button
                 type="button"
-                onClick={() => openEdit(record.id!)}
-                className="flex size-8 items-center justify-center rounded-lg text-slate-400! transition-colors hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary! cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openEdit(record.id!);
+                }}
+                className={`flex size-8 items-center justify-center rounded-lg transition-colors cursor-pointer ${editingId === record.id
+                  ? 'bg-primary/10 text-primary dark:bg-primary/20'
+                  : 'text-slate-400 hover:bg-slate-100 hover:text-primary dark:hover:bg-white/5 dark:hover:text-primary'
+                  }`}
                 aria-label="编辑足迹"
               >
                 <FiEdit2 size={16} />
               </button>
             </Tooltip>
             <Popconfirm
-              title="删除确认"
-              description="确定要删除这条足迹吗？"
+              title="删除足迹"
+              description="删除后无法恢复，确定继续吗？"
               okText="删除"
               okButtonProps={{ danger: true }}
               cancelText="取消"
@@ -364,11 +419,12 @@ export default () => {
               <Tooltip title="删除">
                 <button
                   type="button"
-                  disabled={deleteLoading}
+                  onClick={(e) => e.stopPropagation()}
+                  disabled={btnLoading === record.id}
                   className="flex size-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
                   aria-label="删除足迹"
                 >
-                  {deleteLoading ? (
+                  {btnLoading === record.id ? (
                     <span className="size-4 animate-spin rounded-full border-2 border-slate-300 border-t-red-500" />
                   ) : (
                     <FiTrash2 size={16} />
@@ -380,7 +436,7 @@ export default () => {
         ),
       },
     ],
-    [deleteLoading, delFootprintData, openEdit],
+    [btnLoading, delFootprintData, editingId, openEdit],
   );
 
   if (skeletonLoading) {
@@ -392,37 +448,50 @@ export default () => {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col text-slate-600 dark:text-slate-300">
       <Title value="足迹管理">
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+        <Button
+          type="primary"
+          icon={<FiPlus />}
+          onClick={openCreate}
+          className="inline-flex items-center gap-1"
+        >
           新增足迹
         </Button>
       </Title>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xs dark:border-strokedark dark:bg-boxdark">
-        <div className="shrink-0 space-y-4 border-b border-gray-100 bg-gray-50/30 p-5 dark:border-strokedark dark:bg-boxdark-2/50">
-          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-            <Form
-              form={filterForm}
-              layout="inline"
-              onValuesChange={onFilterValuesChange}
-              className="flex! flex-1 flex-wrap! items-center! gap-y-2.5!"
-            >
-              <Form.Item name="address" className="mb-0!">
-                <Input
-                  prefix={<SearchOutlined className="text-gray-400 dark:text-gray-500" />}
-                  placeholder="搜索地址..."
-                  className="w-[220px]!"
-                  allowClear
-                />
-              </Form.Item>
-
-              <Form.Item name="createTime" className="mb-0!">
-                <RangePicker className="w-[260px]!" />
-              </Form.Item>
-            </Form>
-          </div>
-        </div>
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        <header className="shrink-0 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
+          <Form form={filterForm} onValuesChange={onFilterValuesChange}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                <Form.Item name="address" className="mb-0! w-full sm:w-52">
+                  <Input
+                    allowClear
+                    placeholder="搜索地点地址…"
+                    prefix={<FiSearch className="text-slate-400" size={15} />}
+                  />
+                </Form.Item>
+                <Form.Item name="createTime" className="mb-0! w-full sm:w-auto">
+                  <RangePicker
+                    className="w-full sm:w-56!"
+                    placeholder={['开始日期', '结束日期']}
+                    disabledDate={(current) => current && current > dayjs().endOf('day')}
+                  />
+                </Form.Item>
+                <Tooltip title="重置筛选">
+                  <Button
+                    type="text"
+                    icon={<FiRotateCcw size={15} />}
+                    onClick={resetFilters}
+                    disabled={!hasActiveFilters}
+                    className="shrink-0 text-slate-400 hover:text-slate-600 disabled:opacity-40 dark:hover:text-slate-200"
+                  />
+                </Tooltip>
+              </div>
+            </div>
+          </Form>
+        </header>
 
         <div className="min-h-0 flex-1">
           <Table
@@ -430,18 +499,22 @@ export default () => {
             dataSource={footprintList}
             columns={columns}
             loading={loading}
-            scroll={{ x: 1220 }}
+            scroll={{ x: 'max-content' }}
             pagination={{
               position: ['bottomRight'],
               current: filter.pageNum,
               pageSize: filter.pageSize,
               total,
-              showTotal: (totalCount) => (
-                <div className="mt-[9px] text-xs text-gray-500 dark:text-gray-400">
-                  当前第 {filter.pageNum ?? 1} / {Math.max(1, Math.ceil(totalCount / (filter.pageSize ?? DEFAULT_PAGE_SIZE)))} 页 | 共{' '}
-                  {totalCount} 条数据
-                </div>
-              ),
+              showTotal: (totalCount) => {
+                const pageSize = filter.pageSize ?? DEFAULT_PAGE_SIZE;
+                const pageNum = filter.pageNum ?? 1;
+                const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+                return (
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    第 {pageNum} / {totalPages} 页 · 共 {totalCount} 条
+                  </span>
+                );
+              },
               onChange: (page, size) =>
                 setFilter((prev) => ({
                   ...prev,
@@ -454,68 +527,187 @@ export default () => {
                   pageNum: 1,
                   pageSize: size ?? prev.pageSize ?? DEFAULT_PAGE_SIZE,
                 })),
-              className: 'px-6!',
+              className: 'px-5! py-3!',
             }}
-            className="[&_.ant-table-thead>tr>th]:bg-gray-50! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-gray-500! dark:[&_.ant-table-thead>tr>th]:text-gray-400!"
+            className="min-h-0 flex-1 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! dark:[&_.ant-table-thead>tr>th]:text-slate-400!"
+            locale={{
+              emptyText: (
+                <div className="py-14 text-center">
+                  <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-boxdark-2 dark:text-slate-500">
+                    <FiMapPin size={22} />
+                  </div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {hasActiveFilters
+                      ? '没有匹配的足迹，试试调整地址关键词或日期范围'
+                      : '还没有足迹，点击右上角「新增足迹」记录第一条旅行'}
+                  </p>
+                </div>
+              ),
+            }}
           />
         </div>
-      </div>
+      </section>
 
       <Modal
-        title={modalMode === 'edit' ? '编辑足迹' : '新增足迹'}
         open={isModalOpen}
         onCancel={closeModal}
-        destroyOnClose
         footer={null}
+        width={560}
+        destroyOnClose
+        className="[&_.ant-modal-content]:rounded-2xl! [&_.ant-modal-header]:mb-0! [&_.ant-modal-body]:pt-4!"
+        title={
+          <div className="flex items-start gap-3 pr-6">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/15">
+              <FiMapPin size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100">
+                {isEditing ? '编辑足迹' : '新增足迹'}
+              </h3>
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                {isEditing
+                  ? '修改后保存，列表与前台足迹地图同步更新'
+                  : '记录你去过的城市与坐标，支持高德地址解析'}
+              </p>
+            </div>
+          </div>
+        }
       >
         <Spin spinning={detailLoading || searchLoading}>
-          <Form form={form} layout="vertical" size="large" preserve={false} className="mt-6">
-            <Form.Item label="标题" name="title" rules={[{ required: true, message: '标题不能为空' }]}>
-              <Input placeholder="请输入标题" />
-            </Form.Item>
+          {isEditing && editingTitle && (
+            <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 dark:border-primary/25 dark:bg-primary/10">
+              <span className="truncate text-sm font-medium text-primary">
+                {editingTitle}
+              </span>
+            </div>
+          )}
 
-            <Form.Item label="地址" name="address" rules={[{ required: true, message: '地址不能为空' }]}>
-              <Input placeholder="请输入地址" />
-            </Form.Item>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={onSubmit}
+            size="large"
+            requiredMark="optional"
+            preserve={false}
+            className="[&_.ant-input]:rounded-xl! [&_.ant-picker]:w-full! [&_.ant-picker]:rounded-xl!"
+          >
+            <p className="mb-3 text-[11px] font-medium tracking-wide text-slate-400 uppercase">
+              基本信息
+            </p>
 
-            <Form.Item label="坐标纬度" name="position" rules={[{ required: true, message: '坐标纬度不能为空' }]}>
+            <Form.Item
+              label="标题"
+              name="title"
+              rules={[{ required: true, message: '标题不能为空' }]}
+              className="mb-4!"
+            >
               <Input
-                placeholder="请输入坐标纬度"
-                prefix={<GiPositionMarker />}
-                addonAfter={<IoSearch onClick={getGeocode} className="cursor-pointer" />}
+                placeholder="例如：杭州 · 西湖"
+                allowClear
+                prefix={<FiAlignLeft className="text-slate-400" />}
               />
             </Form.Item>
 
-            <div className="relative">
-              <Form.Item label="图片" name="images">
-                <Input.TextArea autoSize={{ minRows: 2, maxRows: 10 }} placeholder="请输入图片链接" />
-              </Form.Item>
+            <Form.Item
+              label="地址"
+              name="address"
+              rules={[{ required: true, message: '地址不能为空' }]}
+              className="mb-4!"
+            >
+              <Input
+                placeholder="详细地址，用于地图展示与坐标解析"
+                allowClear
+                prefix={<HiOutlineLocationMarker className="text-slate-400" />}
+              />
+            </Form.Item>
 
+            <p className="mb-3 text-[11px] font-medium tracking-wide text-slate-400 uppercase">
+              位置坐标
+            </p>
+
+            <Form.Item
+              label="经纬度"
+              name="position"
+              rules={[{ required: true, message: '坐标不能为空' }]}
+              className="mb-4!"
+              extra={
+                <span className="text-xs text-slate-400">
+                  格式：经度,纬度 · 可点击右侧按钮根据地址自动解析
+                </span>
+              }
+            >
+              <Input
+                placeholder="116.397428,39.90923"
+                allowClear
+                prefix={<FiMapPin className="text-slate-400" />}
+                addonAfter={
+                  <button
+                    type="button"
+                    onClick={() => void getGeocode()}
+                    disabled={searchLoading}
+                    className="inline-flex cursor-pointer items-center justify-center px-3 py-2 text-slate-500 transition-colors hover:text-primary disabled:opacity-50"
+                    aria-label="根据地址解析坐标"
+                  >
+                    <FiNavigation size={16} className={searchLoading ? 'animate-pulse' : ''} />
+                  </button>
+                }
+                className="customizeAntdInputAddonAfter"
+              />
+            </Form.Item>
+
+            <p className="mb-3 text-[11px] font-medium tracking-wide text-slate-400 uppercase">
+              图文内容
+            </p>
+
+            <Form.Item label="图片" name="images" className="mb-3!">
+              <Input.TextArea
+                autoSize={{ minRows: 2, maxRows: 6 }}
+                placeholder="每行一条图片链接，或从素材库批量选择"
+              />
+            </Form.Item>
+
+            <div className="mb-4 flex justify-end">
               <button
                 type="button"
                 onClick={() => setIsMaterialModalOpen(true)}
-                className="absolute bottom-2 right-2 rounded-full border border-stroke bg-white p-0 cursor-pointer dark:bg-boxdark"
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200/80 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-primary/40 hover:text-primary dark:border-strokedark dark:text-slate-300 dark:hover:text-primary"
               >
-                <CloudUploadOutlined className="p-2 text-xl transition-colors hover:text-primary" />
+                <FiUploadCloud size={14} />
+                从素材库选择
               </button>
             </div>
 
-            <Form.Item label="内容" name="content">
-              <Input.TextArea autoSize={{ minRows: 5, maxRows: 10 }} placeholder="请输入内容" />
+            <Form.Item label="描述" name="content" className="mb-4!">
+              <Input.TextArea
+                autoSize={{ minRows: 4, maxRows: 8 }}
+                placeholder="写下这段旅程的故事与感受…"
+              />
             </Form.Item>
 
-            <Form.Item label="时间" name="createTime" rules={[{ required: true, message: '时间不能为空' }]} className="mb-4!">
+            <p className="mb-3 text-[11px] font-medium tracking-wide text-slate-400 uppercase">
+              发布时间
+            </p>
+
+            <Form.Item
+              label="时间"
+              name="createTime"
+              rules={[{ required: true, message: '时间不能为空' }]}
+              className="mb-4!"
+            >
               <DatePicker
                 showTime
-                placeholder="请选择时间"
+                placeholder="选择足迹发布时间"
                 className="w-full"
-                disabledDate={(current) => Boolean(current && current.isAfter(dayjs().endOf('day')))}
+                disabledDate={(current) =>
+                  Boolean(current && current.isAfter(dayjs().endOf('day')))
+                }
                 disabledTime={(current) => {
                   if (!current) return {};
                   const now = dayjs();
                   if (!current.isSame(now, 'day')) return {};
                   return {
-                    disabledHours: () => Array.from({ length: 24 }, (_, i) => i).filter((h) => h > now.hour()),
+                    disabledHours: () =>
+                      Array.from({ length: 24 }, (_, i) => i).filter((h) => h > now.hour()),
                     disabledMinutes: (selectedHour) =>
                       selectedHour === now.hour()
                         ? Array.from({ length: 60 }, (_, i) => i).filter((m) => m > now.minute())
@@ -529,11 +721,20 @@ export default () => {
               />
             </Form.Item>
 
-            <Form.Item className="mb-0! w-full">
-              <Button type="primary" onClick={onSubmit} loading={modalSubmitLoading} className="w-full">
-                确定
+            <div className="flex gap-3 pt-1">
+              <Button className="h-10! flex-1" onClick={closeModal}>
+                取消
               </Button>
-            </Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={modalSubmitLoading}
+                icon={isEditing ? <FiEdit2 /> : <FiPlus />}
+                className="h-10! flex-1"
+              >
+                {isEditing ? '保存修改' : '发布足迹'}
+              </Button>
+            </div>
           </Form>
         </Spin>
       </Modal>
@@ -544,9 +745,9 @@ export default () => {
         onClose={() => setIsMaterialModalOpen(false)}
         onSelect={(url) => {
           form.setFieldValue('images', url.join('\n'));
-          form.validateFields(['images']);
+          void form.validateFields(['images']);
         }}
       />
     </div>
   );
-};
+}

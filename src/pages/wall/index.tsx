@@ -423,7 +423,7 @@ export default function WallPage() {
         key: 'action',
         fixed: 'right',
         align: 'center',
-        width: 120,
+        width: 100,
         render: (_: string, record: Wall) => {
           const isChoice = record.isChoice === 1;
           return (
