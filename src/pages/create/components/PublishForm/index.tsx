@@ -1,11 +1,25 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Form, Input, Button, Select, DatePicker, Cascader, message, Switch, Radio } from 'antd';
+import { Form, Input, Button, Select, DatePicker, Cascader, message, Switch, Radio, Tooltip } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import { RuleObject } from 'antd/es/form';
-import dayjs from 'dayjs';
-import { CloudUploadOutlined, PictureOutlined } from '@ant-design/icons';
+import dayjs, { Dayjs } from 'dayjs';
+import {
+  FiType,
+  FiImage,
+  FiUploadCloud,
+  FiFolder,
+  FiTag,
+  FiCalendar,
+  FiEye,
+  FiEyeOff,
+  FiLock,
+  FiSend,
+  FiSave,
+  FiSettings,
+} from 'react-icons/fi';
+import { HiOutlineSparkles } from 'react-icons/hi2';
 
 import { addArticleDataAPI, editArticleDataAPI } from '@/api/article';
 import { getCateListAPI } from '@/api/cate';
@@ -25,8 +39,8 @@ interface Props {
 
 interface FieldType {
   title: string;
-  createTime: number;
-  cateIds: number[];
+  createTime: Dayjs;
+  cateIds: number[] | number[][];
   tagIds: (number | string)[];
   cover: string;
   description: string;
@@ -46,7 +60,12 @@ interface AssistantResponse {
   }>;
 }
 
-/** 在分类树中查找从根到目标 id 的路径，供 Cascader 多选回显（需完整路径才能显示名称而非数字 id） */
+const STATUS_OPTIONS: { value: 1 | 2 | 3; label: string; hint: string; icon: ReactNode }[] = [
+  { value: 1, label: '正常', hint: '全站可见', icon: <FiEye size={14} /> },
+  { value: 2, label: '首页隐藏', hint: '列表仍可见', icon: <FiEyeOff size={14} /> },
+  { value: 3, label: '全站隐藏', hint: '仅链接可访问', icon: <FiLock size={14} /> },
+];
+
 function findCategoryPathInTree(nodes: Cate[], targetId: number, prefix: number[] = []): number[] | null {
   for (const node of nodes) {
     const nid = node.id;
@@ -61,21 +80,58 @@ function findCategoryPathInTree(nodes: Cate[], targetId: number, prefix: number[
   return null;
 }
 
+type FormSectionProps = {
+  title: string;
+  description?: string;
+  icon: ReactNode;
+  action?: ReactNode;
+  children: ReactNode;
+};
+
+function FormSection({ title, description, icon, action, children }: FormSectionProps) {
+  return (
+    <section className="rounded-xl border border-slate-200/80 bg-slate-50/40 p-4 dark:border-strokedark dark:bg-boxdark-2/30 sm:p-5">
+      <header className="mb-4 flex items-start justify-between gap-3 border-b border-slate-100 pb-3 dark:border-strokedark">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-primary ring-1 ring-slate-200/80 dark:bg-boxdark dark:ring-strokedark">
+            {icon}
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
+            {description && (
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{description}</p>
+            )}
+          </div>
+        </div>
+        {action}
+      </header>
+      <div className="space-y-1">{children}</div>
+    </section>
+  );
+}
+
+const formItemClass = '[&_.ant-form-item-label>label]:text-slate-600! [&_.ant-form-item-label>label]:font-medium! dark:[&_.ant-form-item-label>label]:text-slate-300!';
+
 const PublishForm = ({ data, closeModel }: Props) => {
   const [params] = useSearchParams();
   const id = +params.get('id')!;
   const isDraftParams = Boolean(params.get('draft'));
 
   const [btnLoading, setBtnLoading] = useState(false);
-
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
 
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<FieldType>();
   const navigate = useNavigate();
+  const coverValue = Form.useWatch('cover', form);
 
   const [cateList, setCateList] = useState<Cate[]>([]);
   const [tagList, setTagList] = useState<Tag[]>([]);
   const [isEncryptEnabled, setIsEncryptEnabled] = useState(false);
+
+  const isEditing = Boolean(id && !isDraftParams);
+  const showDraftActions = (isDraftParams && id) || !id;
+  const primaryLabel = isEditing ? '保存修改' : '发布文章';
+  const draftLabel = isDraftParams ? '保存草稿' : '存为草稿';
 
   useEffect(() => {
     if (!id) return form.resetFields();
@@ -91,12 +147,11 @@ const PublishForm = ({ data, closeModel }: Props) => {
       createTime: dayjs(data.createTime!),
     };
 
-    // 分类回显：优先 cateIds（真实选中的叶子/节点 id）；勿把接口里父节点下的全量 children 当成「全部选中」
     const fromCateIds = data?.cateIds?.filter((x): x is number => x != null);
     const rawCateIds =
       fromCateIds?.length ?? 0
         ? fromCateIds!
-        : (data?.cateList?.map((item) => item.id).filter((id): id is number => id !== undefined) ?? []);
+        : (data?.cateList?.map((item) => item.id).filter((cid): cid is number => cid !== undefined) ?? []);
 
     const catePaths =
       cateList.length > 0 && rawCateIds.length > 0
@@ -106,10 +161,10 @@ const PublishForm = ({ data, closeModel }: Props) => {
     form.setFieldsValue({
       ...formValues,
       ...(catePaths?.length ? { cateIds: catePaths } : {}),
+      tagIds: formValues.tagIds?.filter((id): id is number => id !== undefined),
     });
-    // 设置初始的加密状态
     setIsEncryptEnabled(formValues.isEncrypt);
-  }, [data, id, cateList]);
+  }, [data, id, cateList, form]);
 
   const getCateList = async () => {
     const { data } = await getCateListAPI();
@@ -126,7 +181,6 @@ const PublishForm = ({ data, closeModel }: Props) => {
     getTagList();
   }, []);
 
-  // 校验文章封面
   const validateURL = (_: RuleObject, value: string) => {
     return !value || /^(https?:\/\/)/.test(value) ? Promise.resolve() : Promise.reject(new Error('请输入有效的封面链接'));
   };
@@ -135,12 +189,9 @@ const PublishForm = ({ data, closeModel }: Props) => {
     setBtnLoading(true);
 
     try {
-      // 如果是文章标签，则先判断是否存在，如果不存在则添加
       const tagIds: number[] = [];
       for (const item of values.tagIds ? values.tagIds : []) {
         if (typeof item === 'string') {
-          // 如果已经有这个标签了，就没必要再创建一个了
-          // 先转换为大写进行查找，否则会出现大小写不匹配问题
           const tag1 = tagList.find((t) => t.name.toUpperCase() === item.toUpperCase())?.id;
 
           if (tag1) {
@@ -150,7 +201,6 @@ const PublishForm = ({ data, closeModel }: Props) => {
 
           await addTagDataAPI({ name: item });
           const { data: list } = await getTagListAPI();
-          // 添加成功后查找对应的标签id
           const tag2 = list.result.find((t) => t.name === item)?.id;
           if (tag2) tagIds.push(tag2);
         } else {
@@ -158,12 +208,9 @@ const PublishForm = ({ data, closeModel }: Props) => {
         }
       }
 
-      values.createTime = values.createTime.valueOf();
-      // Cascader 多选值为路径数组 [[父, 子], [一级]]，接口只需叶子分类 id，且不要用 flat 把父级 id 与叶子混成「多选了父就多了很多分类」的语义
-      values.cateIds = [
-        ...new Set(
-          (values.cateIds ?? []).map((path) => (Array.isArray(path) ? path[path.length - 1] : path)),
-        ),
+      const createTime = values.createTime.valueOf();
+      const cateIds = [
+        ...new Set((values.cateIds ?? []).map((path) => (Array.isArray(path) ? path[path.length - 1] : path))),
       ];
 
       if (id && !isDraftParams) {
@@ -172,14 +219,15 @@ const PublishForm = ({ data, closeModel }: Props) => {
           ...values,
           content: data.content,
           tagIds,
-          createTime: values.createTime,
+          cateIds,
+          createTime,
           config: {
             isDraft: false,
             isDel: false,
             ...values.config,
           },
         });
-        message.success('🎉 编辑成功');
+        message.success('编辑成功');
       } else {
         if (!isDraftParams) {
           await addArticleDataAPI({
@@ -187,61 +235,49 @@ const PublishForm = ({ data, closeModel }: Props) => {
             ...values,
             content: data.content,
             tagIds,
+            cateIds,
             config: {
               isDraft: false,
               isDel: false,
               ...values.config,
             },
-            createTime: values.createTime,
+            createTime,
           });
 
-          if (isDraft) {
-            message.success('🎉 保存为草稿成功');
-          } else {
-            message.success('🎉 发布成功');
-          }
+          message.success(isDraft ? '已保存为草稿' : '发布成功');
         } else {
-          // 修改草稿状态为发布文章
           await editArticleDataAPI({
             id,
             ...values,
             content: data.content,
             tagIds,
-            createTime: values.createTime,
+            cateIds,
+            createTime,
             config: {
               isDraft: false,
               isDel: false,
               ...values.config,
             },
           });
+          message.success('发布成功');
         }
       }
 
-      // 关闭弹框
       closeModel();
-      // 清除本地持久化的数据
       localStorage.removeItem('article_content');
-      // 如果是草稿就跳转到草稿页，否则文章页
-      if (isDraft) {
-        navigate('/draft');
-      } else {
-        navigate('/article');
-      }
-      // 初始化表单
+      navigate(isDraft ? '/draft' : '/article');
       form.resetFields();
     } catch (error) {
       console.error(error);
+    } finally {
       setBtnLoading(false);
     }
-
-    setBtnLoading(false);
   };
 
-  // 初始表单数据
   const initialValues = {
     config: {
       top: false,
-      status: 1,
+      status: 1 as const,
       password: '',
       isEncrypt: false,
     },
@@ -251,7 +287,6 @@ const PublishForm = ({ data, closeModel }: Props) => {
   const { callAssistant } = useAssistant();
   const [generating, setGenerating] = useState(false);
 
-  // 调用助手API生成标题和简介
   const generateTitleAndDescription = async () => {
     try {
       setGenerating(true);
@@ -275,7 +310,8 @@ ${content}
         [
           {
             role: 'system',
-            content: '你是 Kimi，由 Moonshot AI 提供的人工智能助手，你更擅长中文和英文的对话。你会为用户提供安全，有帮助，准确的回答。',
+            content:
+              '你是 Kimi，由 Moonshot AI 提供的人工智能助手，你更擅长中文和英文的对话。你会为用户提供安全，有帮助，准确的回答。',
           },
           { role: 'user', content: prompt },
         ],
@@ -288,10 +324,7 @@ ${content}
           try {
             let jsonStr = result;
             if (jsonStr.startsWith('```json')) {
-              jsonStr = jsonStr
-                .replace(/```json/g, '')
-                .replace(/```/g, '')
-                .trim();
+              jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
             }
 
             const { title, description } = JSON.parse(jsonStr);
@@ -299,7 +332,7 @@ ${content}
               title: title || '',
               description: description || '',
             });
-            message.success('标题和简介生成成功');
+            message.success('标题和简介已生成');
           } catch (e) {
             console.error('Failed to parse response:', e);
             message.error('解析生成结果失败，请检查助手返回格式');
@@ -316,116 +349,227 @@ ${content}
     }
   };
 
-  // 文件上传
-  const UploadBtn = () => <CloudUploadOutlined className="text-xl cursor-pointer" onClick={() => setIsMaterialModalOpen(true)} />;
+  const handleDraftSave = () => {
+    form.validateFields().then((values) => onSubmit(values, true));
+  };
 
   return (
-    <div>
-      <Form form={form} name="basic" size="large" layout="vertical" onFinish={onSubmit} autoComplete="off" initialValues={initialValues}>
-        <Form.Item label="文章标题" name="title" rules={[{ required: true, message: '请输入文章标题' }]}>
-          <Input placeholder="请输入文章标题" />
-        </Form.Item>
-
-        <Form.Item label="文章简介" name="description">
-          <TextArea autoSize={{ minRows: 2, maxRows: 5 }} showCount placeholder="请输入文章简介" />
-        </Form.Item>
-
-        <Form.Item>
-          <Button type="primary" onClick={generateTitleAndDescription} loading={generating}>
-            一键生成标题和简介
-          </Button>
-        </Form.Item>
-
-        <Form.Item label="文章封面" name="cover" rules={[{ validator: validateURL }]}>
-          <Input placeholder="请输入文章封面" prefix={<PictureOutlined />} addonAfter={<UploadBtn />} className="customizeAntdInputAddonAfter" />
-        </Form.Item>
-
-        <Form.Item label="选择分类" name="cateIds" rules={[{ required: true, message: '请选择文章分类' }]}>
-          <Cascader
-            options={cateList}
-            maxTagCount="responsive"
-            multiple
-            showCheckedStrategy={Cascader.SHOW_CHILD}
-            fieldNames={{ label: 'name', value: 'id' }}
-            placeholder="请选择文章分类"
-            className="w-full"
-          />
-        </Form.Item>
-
-        <Form.Item label="选择标签" name="tagIds">
-          <Select allowClear mode="tags" options={tagList} fieldNames={{ label: 'name', value: 'id' }} filterOption={(input, option) => !!option?.name.includes(input)} placeholder="请选择文章标签" className="w-full" />
-        </Form.Item>
-
-        <Form.Item label="选择发布时间" name="createTime">
-          <DatePicker
-            showTime
-            placeholder="选择文章发布时间"
-            className="w-full"
-            disabledDate={(current) => Boolean(current && current.isAfter(dayjs().endOf('day')))}
-            disabledTime={(current) => {
-              if (!current) return {};
-              const now = dayjs();
-              if (!current.isSame(now, 'day')) return {};
-              return {
-                disabledHours: () => Array.from({ length: 24 }, (_, i) => i).filter((h) => h > now.hour()),
-                disabledMinutes: (selectedHour) =>
-                  selectedHour === now.hour()
-                    ? Array.from({ length: 60 }, (_, i) => i).filter((m) => m > now.minute())
-                    : [],
-                disabledSeconds: (selectedHour, selectedMinute) =>
-                  selectedHour === now.hour() && selectedMinute === now.minute()
-                    ? Array.from({ length: 60 }, (_, i) => i).filter((s) => s > now.second())
-                    : [],
-              };
-            }}
-          />
-        </Form.Item>
-
-        {/* <Form.Item label="是否置顶" name={["config", "top"]} valuePropName="checked">
-          <Switch />
-        </Form.Item> */}
-
-        <Form.Item label="状态" name={['config', 'status']}>
-          <Radio.Group>
-            <Radio value={1}>正常</Radio>
-            <Radio value={2}>首页隐藏</Radio>
-            <Radio value={3}>全站隐藏</Radio>
-          </Radio.Group>
-        </Form.Item>
-
-        <Form.Item label="是否加密" name={['config', 'isEncrypt']} valuePropName="checked">
-          <Switch onChange={(checked: boolean) => setIsEncryptEnabled(checked)} />
-        </Form.Item>
-
-        {isEncryptEnabled && (
-          <Form.Item label="访问密码" name={['config', 'password']} rules={[{ required: isEncryptEnabled, message: '请输入访问密码' }]}>
-            <Input.Password placeholder="请输入访问密码" />
+    <div className="publish-form pb-2">
+      <Form
+        form={form}
+        name="publish"
+        size="middle"
+        layout="vertical"
+        onFinish={onSubmit}
+        autoComplete="off"
+        initialValues={initialValues}
+        className="flex flex-col gap-5"
+        requiredMark={false}
+      >
+        <FormSection
+          title="基本信息"
+          description="标题与简介将展示在列表与详情页"
+          icon={<FiType size={18} />}
+          action={
+            <Tooltip title="根据正文自动生成标题与简介">
+              <Button
+                type="default"
+                size="small"
+                loading={generating}
+                onClick={generateTitleAndDescription}
+                className="inline-flex! shrink-0! items-center! gap-1.5! rounded-lg! border-slate-200/80! shadow-none! dark:border-strokedark!"
+                icon={<HiOutlineSparkles className="text-primary" />}
+              >
+                AI 生成
+              </Button>
+            </Tooltip>
+          }
+        >
+          <Form.Item
+            className={formItemClass}
+            label="文章标题"
+            name="title"
+            rules={[{ required: true, message: '请输入文章标题' }]}
+          >
+            <Input placeholder="请输入文章标题" allowClear />
           </Form.Item>
-        )}
 
-        <Form.Item className="mb-0!">
-          <Button type="primary" htmlType="submit" loading={btnLoading} className="w-full">
-            {id && !isDraftParams ? '编辑文章' : '发布文章'}
+          <Form.Item className={formItemClass} label="文章简介" name="description">
+            <TextArea autoSize={{ minRows: 3, maxRows: 6 }} showCount maxLength={200} placeholder="概括文章要点，用于 SEO 与列表摘要" />
+          </Form.Item>
+        </FormSection>
+
+        <FormSection title="封面" description="支持外链或从素材库选择" icon={<FiImage size={18} />}>
+          <Form.Item className={`${formItemClass} mb-2!`} label="封面地址">
+            <div className="flex gap-2">
+              <Form.Item name="cover" noStyle rules={[{ validator: validateURL }]}>
+                <Input
+                  placeholder="https:// 封面图片地址"
+                  allowClear
+                  prefix={<FiImage className="text-slate-400" />}
+                  className="min-w-0 flex-1"
+                />
+              </Form.Item>
+              <Tooltip title="从素材库选择">
+                <button
+                  type="button"
+                  onClick={() => setIsMaterialModalOpen(true)}
+                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-200/80 text-slate-500 transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary dark:border-strokedark dark:hover:bg-primary/10"
+                  aria-label="从素材库选择封面"
+                >
+                  <FiUploadCloud size={18} />
+                </button>
+              </Tooltip>
+            </div>
+          </Form.Item>
+
+          {coverValue && /^(https?:\/\/)/.test(coverValue) && (
+            <div className="overflow-hidden rounded-lg border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+              <img
+                src={coverValue}
+                alt="封面预览"
+                className="aspect-video w-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+        </FormSection>
+
+        <FormSection title="分类与标签" description="分类必选，标签可多选或输入新建" icon={<FiFolder size={18} />}>
+          <Form.Item
+            className={formItemClass}
+            label="文章分类"
+            name="cateIds"
+            rules={[{ required: true, message: '请选择文章分类' }]}
+          >
+            <Cascader
+              options={cateList}
+              maxTagCount="responsive"
+              multiple
+              showCheckedStrategy={Cascader.SHOW_CHILD}
+              fieldNames={{ label: 'name', value: 'id' }}
+              placeholder="选择分类（可多选）"
+              className="w-full"
+            />
+          </Form.Item>
+
+          <Form.Item className={formItemClass} label="文章标签" name="tagIds">
+            <Select
+              allowClear
+              mode="tags"
+              options={tagList}
+              fieldNames={{ label: 'name', value: 'id' }}
+              filterOption={(input, option) => !!option?.name.includes(input)}
+              placeholder="选择已有标签或输入新标签"
+              className="w-full"
+              suffixIcon={<FiTag className="text-slate-400" />}
+            />
+          </Form.Item>
+        </FormSection>
+
+        <FormSection title="发布设置" description="定时发布仅可选择当前及以前时间" icon={<FiCalendar size={18} />}>
+          <Form.Item className={formItemClass} label="发布时间" name="createTime">
+            <DatePicker
+              showTime
+              placeholder="选择发布时间"
+              className="w-full"
+              suffixIcon={<FiCalendar className="text-slate-400" />}
+              disabledDate={(current) => Boolean(current && current.isAfter(dayjs().endOf('day')))}
+              disabledTime={(current) => {
+                if (!current) return {};
+                const now = dayjs();
+                if (!current.isSame(now, 'day')) return {};
+                return {
+                  disabledHours: () => Array.from({ length: 24 }, (_, i) => i).filter((h) => h > now.hour()),
+                  disabledMinutes: (selectedHour) =>
+                    selectedHour === now.hour()
+                      ? Array.from({ length: 60 }, (_, i) => i).filter((m) => m > now.minute())
+                      : [],
+                  disabledSeconds: (selectedHour, selectedMinute) =>
+                    selectedHour === now.hour() && selectedMinute === now.minute()
+                      ? Array.from({ length: 60 }, (_, i) => i).filter((s) => s > now.second())
+                      : [],
+                };
+              }}
+            />
+          </Form.Item>
+        </FormSection>
+
+        <FormSection title="可见性与加密" description="控制文章展示范围与访问权限" icon={<FiSettings size={18} />}>
+          <Form.Item className={formItemClass} label="展示状态" name={['config', 'status']}>
+            <Radio.Group className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
+              {STATUS_OPTIONS.map((opt) => (
+                <Radio.Button
+                  key={opt.value}
+                  value={opt.value}
+                  className="h-auto! rounded-xl! border-slate-200/80! mx-1! px-3! py-2.5! text-left! shadow-none! before:hidden! dark:border-strokedark! [&.ant-radio-button-wrapper-checked]:border-primary! [&.ant-radio-button-wrapper-checked]:bg-primary/5! [&.ant-radio-button-wrapper-checked]:text-primary!"
+                >
+                  <span className="flex items-center gap-2">
+                    {opt.icon}
+                    <span className="flex flex-col leading-tight">
+                      <span className="text-sm font-medium">{opt.label}</span>
+                      <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">{opt.hint}</span>
+                    </span>
+                  </span>
+                </Radio.Button>
+              ))}
+            </Radio.Group>
+          </Form.Item>
+
+          <div className="mt-2 flex flex-col gap-3 rounded-lg border border-slate-200/60 bg-white px-4 py-3 dark:border-strokedark dark:bg-boxdark sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">加密访问</p>
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">开启后需输入密码才能阅读全文</p>
+            </div>
+            <Form.Item name={['config', 'isEncrypt']} valuePropName="checked" className="mb-0! shrink-0">
+              <Switch onChange={(checked: boolean) => setIsEncryptEnabled(checked)} />
+            </Form.Item>
+          </div>
+
+          {isEncryptEnabled && (
+            <Form.Item
+              className={`${formItemClass} mt-3!`}
+              label="访问密码"
+              name={['config', 'password']}
+              rules={[{ required: isEncryptEnabled, message: '请输入访问密码' }]}
+            >
+              <Input.Password placeholder="设置读者访问密码" prefix={<FiLock className="text-slate-400" />} />
+            </Form.Item>
+          )}
+        </FormSection>
+
+        <footer className="sticky bottom-0 z-10 -mx-1 flex flex-col gap-2 border-t border-slate-100 bg-white/95 px-1 pt-4 backdrop-blur-sm dark:border-strokedark dark:bg-boxdark/95">
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={btnLoading}
+            className="inline-flex! h-11! items-center! justify-center! gap-2! rounded-xl! shadow-none!"
+            icon={<FiSend size={16} />}
+          >
+            {primaryLabel}
           </Button>
-        </Form.Item>
 
-        {/* 草稿和编辑状态下不再显示保存草稿按钮 */}
-        {((isDraftParams && id) || !id) && (
-          <Form.Item className="mt-2! mb-0!">
-            <Button className="w-full" onClick={() => form.validateFields().then((values) => onSubmit(values, true))}>
-              {isDraftParams ? '保存' : '保存为草稿'}
+          {showDraftActions && (
+            <Button
+              className="inline-flex! h-10! items-center! justify-center! gap-2! rounded-xl! border-slate-200/80! shadow-none! dark:border-strokedark!"
+              loading={btnLoading}
+              onClick={handleDraftSave}
+              icon={<FiSave size={16} />}
+            >
+              {draftLabel}
             </Button>
-          </Form.Item>
-        )}
+          )}
+        </footer>
       </Form>
 
       <Material
-        // multiple
         open={isMaterialModalOpen}
         onClose={() => setIsMaterialModalOpen(false)}
         onSelect={(url) => {
           form.setFieldValue('cover', url[0]);
-          form.validateFields(['cover']); // 手动触发 image 字段的校验
+          form.validateFields(['cover']);
         }}
       />
     </div>

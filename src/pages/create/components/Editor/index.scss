@@ -1,6 +1,11 @@
 @use "./markdown.scss";
 @reference "../../../../styles/index.css";
 
+.create-editor-shell .bytemd {
+    height: calc(100vh - 228px);
+    min-height: 420px;
+}
+
 .bytemd {
     height: calc(100vh - 200px);
     border: none;
