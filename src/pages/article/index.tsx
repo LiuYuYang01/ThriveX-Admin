@@ -166,10 +166,12 @@ export default function ArticlePage() {
               />
             </div>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
-              <FiImage size={13} />
-              无封面
-            </span>
+            <div className="flex aspect-video w-[88px] shrink-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-lg border border-dashed border-slate-200/80 bg-slate-50 dark:border-strokedark dark:bg-boxdark-2">
+              <FiImage size={14} className="text-slate-300 dark:text-slate-600" />
+              <span className="text-[10px] leading-none text-slate-400 dark:text-slate-500">
+                无封面
+              </span>
+            </div>
           ),
       },
       {
@@ -313,7 +315,7 @@ export default function ArticlePage() {
                 <button
                   type="button"
                   disabled={btnLoading}
-                  className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50 dark:hover:bg-red-500/10 dark:hover:text-red-400 cursor-pointer"
+                  className="flex size-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
                   aria-label={`删除 ${record.title}`}
                 >
                   <FiTrash2 size={16} />
