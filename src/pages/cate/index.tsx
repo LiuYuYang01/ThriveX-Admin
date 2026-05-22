@@ -3,7 +3,6 @@ import {
   Form,
   Input,
   Button,
-  Tree,
   Modal,
   Spin,
   Popconfirm,
@@ -11,7 +10,6 @@ import {
   Select,
   Tooltip,
 } from 'antd';
-import type { DataNode } from 'antd/es/tree';
 import {
   FiPlus,
   FiEdit2,
@@ -23,12 +21,9 @@ import {
   FiEye,
   FiHash,
   FiList,
-  FiChevronDown,
-  FiChevronRight,
   FiSearch,
   FiChevronsDown,
   FiChevronsUp,
-  FiNavigation,
 } from 'react-icons/fi';
 
 import { Cate } from '@/types/app/cate';
@@ -38,41 +33,18 @@ import {
   editCateDataAPI,
   getCateDataAPI,
   getCateListAPI,
+  sortCateDataAPI,
 } from '@/api/cate';
 import Title from '@/components/Title';
+import CateTree, { type CateDropPayload } from './CateTree';
 import Skeleton from './Skeleton';
+import {
+  applyCateDrop,
+  collectKeys,
+  filterCates,
+  sortCateTree,
+} from './treeUtils';
 
-function countCates(items: Cate[]): number {
-  return items.reduce(
-    (sum, item) => sum + 1 + (item.children?.length ? countCates(item.children) : 0),
-    0,
-  );
-}
-
-function countHidden(items: Cate[]): number {
-  return items.reduce((sum, item) => {
-    const self = item.isHide ? 1 : 0;
-    const children = item.children?.length ? countHidden(item.children) : 0;
-    return sum + self + children;
-  }, 0);
-}
-
-function countByType(items: Cate[], type: string): number {
-  return items.reduce((sum, item) => {
-    const self = item.type === type ? 1 : 0;
-    const children = item.children?.length ? countByType(item.children, type) : 0;
-    return sum + self + children;
-  }, 0);
-}
-
-function collectKeys(items: Cate[]): number[] {
-  return items.flatMap((item) => [
-    item.id || 0,
-    ...(item.children?.length ? collectKeys(item.children) : []),
-  ]);
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildCascaderOptions(data: Cate[], isRoot = true): any[] {
   return [
     ...(isRoot ? [{ value: 0, label: '一级分类' }] : []),
@@ -83,67 +55,6 @@ function buildCascaderOptions(data: Cate[], isRoot = true): any[] {
     })),
   ];
 }
-
-function filterCates(items: Cate[], keyword: string): Cate[] {
-  const kw = keyword.trim().toLowerCase();
-  if (!kw) return items;
-
-  return items.reduce<Cate[]>((acc, item) => {
-    const filteredChildren = item.children?.length ? filterCates(item.children, kw) : [];
-    const match =
-      item.name?.toLowerCase().includes(kw) || item.mark?.toLowerCase().includes(kw);
-
-    if (!match && !filteredChildren.length) return acc;
-
-    const next: Cate = { ...item };
-    if (filteredChildren.length) {
-      next.children = filteredChildren;
-    } else if (!match) {
-      next.children = [];
-    }
-    acc.push(next);
-    return acc;
-  }, []);
-}
-
-const treeClassName = [
-  'bg-transparent!',
-  '[&_.ant-tree-treenode]:w-full! [&_.ant-tree-treenode]:py-px!',
-  '[&_.ant-tree-indent-unit]:w-3!',
-  '[&_.ant-tree-node-content-wrapper]:flex! [&_.ant-tree-node-content-wrapper]:w-full! [&_.ant-tree-node-content-wrapper]:flex-1! [&_.ant-tree-node-content-wrapper]:rounded-lg! [&_.ant-tree-node-content-wrapper]:bg-transparent! [&_.ant-tree-node-content-wrapper]:min-h-0! [&_.ant-tree-node-content-wrapper]:py-0!',
-  '[&_.ant-tree-node-content-wrapper:hover]:bg-transparent!',
-  '[&_.ant-tree-node-selected]:bg-primary/5! dark:[&_.ant-tree-node-selected]:bg-primary/10!',
-  '[&_.ant-tree-title]:block! [&_.ant-tree-title]:w-full! [&_.ant-tree-title]:flex-1!',
-  '[&_.ant-tree-switcher]:mt-1.5! [&_.ant-tree-switcher]:shrink-0! [&_.ant-tree-switcher]:w-5!',
-  '[&_.ant-tree-switcher-noop]:w-5!',
-  '[&_.ant-tree-switcher-leaf-line::before]:border-slate-200! dark:[&_.ant-tree-switcher-leaf-line::before]:border-strokedark!',
-  '[&_.ant-tree-switcher-leaf-line::after]:border-slate-200! dark:[&_.ant-tree-switcher-leaf-line::after]:border-strokedark!',
-].join(' ');
-
-function CateTreeNodeDot({ type }: { type: string }) {
-  const isNav = type === 'nav';
-  return (
-    <span
-      className={`mt-0.5 size-2 shrink-0 rounded-full ${isNav ? 'bg-amber-400/70' : 'bg-primary/45'}`}
-      aria-hidden
-    />
-  );
-}
-
-type StatItem = {
-  key: string;
-  label: string;
-  value: number;
-  icon: typeof FiLayers;
-  tone: 'slate' | 'primary' | 'amber' | 'rose';
-};
-
-const statToneClass: Record<StatItem['tone'], string> = {
-  slate: 'bg-slate-100 text-slate-600 dark:bg-boxdark-2 dark:text-slate-300',
-  primary: 'bg-primary/10 text-primary dark:bg-primary/15',
-  amber: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400',
-  rose: 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400',
-};
 
 export default function CatePage() {
   const [loading, setLoading] = useState(false);
@@ -159,32 +70,16 @@ export default function CatePage() {
   const [cate, setCate] = useState<Cate>({} as Cate);
   const [list, setList] = useState<Cate[]>([]);
   const [isMethod, setIsMethod] = useState<'create' | 'edit'>('create');
+  const [sortSaving, setSortSaving] = useState(false);
+  const [highlightKey, setHighlightKey] = useState<number | null>(null);
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [form] = Form.useForm();
 
   const isEditing = isMethod === 'edit';
   const hasSearch = Boolean(search.trim());
+  const canDragTree = !hasSearch && list.length > 1;
   const isHideValue = Form.useWatch('isHide', form);
   const typeValue = Form.useWatch('type', form) ?? 'cate';
-
-  const stats = useMemo(
-    () => ({
-      total: countCates(list),
-      topLevel: list.length,
-      hidden: countHidden(list),
-      nav: countByType(list, 'nav'),
-    }),
-    [list],
-  );
-
-  const statItems: StatItem[] = useMemo(
-    () => [
-      { key: 'total', label: '全部节点', value: stats.total, icon: FiLayers, tone: 'slate' },
-      { key: 'top', label: '一级分类', value: stats.topLevel, icon: FiFolder, tone: 'primary' },
-      { key: 'nav', label: '导航链接', value: stats.nav, icon: FiNavigation, tone: 'amber' },
-      { key: 'hidden', label: '前台隐藏', value: stats.hidden, icon: FiEyeOff, tone: 'rose' },
-    ],
-    [stats],
-  );
 
   const filteredList = useMemo(() => filterCates(list, search), [list, search]);
 
@@ -197,8 +92,7 @@ export default function CatePage() {
       }
 
       const { data } = await getCateListAPI();
-      data.result.sort((a: Cate, b: Cate) => a.order - b.order);
-      setList(data.result);
+      setList(sortCateTree(data.result ?? []));
       setExpandedKeys(collectKeys(data.result));
       isFirstLoadRef.current = false;
     } catch (error) {
@@ -218,6 +112,19 @@ export default function CatePage() {
       setExpandedKeys(collectKeys(filteredList));
     }
   }, [hasSearch, filteredList]);
+
+  useEffect(
+    () => () => {
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    },
+    [],
+  );
+
+  const flashHighlight = useCallback((id: number) => {
+    setHighlightKey(id);
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = setTimeout(() => setHighlightKey(null), 2000);
+  }, []);
 
   const resetFormState = useCallback(() => {
     setIsMethod('create');
@@ -278,6 +185,153 @@ export default function CatePage() {
     [cate.id, closeModal, getCateList],
   );
 
+  const persistSort = useCallback(
+    async (parentLevel: number, ids: number[], nextList: Cate[], movedId: number) => {
+      setList(nextList);
+      setSortSaving(true);
+      try {
+        await sortCateDataAPI({ level: parentLevel, ids });
+        flashHighlight(movedId);
+      } catch (error) {
+        console.error(error);
+        message.error('排序保存失败，已恢复');
+        await getCateList();
+      } finally {
+        setSortSaving(false);
+      }
+    },
+    [flashHighlight, getCateList],
+  );
+
+  const persistMove = useCallback(
+    async (payload: {
+      dragItem: Cate;
+      newLevel: number;
+      oldParentLevel: number;
+      oldSiblingIds: number[];
+      newParentLevel: number;
+      newSiblingIds: number[];
+      nextList: Cate[];
+      expandParentId?: number;
+    }) => {
+      const sorted = sortCateTree(payload.nextList);
+      setList(sorted);
+      setSortSaving(true);
+      try {
+        await editCateDataAPI({ ...payload.dragItem, level: payload.newLevel });
+        if (payload.oldSiblingIds.length) {
+          await sortCateDataAPI({
+            level: payload.oldParentLevel,
+            ids: payload.oldSiblingIds,
+          });
+        }
+        await sortCateDataAPI({
+          level: payload.newParentLevel,
+          ids: payload.newSiblingIds,
+        });
+        if (payload.expandParentId) {
+          setExpandedKeys((keys) => [...new Set([...keys, payload.expandParentId!])]);
+        }
+        if (payload.dragItem.id) flashHighlight(payload.dragItem.id);
+        message.success('分类已移动');
+      } catch (error) {
+        console.error(error);
+        message.error('移动失败，已恢复');
+        await getCateList();
+      } finally {
+        setSortSaving(false);
+      }
+    },
+    [flashHighlight, getCateList],
+  );
+
+  const handleCateDrop = useCallback(
+    ({ dragId, targetId, zone }: CateDropPayload) => {
+      if (hasSearch || sortSaving) return;
+
+      const result = applyCateDrop(list, dragId, targetId, zone);
+      if (!result) {
+        message.warning('不能移动到该位置');
+        return;
+      }
+
+      if (result.kind === 'sort') {
+        void persistSort(result.parentLevel, result.ids, result.nextList, result.movedId);
+        return;
+      }
+
+      void persistMove({
+        dragItem: result.dragItem,
+        newLevel: result.newLevel,
+        oldParentLevel: result.oldParentLevel,
+        oldSiblingIds: result.oldSiblingIds,
+        newParentLevel: result.newParentLevel,
+        newSiblingIds: result.newSiblingIds,
+        nextList: result.nextList,
+        expandParentId: result.expandParentId,
+      });
+    },
+    [hasSearch, list, persistMove, persistSort, sortSaving],
+  );
+
+  const renderTreeActions = useCallback(
+    (item: Cate) => (
+      <>
+        <Tooltip title="添加子分类">
+          <button
+            type="button"
+            onClick={() => addCateData(item.id!)}
+            className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary dark:hover:bg-white/10 dark:hover:text-primary"
+            aria-label={`在 ${item.name} 下新增子分类`}
+          >
+            <FiPlus size={15} />
+          </button>
+        </Tooltip>
+        <Tooltip title="编辑">
+          <button
+            type="button"
+            onClick={() => void editCateData(item.id!)}
+            className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary dark:hover:bg-white/10 dark:hover:text-primary"
+            aria-label={`编辑 ${item.name}`}
+          >
+            <FiEdit2 size={15} />
+          </button>
+        </Tooltip>
+        <Popconfirm
+          title="删除分类"
+          description={`确定要删除「${item.name}」吗？子分类将一并移除。`}
+          okText="删除"
+          cancelText="取消"
+          okButtonProps={{ danger: true }}
+          onConfirm={() => delCateData(item.id!)}
+        >
+          <Tooltip title="删除">
+            <button
+              type="button"
+              className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+              aria-label={`删除 ${item.name}`}
+            >
+              <FiTrash2 size={15} />
+            </button>
+          </Tooltip>
+        </Popconfirm>
+      </>
+    ),
+    [addCateData, delCateData, editCateData],
+  );
+
+  const renderTreeExtra = useCallback(
+    (item: Cate) =>
+      item.isHide ? (
+        <FiEyeOff
+          size={12}
+          className="shrink-0 text-rose-400/80 dark:text-rose-400/70"
+          aria-label="前台隐藏"
+        />
+      ) : null,
+    [],
+  );
+
   const onSubmit = async () => {
     try {
       setBtnLoading(true);
@@ -304,96 +358,6 @@ export default function CatePage() {
     }
   };
 
-  const toTreeData = useCallback(
-    (data: Cate[], depth = 0): DataNode[] =>
-      data.map((item: Cate) => ({
-        title: (
-          <div
-            className={`group flex w-full items-center justify-between gap-2 rounded-lg border border-transparent px-1.5 transition-colors hover:border-slate-200/80 hover:bg-slate-50/80 dark:hover:border-strokedark dark:hover:bg-white/5 ${depth > 0 ? 'py-1' : 'py-1.5'} ${selectedTreeId === item.id ? 'border-primary/25 bg-primary/5 dark:border-primary/30 dark:bg-primary/10' : ''
-              }`}
-          >
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <CateTreeNodeDot type={item.type} />
-
-              <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                <span
-                  className={`min-w-0 truncate ${depth > 0 ? 'text-[13px]' : 'text-sm'} font-medium text-slate-700 dark:text-slate-200`}
-                >
-                  {item.name}
-                  {item.type === 'cate' && item.count != null && (
-                    <span className="truncate text-xs font-medium text-slate-400 dark:text-slate-200">
-                      （{item.count}）
-                    </span>
-                  )}
-                </span>
-              </div>
-
-              {item.isHide && (
-                <FiEyeOff
-                  size={12}
-                  className="shrink-0 text-rose-400/80 dark:text-rose-400/70"
-                  aria-label="前台隐藏"
-                />
-              )}
-            </div>
-
-            <div className="flex shrink-0 items-center gap-0.5 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:focus-within:opacity-100">
-              <Tooltip title="添加子分类">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addCateData(item.id!);
-                  }}
-                  className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary dark:hover:bg-white/10 dark:hover:text-primary"
-                  aria-label={`在 ${item.name} 下新增子分类`}
-                >
-                  <FiPlus size={15} />
-                </button>
-              </Tooltip>
-              <Tooltip title="编辑">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void editCateData(item.id!);
-                  }}
-                  className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary dark:hover:bg-white/10 dark:hover:text-primary"
-                  aria-label={`编辑 ${item.name}`}
-                >
-                  <FiEdit2 size={15} />
-                </button>
-              </Tooltip>
-              <Popconfirm
-                title="删除分类"
-                description={`确定要删除「${item.name}」吗？子分类将一并移除。`}
-                okText="删除"
-                cancelText="取消"
-                okButtonProps={{ danger: true }}
-                onConfirm={() => delCateData(item.id!)}
-              >
-                <Tooltip title="删除">
-                  <button
-                    type="button"
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                    aria-label={`删除 ${item.name}`}
-                  >
-                    <FiTrash2 size={15} />
-                  </button>
-                </Tooltip>
-              </Popconfirm>
-            </div>
-          </div>
-        ),
-        key: item.id || 0,
-        children: item.children?.length ? toTreeData(item.children, depth + 1) : [],
-      })),
-    [addCateData, selectedTreeId, delCateData, editCateData],
-  );
-
-  const treeData = useMemo(() => toTreeData(filteredList), [filteredList, toTreeData]);
-
   const cascaderOptions = useMemo(() => buildCascaderOptions(list), [list]);
 
   const handleExpandAll = () => setExpandedKeys(collectKeys(list));
@@ -418,8 +382,8 @@ export default function CatePage() {
       <div className="flex min-h-0 flex-1 flex-col px-3">
         <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
           <header className="flex shrink-0 flex-col gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="hidden items-center gap-3 text-[11px] text-slate-400 sm:flex dark:text-slate-500 ml-4">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              <div className="hidden items-center gap-3 text-[11px] text-slate-400 sm:flex dark:text-slate-500 sm:ml-2">
                 <span className="inline-flex items-center gap-1">
                   <span className="size-2 rounded-sm bg-primary/40" />
                   分类
@@ -467,23 +431,24 @@ export default function CatePage() {
 
           <Spin spinning={loading} className="min-h-0 flex-1">
             <div className="min-h-[320px] p-4 sm:p-5">
+              {hasSearch && list.length > 0 ? (
+                <p className="mb-3 rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300">
+                  搜索模式下仅可浏览，清空搜索后可拖拽排序与移动层级
+                </p>
+              ) : null}
               {list.length > 0 ? (
-                treeData.length > 0 ? (
-                  <Tree
-                    className={treeClassName}
-                    treeData={treeData}
+                filteredList.length > 0 ? (
+                  <CateTree
+                    items={filteredList}
                     expandedKeys={expandedKeys}
-                    onExpand={(keys) => setExpandedKeys(keys as number[])}
-                    selectedKeys={selectedTreeId ? [selectedTreeId] : []}
-                    showLine={{ showLeafIcon: false }}
-                    blockNode
-                    switcherIcon={({ expanded }) =>
-                      expanded ? (
-                        <FiChevronDown className="text-primary" size={14} />
-                      ) : (
-                        <FiChevronRight className="text-slate-400" size={14} />
-                      )
-                    }
+                    onExpandedKeysChange={setExpandedKeys}
+                    selectedId={selectedTreeId}
+                    highlightId={highlightKey}
+                    draggable={canDragTree}
+                    saving={sortSaving}
+                    onDrop={handleCateDrop}
+                    renderActions={renderTreeActions}
+                    renderExtra={renderTreeExtra}
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center py-16 text-center">

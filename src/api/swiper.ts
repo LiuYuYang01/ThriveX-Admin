@@ -15,3 +15,6 @@ export const getSwiperDataAPI = (id?: number) => Request<Swiper>('GET', `/swiper
 
 // 获取轮播图数据列表
 export const getSwiperListAPI = () => Request<Paginate<Swiper[]>>('GET', `/swiper`)
+
+// 轮播图拖拽排序（按 ID 顺序提交，越靠前 order 越小）
+export const sortSwiperDataAPI = (ids: number[]) => Request('PATCH', '/swiper/sort', { data: ids })
