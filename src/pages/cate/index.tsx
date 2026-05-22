@@ -308,7 +308,7 @@ export default function CatePage() {
           <Tooltip title="删除">
             <button
               type="button"
-              className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+              className="flex size-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
               aria-label={`删除 ${item.name}`}
             >
               <FiTrash2 size={15} />

@@ -281,7 +281,7 @@ export default function CommentPage() {
         align: 'center',
         width: 96,
         render: (_: string, record: Comment) => (
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-0.5">
             <Tooltip title="回复">
               <button
                 type="button"
@@ -290,7 +290,7 @@ export default function CommentPage() {
                   openReply(record);
                 }}
                 aria-label={`回复 ${record.name}`}
-                className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-500/10 dark:hover:text-sky-400 cursor-pointer"
+                className="flex size-8 items-center justify-center rounded-lg text-slate-400! transition-colors hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary! cursor-pointer"
               >
                 <FiCornerUpRight size={16} />
               </button>
@@ -308,7 +308,7 @@ export default function CommentPage() {
                   type="button"
                   onClick={(e) => e.stopPropagation()}
                   aria-label="删除评论"
-                  className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400 cursor-pointer"
+                  className="flex size-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
                 >
                   <FiTrash2 size={16} />
                 </button>

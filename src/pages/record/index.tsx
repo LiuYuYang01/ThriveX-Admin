@@ -19,7 +19,6 @@ import {
   FiTrash2,
   FiPlus,
   FiCalendar,
-  FiImage,
   FiRotateCcw,
   FiHash,
 } from 'react-icons/fi';
@@ -32,7 +31,7 @@ import { delRecordDataAPI, getRecordListAPI } from '@/api/record';
 import type { Record, RecordFilterDataForm, RecordFilterQueryParams } from '@/types/app/record';
 
 import Skeleton from './Skeleton';
-import { parseRecordImages, RecordImagesCell } from './recordTableShared';
+import { RecordImagesCell } from './recordTableShared';
 
 export default function RecordPage() {
   const [loading, setLoading] = useState(false);
@@ -50,11 +49,6 @@ export default function RecordPage() {
 
   const hasActiveFilters = Boolean(
     filter.content?.trim() || filter.startDate || filter.endDate,
-  );
-
-  const pageWithImages = useMemo(
-    () => recordList.filter((row) => parseRecordImages(row.images).length > 0).length,
-    [recordList],
   );
 
   const getRecordList = useCallback(async () => {
@@ -118,7 +112,7 @@ export default function RecordPage() {
         title: '内容',
         dataIndex: 'content',
         key: 'content',
-        ellipsis: true,
+        width: 300,
         render: (text: string) => (
           <Tooltip title={text} placement="topLeft">
             <div className="max-w-md py-0.5">
@@ -137,14 +131,13 @@ export default function RecordPage() {
         title: '图片',
         dataIndex: 'images',
         key: 'images',
-        width: 140,
+        width: 150,
         render: (_: unknown, row: Record) => <RecordImagesCell imagesRaw={row.images} />,
       },
       {
         title: '发布时间',
         dataIndex: 'createTime',
         key: 'createTime',
-        width: 128,
         render: (text: string | number) => (
           <div className="flex items-center gap-2 text-sm">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-boxdark-2 dark:text-slate-400">
@@ -168,11 +161,11 @@ export default function RecordPage() {
         width: 100,
         align: 'center',
         render: (_: unknown, row: Record) => (
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-0.5">
             <Tooltip title="编辑">
               <Link
                 to={`/create_record?id=${row.id}`}
-                className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary dark:hover:bg-white/5 dark:hover:text-primary"
+                className="flex size-8 items-center justify-center rounded-lg text-slate-400! transition-colors hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary!"
                 aria-label="编辑说说"
               >
                 <FiEdit2 size={16} />
@@ -190,7 +183,7 @@ export default function RecordPage() {
                 <button
                   type="button"
                   disabled={btnLoading === row.id}
-                  className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50 dark:hover:bg-red-500/10 dark:hover:text-red-400 cursor-pointer"
+                  className="flex size-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
                   aria-label="删除说说"
                 >
                   {btnLoading === row.id ? (
@@ -243,27 +236,6 @@ export default function RecordPage() {
     );
   }
 
-  const statCards = [
-    {
-      label: '说说总数',
-      value: total,
-      icon: FiMessageSquare,
-      accent: 'text-primary bg-primary/10 dark:bg-primary/20',
-    },
-    {
-      label: '本页条数',
-      value: recordList.length,
-      icon: FiHash,
-      accent: 'text-slate-600 bg-slate-100 dark:bg-boxdark-2 dark:text-slate-300',
-    },
-    {
-      label: '本页含图',
-      value: pageWithImages,
-      icon: FiImage,
-      accent: 'text-sky-600 bg-sky-50 dark:bg-sky-500/10 dark:text-sky-300',
-    },
-  ];
-
   return (
     <div className="flex min-h-0 flex-1 flex-col text-slate-600 dark:text-slate-300">
       <Title value="说说管理">
@@ -304,9 +276,6 @@ export default function RecordPage() {
                   />
                 </Tooltip>
               </div>
-              <p className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
-                闪念支持图文混排，前台以时间线展示
-              </p>
             </div>
           </Form>
         </header>

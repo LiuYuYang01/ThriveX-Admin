@@ -168,12 +168,12 @@ export default function TagPage() {
         width: 108,
         fixed: 'right',
         render: (_: string, record: Tag) => (
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-0.5">
             <Tooltip title="编辑">
               <button
                 type="button"
                 onClick={() => editTagData(record)}
-                className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary dark:hover:bg-white/5 dark:hover:text-primary cursor-pointer"
+                className="flex size-8 items-center justify-center rounded-lg text-slate-400! transition-colors hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary! cursor-pointer"
                 aria-label={`编辑 ${record.name}`}
               >
                 <FiEdit2 size={16} />
@@ -194,7 +194,7 @@ export default function TagPage() {
               <Tooltip title="删除">
                 <button
                   type="button"
-                  className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400 cursor-pointer"
+                  className="flex size-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
                   aria-label={`删除 ${record.name}`}
                 >
                   <FiTrash2 size={16} />

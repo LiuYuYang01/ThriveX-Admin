@@ -511,12 +511,12 @@ export default function SwiperPage() {
         fixed: 'right',
         width: 100,
         render: (_: unknown, record: Swiper) => (
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-0.5">
             <Tooltip title="编辑">
               <button
                 type="button"
                 onClick={() => editSwiperData(record)}
-                className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary dark:hover:bg-white/5 dark:hover:text-primary"
+                className="flex size-8 items-center justify-center rounded-lg text-slate-400! transition-colors hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary! cursor-pointer"
                 aria-label={`编辑 ${record.title}`}
               >
                 <FiEdit2 size={16} />
@@ -533,7 +533,7 @@ export default function SwiperPage() {
               <Tooltip title="删除">
                 <button
                   type="button"
-                  className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                  className="flex size-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
                   aria-label={`删除 ${record.title}`}
                 >
                   <FiTrash2 size={16} />

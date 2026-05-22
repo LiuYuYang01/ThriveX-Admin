@@ -17,7 +17,8 @@ import type { ColumnsType } from 'antd/es/table';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
-import { CloudUploadOutlined, DeleteOutlined, FormOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { GiPositionMarker } from 'react-icons/gi';
 import { IoSearch } from 'react-icons/io5';
 
@@ -339,36 +340,42 @@ export default () => {
         key: 'action',
         fixed: 'right',
         align: 'center',
-        width: 130,
+        width: 120,
         render: (_: unknown, record: Footprint) => (
-          <div className="flex items-center justify-center gap-0">
+          <div className="flex items-center justify-center gap-0.5">
             <Tooltip title="编辑">
-              <Button
-                type="text"
+              <button
+                type="button"
                 onClick={() => openEdit(record.id!)}
-                icon={<FormOutlined className="text-blue-500" />}
-                className="text-blue-500 dark:text-gray-300 dark:hover:text-blue-500! hover:bg-blue-50 dark:hover:bg-blue-900/20"
-              />
-            </Tooltip>
-
-            <Tooltip title="删除">
-              <Popconfirm
-                title="删除确认"
-                description="确定要删除这条足迹吗？"
-                okText="删除"
-                okButtonProps={{ danger: true }}
-                cancelText="取消"
-                onConfirm={() => delFootprintData(record.id!)}
+                className="flex size-8 items-center justify-center rounded-lg text-slate-400! transition-colors hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary! cursor-pointer"
+                aria-label="编辑足迹"
               >
-                <Button
-                  type="text"
-                  danger
-                  loading={deleteLoading}
-                  icon={<DeleteOutlined />}
-                  className="hover:bg-red-50 dark:hover:bg-red-900/20"
-                />
-              </Popconfirm>
+                <FiEdit2 size={16} />
+              </button>
             </Tooltip>
+            <Popconfirm
+              title="删除确认"
+              description="确定要删除这条足迹吗？"
+              okText="删除"
+              okButtonProps={{ danger: true }}
+              cancelText="取消"
+              onConfirm={() => delFootprintData(record.id!)}
+            >
+              <Tooltip title="删除">
+                <button
+                  type="button"
+                  disabled={deleteLoading}
+                  className="flex size-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
+                  aria-label="删除足迹"
+                >
+                  {deleteLoading ? (
+                    <span className="size-4 animate-spin rounded-full border-2 border-slate-300 border-t-red-500" />
+                  ) : (
+                    <FiTrash2 size={16} />
+                  )}
+                </button>
+              </Tooltip>
+            </Popconfirm>
           </div>
         ),
       },
