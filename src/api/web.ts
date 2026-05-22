@@ -25,3 +25,7 @@ export const getWebTypeListAPI = () => {
 
 // 审核网站
 export const auditWebDataAPI = (id: number) => Request<Web>('PATCH', `/link/audit/${id}`)
+
+// 同类型网站拖拽排序
+export const sortLinkDataAPI = (data: { typeId: number; ids: number[] }) =>
+  Request('PATCH', '/link/sort', { data })
