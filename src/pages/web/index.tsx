@@ -428,15 +428,6 @@ export default () => {
             className="w-[300px]"
             allowClear
           />
-          {canDragSort && listTemp.length > 1 && (
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              {sortSaving
-                ? '正在保存排序…'
-                : draggingId != null
-                  ? '松手放置 · Esc 取消'
-                  : '拖动手柄，在同类型内调整顺序'}
-            </span>
-          )}
         </div>
 
         <Spin spinning={loading}>
@@ -463,6 +454,7 @@ export default () => {
                 </span>
               </div>
             ) : null}
+
             {Object.keys(list).map((groupKey) => {
               const groupItems = list[groupKey] ?? [];
               return (
