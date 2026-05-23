@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Card, Empty, Form, Modal, Typography, message, Space, Tooltip } from 'antd';
+import { Button, Empty, Form, Modal, message, Tooltip } from 'antd';
 import {
-  CopyOutlined,
-  EditOutlined,
-  CheckOutlined,
-  FileTextOutlined,
-  UserOutlined,
-  ProjectOutlined,
-  ToolOutlined,
-  SettingOutlined,
-  AppstoreOutlined,
-  GlobalOutlined,
-} from '@ant-design/icons';
+  BiUser,
+  BiFile,
+  BiWrench,
+  BiFolder,
+  BiGlobe,
+  BiGridAlt,
+  BiCog,
+  BiEdit,
+  BiCopy,
+  BiCheck,
+} from 'react-icons/bi';
 
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
@@ -23,13 +23,24 @@ import Skeleton from './Skeleton';
 
 const getConfigIcon = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes('my') || n.includes('user') || n.includes('profile')) return <UserOutlined />;
-  if (n.includes('resume') || n.includes('file')) return <FileTextOutlined />;
-  if (n.includes('equipment') || n.includes('tool')) return <ToolOutlined />;
-  if (n.includes('project')) return <ProjectOutlined />;
-  if (n.includes('web') || n.includes('site') || n.includes('global')) return <GlobalOutlined />;
-  if (n.includes('app')) return <AppstoreOutlined />;
-  return <SettingOutlined />;
+  if (n.includes('my') || n.includes('user') || n.includes('profile')) return <BiUser />;
+  if (n.includes('resume') || n.includes('file')) return <BiFile />;
+  if (n.includes('equipment') || n.includes('tool')) return <BiWrench />;
+  if (n.includes('project')) return <BiFolder />;
+  if (n.includes('web') || n.includes('site') || n.includes('global')) return <BiGlobe />;
+  if (n.includes('app')) return <BiGridAlt />;
+  return <BiCog />;
+};
+
+const CONFIG_DESC_MAP: Record<string, string> = {
+  my: '个人简介、性格标签、社交链接与头像设置',
+  resume: '教育背景、工作经历、专业技能与证书管理',
+  equipment: '开发设备、常用软件与生产力工具清单',
+};
+
+const getConfigDesc = (name: string) => {
+  const key = name.toLowerCase();
+  return CONFIG_DESC_MAP[key] || '页面数据配置';
 };
 
 export default () => {
@@ -70,7 +81,6 @@ export default () => {
     fetchList();
   }, []);
 
-  // 打开编辑弹窗
   const handleEdit = (item: Config) => {
     setEditItem(item);
     setIsModalOpen(true);
@@ -80,7 +90,6 @@ export default () => {
     setJsonError(null);
   };
 
-  // 保存编辑
   const handleSave = async () => {
     try {
       setBtnLoading(true);
@@ -120,7 +129,6 @@ export default () => {
     }
   }, [activeConfig, activeId]);
 
-  // JSON 输入变更时校验
   const handleJsonChange = (value: string) => {
     setJsonValue(value);
     formRef.current.setFieldsValue({ value });
@@ -136,7 +144,6 @@ export default () => {
     }
   };
 
-  // 格式化 JSON
   const handleFormatJson = () => {
     try {
       const formatted = JSON.stringify(JSON.parse(jsonValue), null, 2);
@@ -163,7 +170,6 @@ export default () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // 初始加载时显示骨架屏
   if (initialLoading) {
     return <Skeleton />;
   }
@@ -172,100 +178,103 @@ export default () => {
     <div className="flex min-h-0 flex-1 flex-col">
       <Title value="页面配置" />
 
-      <div className="grid flex-1 min-h-0 grid-cols-1 gap-2 lg:grid-cols-12">
-        {/* 左侧列表 */}
-        <Card className="lg:col-span-3 rounded-xl! overflow-hidden border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: 0 } }}>
-          <div className="flex flex-col divide-y divide-gray-100 dark:divide-strokedark">
+      <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-3 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-strokedark dark:bg-boxdark">
+          <div className="flex-1 overflow-y-auto">
             {!data.length ? (
-              <div className="p-10 text-center">
+              <div className="flex h-full items-center justify-center p-10">
                 <Empty description="暂无配置" image={Empty.PRESENTED_IMAGE_SIMPLE} />
               </div>
             ) : (
-              data.map((item) => {
-                const isActive = Number(item.id) === Number(activeConfig?.id);
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setActiveId(Number(item.id))}
-                    className={`group relative flex items-center gap-3 p-4 text-left transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/5 ${isActive ? 'bg-primary/5 dark:bg-primary/10' : 'bg-transparent'
+              <div className="flex flex-col p-2 gap-0.5">
+                {data.map((item) => {
+                  const isActive = Number(item.id) === Number(activeConfig?.id);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setActiveId(Number(item.id))}
+                      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+                        isActive
+                          ? 'bg-primary/8 dark:bg-primary/15'
+                          : 'hover:bg-gray-50 dark:hover:bg-white/5'
                       } cursor-pointer`}
-                  >
-                    {/* 激活指示条 */}
-                    {isActive && <div className="absolute left-0 top-0 h-full w-1 bg-primary" />}
-
-                    {/* 图标 */}
-                    <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${isActive
-                        ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                        : 'bg-gray-50 text-gray-400 dark:bg-white/5 dark:text-gray-500 group-hover:bg-primary/10 group-hover:text-primary'
-                        }`}
                     >
-                      <span className="text-lg">{getConfigIcon(item.name)}</span>
-                    </div>
+                      {isActive && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-primary" />
+                      )}
 
-                    <div className="flex flex-1 flex-col overflow-hidden">
-                      <div className="flex items-center justify-between">
-                        <Typography.Text
-                          strong
-                          className={`text-xl transition-colors ${isActive ? 'text-primary' : 'text-gray-700 dark:text-gray-300'
-                            }`}
-                          ellipsis
+                      <div
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                          isActive
+                            ? 'bg-primary text-white'
+                            : 'bg-gray-100 text-gray-400 dark:bg-white/8 dark:text-gray-500 group-hover:text-gray-600'
+                        }`}
+                      >
+                        <span className="text-[15px]">{getConfigIcon(item.name)}</span>
+                      </div>
+
+                      <div className="flex flex-1 flex-col overflow-hidden">
+                        <span
+                          className={`truncate text-sm font-medium transition-colors ${
+                            isActive ? 'text-primary' : 'text-gray-700 dark:text-gray-300'
+                          }`}
                         >
                           {item.notes}
-                        </Typography.Text>
-                        {isActive && (
-                          <div className="relative flex h-2.5 w-2.5 mr-1">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                          </div>
-                        )}
+                        </span>
+                        <span className="truncate text-xs text-gray-400 dark:text-gray-500">{getConfigDesc(item.name)}</span>
                       </div>
-                    </div>
-                  </button>
-                );
-              })
+
+                      {isActive && (
+                        <div className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
-        </Card>
+        </div>
 
-        {/* 右侧预览 */}
-        <Card className="lg:col-span-9 min-h-0 rounded-xl! flex flex-col border-none shadow-none dark:bg-boxdark" styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } }}>
+        <div className="lg:col-span-9 flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-strokedark dark:bg-boxdark">
           {!activeConfig ? (
             <div className="flex h-full items-center justify-center">
               <Empty description="请选择一个配置项" />
             </div>
           ) : (
-            <div className="flex flex-1 min-h-0 flex-col gap-6">
-              <div className="flex shrink-0 items-center justify-between border-b border-gray-100 pb-5 dark:border-strokedark">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-primary/20">
-                    <span className="text-2xl">{getConfigIcon(activeConfig.name)}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xl font-bold text-gray-800 dark:text-white">{activeConfig.notes}</span>
-                  </div>
+            <div className="flex flex-1 min-h-0 flex-col">
+              <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-3 dark:border-strokedark">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-800 dark:text-white">{activeConfig.notes}</span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Tooltip title="编辑配置">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(activeConfig!)}
+                      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-primary dark:hover:bg-white/10"
+                    >
+                      <BiEdit className="text-lg" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip title="复制 JSON">
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-primary dark:hover:bg-white/10"
+                    >
+                      {copied ? <BiCheck className="text-lg text-green-500" /> : <BiCopy className="text-lg" />}
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
 
-              <div className="relative group flex min-h-0 flex-1 flex-col">
-                <div className="mb-4 flex shrink-0 items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-1 rounded-full bg-primary" />
-                    <Typography.Text strong className="text-gray-700 dark:text-gray-300">
-                      预览
-                    </Typography.Text>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Tooltip title="编辑配置">
-                      <Button type="text" size="small" className="flex items-center gap-1.5 text-gray-400 hover:text-primary" icon={<EditOutlined />} onClick={() => handleEdit(activeConfig!)} />
-                    </Tooltip>
-                    <Tooltip title="复制 JSON 内容">
-                      <Button type="text" size="small" className="flex items-center gap-1.5 text-gray-400 hover:text-primary" icon={copied ? <CheckOutlined className="text-green-500" /> : <CopyOutlined />} onClick={handleCopy} />
-                    </Tooltip>
-                  </div>
-                </div>
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-800 bg-[#1e1e1e] shadow-lg transition-all">
+              <div className="flex min-h-0 flex-1 flex-col p-4">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-gray-200 bg-[#1e1e1e] dark:border-strokedark">
                   <CodeMirror
                     className="h-full min-h-0 [&_.cm-editor]:h-full"
                     value={prettyValue}
@@ -280,26 +289,51 @@ export default () => {
               </div>
             </div>
           )}
-        </Card>
+        </div>
       </div>
 
-      <Modal title={editItem?.notes} open={isModalOpen} onCancel={() => setIsModalOpen(false)} width={1000} footer={null} centered className="config-modal" destroyOnClose>
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <BiEdit className="text-primary" />
+            <span>{editItem?.notes}</span>
+          </div>
+        }
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        width={900}
+        footer={null}
+        centered
+        destroyOnClose
+      >
         <Form form={formRef.current} layout="vertical" onFinish={handleSave} size="large" className="mt-4">
-          <Form.Item name="value" rules={[{ required: true, message: '请输入配置内容' }]} className="mb-6" validateStatus={jsonError ? 'error' : ''} help={jsonError ? `JSON 格式错误: ${jsonError}` : ''}>
-            <div className="overflow-hidden rounded-xl border border-gray-800 bg-[#1e1e1e]">
-              <CodeMirror value={jsonValue} extensions={[json()]} onChange={handleJsonChange} theme="dark" basicSetup={{ lineNumbers: true, foldGutter: true }} height="500px" />
+          <Form.Item
+            name="value"
+            rules={[{ required: true, message: '请输入配置内容' }]}
+            className="mb-5"
+            validateStatus={jsonError ? 'error' : ''}
+            help={jsonError ? `JSON 格式错误: ${jsonError}` : ''}
+          >
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-[#1e1e1e] dark:border-strokedark">
+              <CodeMirror
+                value={jsonValue}
+                extensions={[json()]}
+                onChange={handleJsonChange}
+                theme="dark"
+                basicSetup={{ lineNumbers: true, foldGutter: true }}
+                height="460px"
+              />
             </div>
           </Form.Item>
 
-          <Space className="w-full justify-end">
+          <div className="flex justify-end gap-2">
             <Button onClick={handleFormatJson}>格式化</Button>
             <Button type="primary" htmlType="submit" loading={btnLoading}>
               保存
             </Button>
-          </Space>
+          </div>
         </Form>
       </Modal>
     </div>
   );
 };
-

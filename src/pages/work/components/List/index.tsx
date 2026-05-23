@@ -4,6 +4,7 @@ import { Button, message, Modal, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { BiBook, BiCheck, BiGlobe, BiLinkExternal, BiReply, BiTag, BiX } from 'react-icons/bi';
 import { HiOutlineMail } from 'react-icons/hi';
+import { IoTimeOutline } from 'react-icons/io5';
 
 import { auditCommentDataAPI, delCommentDataAPI, addCommentDataAPI } from '@/api/comment';
 import { auditWallDataAPI, delWallDataAPI } from '@/api/wall';
@@ -32,24 +33,21 @@ const ExternalLink = ({ href, children }: { href: string; children: ReactNode })
     className="inline-flex min-w-0 items-center gap-1 text-primary hover:underline"
   >
     <span className="truncate">{children}</span>
-    <BiLinkExternal size={13} className="shrink-0 opacity-60" />
+    <BiLinkExternal size={11} className="shrink-0 opacity-50" />
   </a>
 );
 
-const MetaRow = ({
+const MetaChip = ({
   icon: Icon,
-  label,
   children,
 }: {
   icon: ComponentType<{ size?: number; className?: string }>;
-  label: string;
   children: ReactNode;
 }) => (
-  <div className="flex min-w-0 items-start gap-2.5 text-xs">
-    <Icon size={14} className="mt-0.5 shrink-0 text-slate-400 dark:text-slate-500" />
-    <span className="w-7 shrink-0 text-slate-400 dark:text-slate-500">{label}</span>
-    <div className="min-w-0 flex-1 text-slate-600 dark:text-slate-300">{children}</div>
-  </div>
+  <span className="inline-flex min-w-0 items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-500 dark:bg-boxdark-2 dark:text-slate-400">
+    <Icon size={12} className="shrink-0 text-slate-400 dark:text-slate-500" />
+    <span className="min-w-0 truncate">{children}</span>
+  </span>
 );
 
 export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
@@ -208,133 +206,115 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
     setIsModalOpen(true);
   };
 
-  const actionBtnClass =
-    'flex size-8 items-center justify-center rounded-md text-slate-500 transition-colors disabled:pointer-events-none disabled:opacity-40';
-
-  const ActionToolbar = () => (
-    <div
-      role="toolbar"
-      aria-label="审核操作"
-      className="inline-flex shrink-0 items-center gap-0.5 rounded-lg border border-slate-200/70 bg-slate-50/80 p-0.5 dark:border-strokedark dark:bg-boxdark-2"
-    >
-      <Tooltip title="通过">
-        <button
-          type="button"
-          onClick={handleApproval}
-          aria-label="通过"
-          className={`${actionBtnClass} hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-400 cursor-pointer`}
-        >
-          <BiCheck size={18} />
-        </button>
-      </Tooltip>
-      {canReply && (
-        <>
-          <span className="h-4 w-px bg-slate-200/80 dark:bg-strokedark" aria-hidden />
-          <Tooltip title="回复">
-            <button
-              type="button"
-              onClick={() => openModal('reply')}
-              aria-label="回复"
-              className={`${actionBtnClass} hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-950/30 dark:hover:text-sky-400 cursor-pointer`}
-            >
-              <BiReply size={18} />
-            </button>
-          </Tooltip>
-        </>
-      )}
-      <span className="h-4 w-px bg-slate-200/80 dark:bg-strokedark" aria-hidden />
-      <Tooltip title="驳回">
-        <button
-          type="button"
-          onClick={() => openModal('dismiss')}
-          aria-label="驳回"
-          className={`${actionBtnClass} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 cursor-pointer`}
-        >
-          <BiX size={18} />
-        </button>
-      </Tooltip>
-    </div>
-  );
-
-  const hasMetaFooter =
-    (type === 'comment' && (item?.url || item.articleId)) ||
-    (type === 'link' && (item?.url || item.type?.name));
-
   const Avatar = () =>
     item.avatar || item.image ? (
       <img
         src={item.avatar || item.image}
         alt=""
-        className="size-9 shrink-0 rounded-full border border-slate-200/80 object-cover dark:border-strokedark"
+        className="size-10 shrink-0 rounded-full border-2 border-white object-cover dark:border-boxdark"
       />
     ) : (
-      <RandomAvatar className="size-9 shrink-0 rounded-full border border-slate-200/80 dark:border-strokedark" />
+      <RandomAvatar className="size-10 shrink-0 rounded-full border-2 border-white dark:border-boxdark" />
     );
 
+  const actionBtnBase = "flex size-8 cursor-pointer items-center justify-center rounded-lg transition-all duration-150";
+
   return (
-    <article className="overflow-hidden rounded-xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
-      {/* 顶栏：身份 · 时间 · 操作 */}
-      <header className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-strokedark dark:bg-boxdark-2/60">
-        <Avatar />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-3">
-            <h4 className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
-              {displayName || '匿名'}
-            </h4>
-            <time className="shrink-0 text-[11px] font-mono tabular-nums text-slate-400 dark:text-slate-500">
-              {dayjs(+item.createTime!).format('MM-DD HH:mm')}
-            </time>
-          </div>
-          {(item.email || (type !== 'link' && !item.email)) && (
-            <p className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-xs text-slate-400 dark:text-slate-500">
-              <HiOutlineMail size={11} className="shrink-0" />
-              <span className="truncate">{item.email || '暂无邮箱'}</span>
-            </p>
-          )}
+    <article className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white transition-all duration-200 hover:border-slate-300/80 dark:border-strokedark dark:bg-boxdark dark:hover:border-slate-600">
+      <div className="flex gap-4 px-5 py-4">
+        <div className="relative mt-0.5">
+          <Avatar />
         </div>
-        <ActionToolbar />
-      </header>
 
-      {/* 正文 */}
-      <div className="px-4 py-3.5">
-        {type === 'link' ? (
-          <p className="border-l-2 border-slate-200 pl-3 text-[15px] leading-relaxed whitespace-pre-wrap text-slate-700 break-words dark:border-strokedark dark:text-slate-200">
-            {item.description || '—'}
-          </p>
-        ) : (
-          <p className="border-l-2 border-primary/40 pl-3 text-[15px] leading-relaxed whitespace-pre-wrap text-slate-800 break-words dark:text-slate-100">
-            {item.content || '—'}
-          </p>
-        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2.5">
+                <h4 className="truncate text-[15px] font-semibold text-slate-800 dark:text-slate-100">
+                  {displayName || '匿名'}
+                </h4>
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-boxdark-2 dark:text-slate-400">
+                  <IoTimeOutline size={10} />
+                  {dayjs(+item.createTime!).format('MM/DD HH:mm')}
+                </span>
+              </div>
+              {(item.email || (type !== 'link' && !item.email)) && (
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+                  <HiOutlineMail size={12} className="shrink-0" />
+                  <span className="truncate">{item.email || '暂无邮箱'}</span>
+                </p>
+              )}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-0.5 opacity-60 transition-opacity group-hover:opacity-100">
+              <Tooltip title="通过">
+                <button
+                  type="button"
+                  onClick={handleApproval}
+                  aria-label="通过"
+                  className={`${actionBtnBase} text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-400`}
+                >
+                  <BiCheck size={20} />
+                </button>
+              </Tooltip>
+              {canReply && (
+                <Tooltip title="回复">
+                  <button
+                    type="button"
+                    onClick={() => openModal('reply')}
+                    aria-label="回复"
+                    className={`${actionBtnBase} text-slate-400 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-950/30 dark:hover:text-sky-400`}
+                  >
+                    <BiReply size={20} />
+                  </button>
+                </Tooltip>
+              )}
+              <Tooltip title="驳回">
+                <button
+                  type="button"
+                  onClick={() => openModal('dismiss')}
+                  aria-label="驳回"
+                  className={`${actionBtnBase} text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400`}
+                >
+                  <BiX size={20} />
+                </button>
+              </Tooltip>
+            </div>
+          </div>
+
+          <div className="mt-3 rounded-xl bg-slate-50/80 px-4 py-3 dark:bg-boxdark-2/50">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap text-slate-700 break-words dark:text-slate-200">
+              {type === 'link' ? (item.description || '—') : (item.content || '—')}
+            </p>
+          </div>
+
+          {((type === 'comment' && (item?.url || item.articleId)) ||
+            (type === 'link' && (item?.url || item.type?.name))) && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {type === 'link' && item.type?.name && (
+                  <MetaChip icon={BiTag}>{item.type.name}</MetaChip>
+                )}
+                {type === 'link' && item?.url && (
+                  <MetaChip icon={BiGlobe}>
+                    <ExternalLink href={item.url}>{item.url}</ExternalLink>
+                  </MetaChip>
+                )}
+                {type === 'comment' && item?.url && (
+                  <MetaChip icon={BiGlobe}>
+                    <ExternalLink href={item.url}>{item.url}</ExternalLink>
+                  </MetaChip>
+                )}
+                {type === 'comment' && item.articleId && (
+                  <MetaChip icon={BiBook}>
+                    <ExternalLink href={`${web.url}/article/${item.articleId}`}>
+                      {item.articleTitle || '暂无'}
+                    </ExternalLink>
+                  </MetaChip>
+                )}
+              </div>
+            )}
+        </div>
       </div>
-
-      {/* 附加信息 */}
-      {hasMetaFooter && (
-        <footer className="space-y-2 border-t border-slate-100 bg-slate-50/40 px-4 py-3 dark:border-strokedark dark:bg-boxdark-2/30">
-          {type === 'link' && item.type?.name && (
-            <MetaRow icon={BiTag} label="类型">
-              {item.type.name}
-            </MetaRow>
-          )}
-          {type === 'link' && item?.url && (
-            <MetaRow icon={BiGlobe} label="网站">
-              <ExternalLink href={item.url}>{item.url}</ExternalLink>
-            </MetaRow>
-          )}
-          {type === 'comment' && item?.url && (
-            <MetaRow icon={BiGlobe} label="网站">
-              <ExternalLink href={item.url}>{item.url}</ExternalLink>
-            </MetaRow>
-          )}
-          {type === 'comment' && item.articleId && (
-            <MetaRow icon={BiBook} label="文章">
-              <ExternalLink href={`${web.url}/article/${item.articleId}`}>
-                {item.articleTitle || '暂无'}
-              </ExternalLink>
-            </MetaRow>
-          )}
-        </footer>
-      )}
 
       <Modal
         title={btnType === 'reply' ? '回复内容' : '驳回原因'}
