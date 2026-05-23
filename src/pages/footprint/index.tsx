@@ -20,7 +20,6 @@ import {
   FiAlignLeft,
   FiCrosshair,
   FiEdit2,
-  FiHash,
   FiMapPin,
   FiNavigation,
   FiPlus,
