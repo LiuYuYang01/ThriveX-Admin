@@ -1,15 +1,18 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import GitHubCalendar from 'react-github-calendar';
 import dayjs from 'dayjs';
-import { Select } from 'antd';
+import { Select, Spin } from 'antd';
 import {
+  FiCalendar,
+  FiGitCommit,
+  FiGlobe,
+  FiGithub,
   FiLayout,
   FiServer,
-  FiGlobe,
-  FiCalendar,
-  FiLoader,
+  FiTrendingUp,
 } from 'react-icons/fi';
 import { useConfigStore } from '@/stores';
+import Title from '@/components/Title';
 import Skeleton from './Skeleton';
 
 interface Commit {
@@ -26,92 +29,162 @@ interface TimelineItem {
 
 type TimelineCardIcon = React.ComponentType<{ size?: number; className?: string }>;
 
-// 图一风格：图标背景色与图标色
-const CARD_STYLES = [
-  { iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600 dark:text-blue-400' },
-  { iconBg: 'bg-amber-100 dark:bg-amber-900/30', iconColor: 'text-amber-600 dark:text-amber-400' },
-  { iconBg: 'bg-red-100 dark:bg-red-900/30', iconColor: 'text-red-600 dark:text-red-400' },
-] as const;
+type ProjectKey = 'blog' | 'admin' | 'server';
 
-// 自定义时间轴（图一：圆角浅灰卡片 + 左侧彩色圆形图标 + 右侧粗体标题）
+const PROJECTS: {
+  key: ProjectKey;
+  title: string;
+  repo: string;
+  cacheKey: string;
+  icon: TimelineCardIcon;
+  accent: {
+    icon: string;
+    iconBg: string;
+    dot: string;
+    line: string;
+    badge: string;
+  };
+}[] = [
+    {
+      key: 'blog',
+      title: 'ThriveX Blog',
+      repo: 'ThriveX-Blog',
+      cacheKey: 'blog_project_iterative',
+      icon: FiGlobe,
+      accent: {
+        icon: 'text-emerald-600 dark:text-emerald-400',
+        iconBg: 'bg-emerald-50 dark:bg-emerald-950/40',
+        dot: 'bg-emerald-500',
+        line: 'border-emerald-200 dark:border-emerald-900/50',
+        badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
+      },
+    },
+    {
+      key: 'admin',
+      title: 'ThriveX Admin',
+      repo: 'ThriveX-Admin',
+      cacheKey: 'admin_project_iterative',
+      icon: FiLayout,
+      accent: {
+        icon: 'text-amber-600 dark:text-amber-400',
+        iconBg: 'bg-amber-50 dark:bg-amber-950/40',
+        dot: 'bg-amber-500',
+        line: 'border-amber-200 dark:border-amber-900/50',
+        badge: 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
+      },
+    },
+    {
+      key: 'server',
+      title: 'ThriveX Server',
+      repo: 'ThriveX-Server',
+      cacheKey: 'server_project_iterative',
+      icon: FiServer,
+      accent: {
+        icon: 'text-violet-600 dark:text-violet-400',
+        iconBg: 'bg-violet-50 dark:bg-violet-950/40',
+        dot: 'bg-violet-500',
+        line: 'border-violet-200 dark:border-violet-900/50',
+        badge: 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
+      },
+    },
+  ];
+
 const ProjectTimelineCard = ({
   title,
+  repo,
   icon: Icon,
+  accent,
   data,
-  colorIndex,
 }: {
   title: string;
+  repo: string;
   icon: TimelineCardIcon;
+  accent: (typeof PROJECTS)[number]['accent'];
   data: TimelineItem[];
-  colorIndex: 0 | 1 | 2;
-}) => {
-  const { iconBg, iconColor } = CARD_STYLES[colorIndex];
-  return (
-    <div className="bg-slate-100 dark:bg-boxdark-2 rounded-xl border border-slate-200/80 dark:border-strokedark shadow-xs hover:shadow-md transition-all duration-300 flex flex-col h-full overflow-hidden group">
-      <div className="bg-white dark:bg-boxdark p-4 flex items-center gap-3 border-b border-slate-200/60 dark:border-strokedark">
-        <div className={`flex items-center justify-center w-10 h-10 rounded-xl shrink-0 ${iconBg} ${iconColor}`}>
-          <Icon size={22} className={iconColor} />
+}) => (
+  <article className="flex h-full min-h-[420px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+    <header className="flex shrink-0 items-center gap-3 border-b border-slate-100 px-4 py-3.5 dark:border-strokedark">
+      <span
+        className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${accent.iconBg}`}
+      >
+        <Icon size={20} className={accent.icon} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+          {title}
+        </h3>
+        <p className="truncate text-xs text-slate-400 dark:text-slate-500">{repo}</p>
+      </div>
+      <span
+        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium tabular-nums ${accent.badge}`}
+      >
+        {data.length} 条
+      </span>
+    </header>
+
+    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent dark:scrollbar-thumb-strokedark">
+      {data.length === 0 ? (
+        <div className="flex h-full min-h-[280px] flex-col items-center justify-center gap-2 text-slate-400 dark:text-slate-500">
+          <FiGitCommit size={28} className="opacity-40" />
+          <p className="text-sm">暂无最近提交</p>
         </div>
-        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base tracking-tight">{title}</h3>
-      </div>
-
-      <div className="p-4 flex-1 min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-strokedark scrollbar-track-transparent bg-white/60 dark:bg-boxdark/60 rounded-b-2xl">
-        {data.length === 0 ? (
-          <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-sm">暂无提交记录</div>
-        ) : (
-          <div className="relative pl-2">
-            {/* 贯穿线 */}
-            <div className="absolute top-2 left-[6.5px] bottom-0 w-[2px] bg-slate-100 dark:bg-strokedark" />
-
-            {data.map((item, index) => (
-              <div key={index} className="relative flex gap-4 mb-6 last:mb-0 group/item">
-                {/* 装饰点 */}
-                <div className={`
-                  relative z-10 w-3.5 h-3.5 ml-[-7px] rounded-full border-2 border-white dark:border-boxdark shadow-xs mt-1.5 shrink-0
-                  ${index === 0 ? 'bg-green-500 ring-2 ring-green-100 dark:ring-green-900/50' : 'bg-slate-300 dark:bg-strokedark group-hover/item:bg-indigo-400 dark:group-hover/item:bg-indigo-500'}
-                  transition-colors duration-300
-                `} />
-
-                {/* 内容 */}
-                <div className="flex-1">
-                  <time className="text-xs font-medium text-slate-400 dark:text-slate-500 mb-1 block font-mono">
-                    {item.label}
-                  </time>
-                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed break-all bg-slate-50 dark:bg-boxdark-2 p-3 rounded-lg border border-slate-100 dark:border-strokedark group-hover/item:border-slate-200 dark:group-hover/item:border-strokedark transition-colors">
-                    {item.children}
-                  </p>
-                </div>
+      ) : (
+        <ul className="space-y-0">
+          {data.map((item, index) => (
+            <li
+              key={`${item.label}-${index}`}
+              className={`relative flex gap-3 border-l-2 pb-5 pl-4 last:pb-0 ${accent.line} ${index === data.length - 1 ? 'border-l-transparent' : ''}`}
+            >
+              <span
+                className={`absolute top-1.5 left-[-5px] size-2 rounded-full ring-2 ring-white dark:ring-boxdark ${index === 0 ? accent.dot : 'bg-slate-300 dark:bg-slate-600'}`}
+              />
+              <div className="min-w-0 flex-1 -mt-0.5">
+                <time className="mb-1 block font-mono text-[11px] text-slate-400 dark:text-slate-500">
+                  {item.label}
+                </time>
+                <p className="text-sm leading-relaxed text-slate-700 break-all dark:text-slate-300">
+                  {item.children}
+                </p>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
-  );
-};
+  </article>
+);
 
 const IterativePage = () => {
   const theme = useConfigStore((state) => state.colorMode);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [initialLoading, setInitialLoading] = useState<boolean>(true);
-  const isFirstLoadRef = useRef<boolean>(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const isFirstLoadRef = useRef(true);
 
-  const [year, setYear] = useState<number>(new Date().getFullYear());
+  const [year, setYear] = useState(new Date().getFullYear());
   const [yearList, setYearList] = useState<{ value: number; label: string }[]>([]);
 
   const [blogData, setBlogData] = useState<TimelineItem[]>([]);
   const [adminData, setAdminData] = useState<TimelineItem[]>([]);
   const [serverData, setServerData] = useState<TimelineItem[]>([]);
 
+  const dataByKey: Record<ProjectKey, TimelineItem[]> = useMemo(
+    () => ({ blog: blogData, admin: adminData, server: serverData }),
+    [blogData, adminData, serverData],
+  );
+
+  const totalCommits = blogData.length + adminData.length + serverData.length;
+
   const getCommitData = async (project: string) => {
     try {
       if (isFirstLoadRef.current) setInitialLoading(true);
       else setLoading(true);
 
-      const res = await fetch(`https://api.github.com/repos/LiuYuYang01/${project}/commits?per_page=10`);
+      const res = await fetch(
+        `https://api.github.com/repos/LiuYuYang01/${project}/commits?per_page=10`,
+      );
       const data = await res.json();
       const result = data?.map((item: Commit) => ({
-        label: dayjs(item.commit.author.date).format('YYYY-MM-DD HH:mm'), // 优化了日期格式
+        label: dayjs(item.commit.author.date).format('MM-DD HH:mm'),
         children: item.commit.message,
       }));
 
@@ -162,89 +235,95 @@ const IterativePage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  if (initialLoading) return <Skeleton />
+  if (initialLoading) return <Skeleton />;
 
   return (
-    <div className="font-sans text-slate-600 dark:text-slate-300 transition-colors">
-      <div className="mb-2">
-        <div className="relative flex flex-col md:flex-row md:items-center justify-center gap-4 bg-white dark:bg-boxdark px-6 py-3 rounded-2xl shadow-xs border border-slate-100 dark:border-strokedark transition-colors">
-          <h1 className="flex items-center gap-4 font-extrabold text-slate-800 dark:text-slate-100">
-            <img src="/logo.png" alt="" className="w-8 h-8" />
-            <span className="text-xl font-extrabold text-slate-800 dark:text-slate-100">不断改善、成为最佳</span>
-          </h1>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <Title value="持续迭代">
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-1 dark:border-strokedark dark:bg-boxdark-2">
+          <FiCalendar size={15} className="shrink-0 text-slate-400" />
+          <span className="text-xs text-slate-500 dark:text-slate-400">年份</span>
+          <Select
+            variant="borderless"
+            value={year}
+            options={yearList}
+            onChange={setYear}
+            className="min-w-[72px]! font-medium! text-slate-700 dark:text-slate-200 [&_.ant-select-selector]:bg-transparent! [&_.ant-select-selector]:px-0!"
+            popupMatchSelectWidth={false}
+          />
+        </div>
+      </Title>
 
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-3 bg-slate-50 dark:bg-boxdark-2 px-4 py-1 rounded-xl border border-slate-100 dark:border-strokedark transition-colors">
-            <span className="text-slate-500 dark:text-slate-400 text-sm font-medium flex items-center gap-2">
-              <FiCalendar size={16} />
-              年份视图:
-            </span>
-
-            <Select
-              variant="borderless"
-              defaultValue={year}
-              options={yearList}
-              onChange={setYear}
-              className="min-w-[100px] font-bold! text-slate-700 dark:text-slate-200 [&_.ant-select-selector]:bg-transparent!"
-              dropdownStyle={{ borderRadius: '12px', padding: '8px' }}
-            />
+      <div className="mb-2 px-3">
+        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white px-5 py-4 sm:flex-row sm:items-center dark:border-strokedark dark:bg-boxdark">
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
+            <img src="/logo.png" alt="" className="size-9 shrink-0 rounded-lg" />
+            <div className="min-w-0">
+              <p className="text-base font-semibold tracking-tight text-slate-800 dark:text-slate-100">
+                不断改善、成为最佳
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mb-2">
-        <div className="bg-white dark:bg-boxdark p-6 md:p-8 rounded-2xl shadow-xs border border-slate-100 dark:border-strokedark flex flex-col items-center justify-center relative overflow-hidden group transition-colors">
-          {/* 背景装饰 */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-green-50 dark:bg-green-900/20 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-          <div className="relative z-10 w-full overflow-x-auto pb-2 flex justify-center">
+      <section className="mb-4 px-3">
+        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
+            <FiGithub size={18} className="text-slate-500 dark:text-slate-400" />
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                GitHub 贡献热力图
+              </h3>
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                @liuyuyang01 · {year} 年
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-center overflow-x-auto px-4 py-6 sm:px-6">
             <GitHubCalendar
               username="liuyuyang01"
               year={year}
               fontSize={12}
-              blockSize={13}
-              blockMargin={4}
+              blockSize={12}
+              blockMargin={3}
               colorScheme={theme}
               theme={{
-                light: ['#f0f2f5', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
-                dark: ['#1e293b', '#166534', '#15803d', '#16a34a', '#22c55e'],
+                light: ['#f1f5f9', '#bbf7d0', '#4ade80', '#22c55e', '#15803d'],
+                dark: ['#1e293b', '#14532d', '#166534', '#16a34a', '#4ade80'],
               }}
             />
           </div>
         </div>
-      </div>
+      </section>
 
-      <div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 relative mb-4">
-          {loading && (
-            <div className="absolute inset-0 z-20 bg-white/60 dark:bg-boxdark/80 backdrop-blur-[1px] rounded-3xl flex items-center justify-center transition-colors">
-              <div className="bg-white dark:bg-boxdark-2 p-4 rounded-full shadow-lg border border-slate-100 dark:border-strokedark">
-                <FiLoader className="animate-spin text-indigo-600 dark:text-indigo-400" size={32} />
-              </div>
-            </div>
-          )}
-
-          <ProjectTimelineCard
-            title="ThriveX Blog"
-            icon={FiGlobe}
-            colorIndex={0}
-            data={blogData}
-          />
-
-          <ProjectTimelineCard
-            title="ThriveX Admin"
-            icon={FiLayout}
-            colorIndex={1}
-            data={adminData}
-          />
-
-          <ProjectTimelineCard
-            title="ThriveX Server"
-            icon={FiServer}
-            colorIndex={2}
-            data={serverData}
-          />
+      <section className="min-h-0 flex-1 px-3 pb-3">
+        <div className="mb-3 flex justify-center items-center gap-2">
+          <FiGitCommit size={16} className="text-slate-400" />
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            仓库最近提交
+          </h3>
+          <span className="text-xs text-slate-400 dark:text-slate-500">
+            各展示最近 10 条
+          </span>
         </div>
-      </div>
+
+        <Spin spinning={loading}>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {PROJECTS.map(({ title, repo, icon, accent, key }) => (
+              <ProjectTimelineCard
+                key={key}
+                title={title}
+                repo={repo}
+                icon={icon}
+                accent={accent}
+                data={dataByKey[key]}
+              />
+            ))}
+          </div>
+        </Spin>
+      </section>
     </div>
   );
 };
