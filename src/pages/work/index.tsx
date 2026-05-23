@@ -103,7 +103,7 @@ export default () => {
               className={`
                 group relative flex items-center gap-4 overflow-hidden rounded-2xl border px-5 py-5 text-left transition-all duration-200 cursor-pointer
                 ${isActive
-                  ? 'border-primary/20 bg-primary/[0.03] ring-1 ring-primary/10 dark:border-primary/30 dark:bg-primary/[0.06]'
+                  ? 'border-primary/30 bg-primary/10 ring-1 ring-primary/15 dark:border-primary/40 dark:bg-primary/15'
                   : 'border-slate-200/70 bg-white hover:border-slate-300 dark:border-strokedark dark:bg-boxdark dark:hover:border-slate-600'
                 }
               `}

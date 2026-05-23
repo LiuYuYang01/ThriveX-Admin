@@ -1,18 +1,34 @@
-import { useEffect, useMemo, useState } from 'react';
-import {
-  AppstoreOutlined,
-  ArrowLeftOutlined,
-  BarsOutlined,
-  CloudUploadOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  EyeOutlined,
-  FolderAddOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { ColumnsType } from 'antd/es/table';
-import { Breadcrumb, Button, Card, Checkbox, Empty, Form, Image, Input, Modal, Popconfirm, Segmented, Select, Space, Spin, Table, Tooltip, message } from 'antd';
+import {
+  Button,
+  Checkbox,
+  Empty,
+  Form,
+  Image,
+  Input,
+  Modal,
+  Popconfirm,
+  Segmented,
+  Select,
+  Spin,
+  Table,
+  Tooltip,
+  message,
+} from 'antd';
+import {
+  FiArrowLeft,
+  FiChevronRight,
+  FiEdit2,
+  FiEye,
+  FiFolderPlus,
+  FiGrid,
+  FiList,
+  FiRotateCcw,
+  FiSearch,
+  FiTrash2,
+  FiUploadCloud,
+} from 'react-icons/fi';
 import dayjs from 'dayjs';
 import { batchDelFileDataAPI, createDirAPI, deleteDirAPI, delFileDataAPI, getFileDataAPI, getFileTreeAPI, renameDirAPI } from '@/api/file';
 import FileUpload from '@/components/FileUpload';
@@ -147,6 +163,87 @@ const FILE_SORT_FIELD_OPTIONS: { value: FileSortField; label: string }[] = [
 
 /** 供 Table 使用：去掉 `children` 避免被当作树表；子目录个数单独保留 */
 type DirTableRow = Omit<FileTreeNode, 'children'> & { subDirCount: number };
+
+const iconBtnBase =
+  'flex size-8 items-center justify-center rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40';
+
+function TableIconButton({
+  label,
+  onClick,
+  disabled,
+  danger,
+  children,
+}: {
+  label: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip title={label}>
+      <button
+        type="button"
+        aria-label={label}
+        disabled={disabled}
+        onClick={onClick}
+        className={
+          danger
+            ? `${iconBtnBase} text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10`
+            : `${iconBtnBase} text-slate-400 hover:bg-slate-100 hover:text-primary dark:hover:bg-white/5 dark:hover:text-primary`
+        }
+      >
+        {children}
+      </button>
+    </Tooltip>
+  );
+}
+
+function ViewModeToggle({
+  value,
+  onChange,
+}: {
+  value: EntryViewMode;
+  onChange: (mode: EntryViewMode) => void;
+}) {
+  return (
+    <Segmented<EntryViewMode>
+      value={value}
+      onChange={onChange}
+      options={[
+        {
+          label: (
+            <span className="inline-flex items-center gap-1">
+              <FiGrid size={14} />
+              网格
+            </span>
+          ),
+          value: 'grid',
+        },
+        {
+          label: (
+            <span className="inline-flex items-center gap-1">
+              <FiList size={14} />
+              列表
+            </span>
+          ),
+          value: 'list',
+        },
+      ]}
+    />
+  );
+}
+
+function SectionHeading({ title, count }: { title: string; count: number }) {
+  return (
+    <header className="mb-3 flex items-center gap-2">
+      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
+      <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-medium tabular-nums text-slate-500 dark:bg-boxdark-2 dark:text-slate-400">
+        {count}
+      </span>
+    </header>
+  );
+}
 
 export default () => {
   const [loading, setLoading] = useState(false);
@@ -431,6 +528,9 @@ export default () => {
     }
   };
 
+  const canGoBack =
+    (!rootPath && currentPath !== '') || (Boolean(rootPath) && currentPath !== rootPath);
+
   if (skeletonLoading) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
@@ -440,441 +540,480 @@ export default () => {
   }
 
   return (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col text-slate-600 dark:text-slate-300">
       <Title value="文件管理">
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => fetchTree(currentPath)}>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button icon={<FiRotateCcw />} onClick={() => fetchTree(currentPath)}>
             刷新
           </Button>
-          <Button icon={<FolderAddOutlined />} disabled={atMultiRootHome} onClick={() => setCreateOpen(true)}>
+          <Button icon={<FiFolderPlus />} disabled={atMultiRootHome} onClick={() => setCreateOpen(true)}>
             新建目录
           </Button>
-          <Button type="primary" icon={<CloudUploadOutlined />} disabled={atMultiRootHome} onClick={() => setUploadOpen(true)}>
+          <Button
+            type="primary"
+            icon={<FiUploadCloud />}
+            disabled={atMultiRootHome}
+            onClick={() => setUploadOpen(true)}
+          >
             上传文件
           </Button>
-        </Space>
+        </div>
       </Title>
 
-      <Card className="rounded-2xl! min-h-[calc(100vh-160px)]">
-        <div className="mb-4 flex min-w-0 items-center gap-2 sm:gap-3">
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            disabled={(!rootPath && currentPath === '') || (Boolean(rootPath) && currentPath === rootPath)}
-            onClick={goBack}
-            className={`shrink-0 ${(!rootPath && currentPath === '') || (Boolean(rootPath) && currentPath === rootPath) ? 'bg-gray-50! dark:bg-gray-700!' : 'bg-gray-100! hover:bg-gray-200! dark:bg-gray-700! hover:dark:bg-gray-800!'}`}
-          />
+      <section className="mx-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        <header className="shrink-0 border-b border-slate-100 px-3 py-2.5 sm:px-4 sm:py-3 dark:border-strokedark">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              aria-label="返回上一级"
+              disabled={!canGoBack}
+              onClick={goBack}
+              className={`flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors cursor-pointer ${canGoBack
+                ? 'border-slate-200/80 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-slate-100 dark:border-strokedark dark:bg-boxdark-2 dark:text-slate-300 dark:hover:bg-white/5'
+                : 'cursor-not-allowed border-transparent bg-slate-50/60 text-slate-300 dark:bg-boxdark-2/50 dark:text-slate-600'
+                }`}
+            >
+              <FiArrowLeft size={18} />
+            </button>
 
-          <nav className="min-w-0 flex-1 rounded-md bg-gray-100/50 px-4 py-1 leading-normal dark:bg-gray-700!" aria-label="当前路径">
-            <Breadcrumb
-              className="text-sm [&.ant-breadcrumb]:text-inherit [&_ol]:flex [&_ol]:flex-wrap [&_ol]:items-center [&_ol]:gap-y-1 [&_.ant-breadcrumb-separator]:mx-1"
-              separator={<span className="select-none text-black/22 dark:text-white/25">/</span>}
-              items={breadcrumbs.map((item, index) => {
-                const isCurrent = index === breadcrumbs.length - 1;
-                return {
-                  key: `${index}-${item.path}`,
-                  title: (
-                    <button
-                      type="button"
-                      className={
-                        isCurrent
-                          ? 'max-w-full cursor-default rounded border-0 bg-transparent p-0 text-left font-inherit font-semibold text-primary focus-visible:outline focus-visible:outline-primary focus-visible:outline-offset-2 dark:text-white/92'
-                          : 'max-w-full cursor-pointer rounded border-0 bg-transparent p-0 text-left font-inherit text-black/55 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 dark:text-white/55 dark:hover:text-primary'
-                      }
-                      onClick={() => navigateTo(item.path)}
-                    >
-                      {item.label}
-                    </button>
-                  ),
-                };
-              })}
-            />
-          </nav>
-        </div>
-
-        <Spin spinning={loading}>
-          {dirList.length === 0 && fileList.length === 0 ? (
-            <Empty description="当前目录暂无内容" className="py-16" />
-          ) : (
-            <>
-              <div className="mb-5 flex justify-between flex-col gap-3 rounded-xl border border-black/6 bg-black/2 px-3 py-2 dark:border-white/8 dark:bg-white/3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2">
-                <div>
-                  {fileList.length > 0 && (
-                    <>
-                      {viewMode === 'grid' && (
-                        <Checkbox
-                          className="shrink-0"
-                          checked={allFileSelected}
-                          indeterminate={someFileSelected && !allFileSelected}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedFilePaths(fileList.map((f) => f.path));
-                            } else {
-                              setSelectedFilePaths([]);
-                            }
-                          }}
-                        >
-                          全选
-                        </Checkbox>
+            <nav
+              className="min-w-0 flex-1 overflow-x-auto rounded-lg border border-slate-200/60 bg-slate-50/80 px-3 py-2 dark:border-strokedark dark:bg-boxdark-2/80"
+              aria-label="当前路径"
+            >
+              <ol className="flex min-w-max flex-wrap items-center gap-1 text-sm">
+                {breadcrumbs.map((item, index) => {
+                  const isCurrent = index === breadcrumbs.length - 1;
+                  return (
+                    <li key={`${index}-${item.path}`} className="flex items-center gap-1">
+                      {index > 0 && (
+                        <FiChevronRight className="shrink-0 text-slate-300 dark:text-slate-600" size={14} aria-hidden />
                       )}
+                      <button
+                        type="button"
+                        onClick={() => !isCurrent && navigateTo(item.path)}
+                        className={`max-w-48 truncate rounded px-0.5 transition-colors ${isCurrent
+                          ? 'cursor-default font-semibold text-primary'
+                          : 'cursor-pointer text-slate-500 hover:text-primary dark:text-slate-400'
+                          }`}
+                      >
+                        {item.label}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </nav>
+          </div>
+        </header>
 
-                      {selectedFilePaths.length > 0 && (
-                        <Popconfirm
-                          title={`确定删除选中的 ${selectedFilePaths.length} 个文件吗？`}
-                          okText="确定"
-                          cancelText="取消"
-                          onConfirm={onBatchDeleteFiles}
-                        >
-                          <Button type="primary" danger>
-                            批量删除 ({selectedFilePaths.length})
-                          </Button>
-                        </Popconfirm>
-                      )}
-                    </>
-                  )}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
+          <Spin
+            spinning={loading}
+            className="flex min-h-0 flex-1 flex-col [&_.ant-spin-container]:flex [&_.ant-spin-container]:min-h-0 [&_.ant-spin-container]:flex-1 [&_.ant-spin-container]:flex-col"
+          >
+            {dirList.length === 0 && fileList.length === 0 ? (
+              <div className="flex min-h-[320px] flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 dark:border-strokedark dark:bg-boxdark-2/30">
+                <Empty description="当前目录暂无内容" />
+              </div>
+            ) : (
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div className="mb-4 flex shrink-0 flex-col gap-2 rounded-xl border border-slate-200/70 bg-slate-50/50 px-3 py-2.5 dark:border-strokedark dark:bg-boxdark-2/40 sm:px-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {fileList.length > 0 && viewMode === 'grid' && (
+                      <Checkbox
+                        className="shrink-0"
+                        checked={allFileSelected}
+                        indeterminate={someFileSelected && !allFileSelected}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedFilePaths(fileList.map((f) => f.path));
+                          } else {
+                            setSelectedFilePaths([]);
+                          }
+                        }}
+                      >
+                        全选文件
+                      </Checkbox>
+                    )}
+
+                    {selectedFilePaths.length > 0 && (
+                      <Popconfirm
+                        title={`确定删除选中的 ${selectedFilePaths.length} 个文件吗？`}
+                        okText="确定"
+                        cancelText="取消"
+                        onConfirm={onBatchDeleteFiles}
+                      >
+                        <Button type="primary" danger icon={<FiTrash2 />}>
+                          批量删除 ({selectedFilePaths.length})
+                        </Button>
+                      </Popconfirm>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                    <ViewModeToggle value={viewMode} onChange={setViewMode} />
+
+                    {dirList.length > 0 && (
+                      <>
+                        <span className="hidden h-4 w-px shrink-0 bg-slate-200 sm:block dark:bg-strokedark" aria-hidden />
+                        <div className="flex items-center gap-2">
+                          <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">目录</span>
+                          <Select<DirSortField>
+                            className="min-w-22"
+                            value={dirSortField}
+                            options={DIR_SORT_FIELD_OPTIONS}
+                            onChange={setDirSortField}
+                          />
+                          <Segmented<'ascend' | 'descend'>
+                            value={dirSortOrder}
+                            onChange={setDirSortOrder}
+                            options={[
+                              { label: '升序', value: 'ascend' },
+                              { label: '降序', value: 'descend' },
+                            ]}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {fileList.length > 0 && (
+                      <>
+                        <span className="hidden h-4 w-px shrink-0 bg-slate-200 sm:block dark:bg-strokedark" aria-hidden />
+                        <div className="flex items-center gap-2">
+                          <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">文件</span>
+                          <Select<FileSortField>
+                            className="min-w-22"
+                            value={fileSortField}
+                            options={FILE_SORT_FIELD_OPTIONS}
+                            onChange={setFileSortField}
+                          />
+                          <Segmented<'ascend' | 'descend'>
+                            value={fileSortOrder}
+                            onChange={setFileSortOrder}
+                            options={[
+                              { label: '升序', value: 'ascend' },
+                              { label: '降序', value: 'descend' },
+                            ]}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <Input
+                      allowClear
+                      prefix={<FiSearch className="text-slate-400" size={15} />}
+                      placeholder="搜索当前目录"
+                      className="w-full sm:w-52!"
+                      value={keyword}
+                      onChange={(e) => setKeyword(e.target.value)}
+                    />
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <Segmented<EntryViewMode>
-                    value={viewMode}
-                    onChange={setViewMode}
-                    options={[
-                      {
-                        value: 'grid',
-                        label: (
-                          <span className="inline-flex items-center gap-1">
-                            <AppstoreOutlined />
-                            网格
-                          </span>
-                        ),
-                      },
-                      {
-                        value: 'list',
-                        label: (
-                          <span className="inline-flex items-center gap-1">
-                            <BarsOutlined />
-                            列表
-                          </span>
-                        ),
-                      },
-                    ]}
-                  />
+                <div className="min-h-0 flex-1 overflow-y-auto">
 
                   {dirList.length > 0 && (
-                    <>
-                      <span className="hidden h-5 w-px shrink-0 bg-black/10 sm:block dark:bg-white/12" aria-hidden />
-                      <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-                        <Select<DirSortField>
-                          className="min-w-22"
-                          value={dirSortField}
-                          options={DIR_SORT_FIELD_OPTIONS}
-                          onChange={setDirSortField}
+                    <section>
+                      <SectionHeading title="目录" count={dirList.length} />
+                      {viewMode === 'list' ? (
+                        <Table<DirTableRow>
+                          rowKey="path"
+                          pagination={false}
+                          scroll={{ x: 'max-content' }}
+                          className="[&_.ant-table-cell]:align-middle"
+                          dataSource={dirTableRows}
+                          columns={
+                            [
+                              {
+                                title: '名称',
+                                dataIndex: 'name',
+                                ellipsis: true,
+                                render: (_, row) => (
+                                  <button
+                                    type="button"
+                                    className="max-w-full cursor-pointer border-0 bg-transparent p-0 text-left font-medium text-primary hover:underline"
+                                    onClick={() => navigateTo(row.path)}
+                                  >
+                                    {row.name}
+                                  </button>
+                                ),
+                              },
+                              {
+                                title: '子目录',
+                                width: 88,
+                                align: 'center',
+                                render: (_, row) => (
+                                  <span className="tabular-nums text-slate-600 dark:text-slate-300">{row.subDirCount}</span>
+                                ),
+                              },
+                              {
+                                title: '文件数',
+                                width: 88,
+                                align: 'center',
+                                render: (_, row) => (
+                                  <span className="tabular-nums text-slate-600 dark:text-slate-300">{row.fileCount}</span>
+                                ),
+                              },
+                              {
+                                title: '大小',
+                                width: 104,
+                                align: 'right',
+                                render: (_, row) => (
+                                  <span className="tabular-nums text-slate-600 dark:text-slate-300">
+                                    {formatFileSize(row.totalSize)}
+                                  </span>
+                                ),
+                              },
+                              {
+                                title: '操作',
+                                key: 'actions',
+                                width: 96,
+                                align: 'center',
+                                render: (_, row) => {
+                                  const node = sortedDirList.find((d) => d.path === row.path);
+                                  return (
+                                    <div className="flex items-center justify-center gap-0.5">
+                                      <TableIconButton
+                                        label="重命名目录"
+                                        disabled={!node}
+                                        onClick={() => node && openRenameDir(node)}
+                                      >
+                                        <FiEdit2 size={16} />
+                                      </TableIconButton>
+                                      <Popconfirm
+                                        title="确定删除该目录吗？"
+                                        okText="确定"
+                                        cancelText="取消"
+                                        onConfirm={() => onDeleteDir(row.path)}
+                                      >
+                                        <TableIconButton label="删除目录" danger>
+                                          <FiTrash2 size={16} />
+                                        </TableIconButton>
+                                      </Popconfirm>
+                                    </div>
+                                  );
+                                },
+                              },
+                            ] as ColumnsType<DirTableRow>
+                          }
                         />
-                        <Segmented<'ascend' | 'descend'>
-                          value={dirSortOrder}
-                          onChange={setDirSortOrder}
-                          options={[
-                            { label: '升序', value: 'ascend' },
-                            { label: '降序', value: 'descend' },
-                          ]}
-                        />
-                      </div>
-                    </>
+                      ) : (
+                        <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">
+                          {sortedDirList.map((dir) => (
+                            <div
+                              key={dir.path}
+                              className="group flex flex-col rounded-xl border border-slate-200/80 bg-slate-50/50 px-2 pb-2 pt-3 transition-colors hover:border-primary/30 hover:bg-primary/5 dark:border-strokedark dark:bg-boxdark-2/50 dark:hover:border-primary/35"
+                            >
+                              <button
+                                type="button"
+                                className="cursor-pointer text-center"
+                                onClick={() => navigateTo(dir.path)}
+                              >
+                                <img src={fileSvg} alt="" className="mx-auto mb-2 h-12 w-14 object-contain" />
+                                <Tooltip title={dir.name}>
+                                  <p className="m-0 line-clamp-2 text-xs font-medium leading-snug text-slate-700 group-hover:text-primary dark:text-slate-200">
+                                    {dir.name}
+                                  </p>
+                                </Tooltip>
+                                <p className="mt-1 text-[10px] tabular-nums text-slate-400 dark:text-slate-500">
+                                  {dir.fileCount} 个文件
+                                </p>
+                              </button>
+                              <div className="mt-2 flex justify-center gap-0.5 border-t border-slate-200/60 pt-2 dark:border-strokedark">
+                                <TableIconButton label="重命名目录" onClick={() => openRenameDir(dir)}>
+                                  <FiEdit2 size={14} />
+                                </TableIconButton>
+                                <Popconfirm
+                                  title="确定删除该目录吗？"
+                                  okText="确定"
+                                  cancelText="取消"
+                                  onConfirm={() => onDeleteDir(dir.path)}
+                                >
+                                  <TableIconButton label="删除目录" danger>
+                                    <FiTrash2 size={14} />
+                                  </TableIconButton>
+                                </Popconfirm>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
                   )}
 
                   {fileList.length > 0 && (
-                    <>
-                      <span className="hidden h-5 w-px shrink-0 bg-black/10 sm:block dark:bg-white/12" aria-hidden />
-                      <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-                        <Select<FileSortField>
-                          className="min-w-22"
-                          value={fileSortField}
-                          options={FILE_SORT_FIELD_OPTIONS}
-                          onChange={setFileSortField}
-                        />
-                        <Segmented<'ascend' | 'descend'>
-                          value={fileSortOrder}
-                          onChange={setFileSortOrder}
-                          options={[
-                            { label: '升序', value: 'ascend' },
-                            { label: '降序', value: 'descend' },
-                          ]}
-                        />
-                      </div>
-                    </>
+                    <section className={dirList.length > 0 ? 'mt-6 border-t border-slate-100 pt-5 dark:border-strokedark' : ''}>
+                      <SectionHeading title="文件" count={fileList.length} />
+                      <Image.PreviewGroup>
+                        {viewMode === 'list' ? (
+                          <Table<AppFile>
+                            rowKey="path"
+                            pagination={false}
+                            scroll={{ x: 'max-content' }}
+                            className="[&_.ant-table-cell]:align-middle"
+                            dataSource={sortedFileList}
+                            rowSelection={{
+                              selectedRowKeys: selectedFilePaths,
+                              onChange: (keys) => setSelectedFilePaths(keys as string[]),
+                              columnWidth: 40,
+                            }}
+                            columns={
+                              [
+                                {
+                                  title: '预览',
+                                  key: 'thumb',
+                                  width: 88,
+                                  render: (_, file) => (
+                                    <div className="relative size-14 overflow-hidden rounded-lg bg-slate-100 dark:bg-boxdark-2">
+                                      <Image
+                                        src={file.url}
+                                        fallback={errorImg}
+                                        alt={file.name}
+                                        loading="lazy"
+                                        preview={{ alt: file.name }}
+                                        rootClassName="absolute inset-0 block size-full"
+                                        className="size-full h-[inherit]! object-cover"
+                                      />
+                                    </div>
+                                  ),
+                                },
+                                {
+                                  title: '名称',
+                                  dataIndex: 'name',
+                                  ellipsis: true,
+                                  render: (name: string) => (
+                                    <Tooltip title={name} placement="topLeft">
+                                      <span className="font-medium text-slate-800 dark:text-slate-100">{name}</span>
+                                    </Tooltip>
+                                  ),
+                                },
+                                {
+                                  title: '大小',
+                                  width: 108,
+                                  align: 'right',
+                                  render: (_, file) => (
+                                    <span className="tabular-nums text-slate-600 dark:text-slate-300">
+                                      {formatFileSize(file.size)}
+                                    </span>
+                                  ),
+                                },
+                                {
+                                  title: '类型',
+                                  width: 88,
+                                  ellipsis: true,
+                                  render: (_, file) => (
+                                    <span className="inline-flex rounded-md border border-slate-200/80 bg-slate-50 px-1.5 py-0.5 font-mono text-[11px] uppercase text-slate-500 dark:border-strokedark dark:bg-boxdark-2 dark:text-slate-400">
+                                      {getFileTypeLabel(file)}
+                                    </span>
+                                  ),
+                                },
+                                {
+                                  title: '操作',
+                                  key: 'actions',
+                                  width: 96,
+                                  align: 'center',
+                                  render: (_, file) => (
+                                    <div className="flex items-center justify-center gap-0.5">
+                                      <TableIconButton label="查看详情" onClick={() => onOpenFileDetail(file.path)}>
+                                        <FiEye size={16} />
+                                      </TableIconButton>
+                                      <Popconfirm
+                                        title="确定删除该文件吗？"
+                                        okText="确定"
+                                        cancelText="取消"
+                                        onConfirm={() => onDeleteFile(file.path)}
+                                      >
+                                        <TableIconButton label="删除文件" danger>
+                                          <FiTrash2 size={16} />
+                                        </TableIconButton>
+                                      </Popconfirm>
+                                    </div>
+                                  ),
+                                },
+                              ] as ColumnsType<AppFile>
+                            }
+                          />
+                        ) : (
+                          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+                            {sortedFileList.map((file) => {
+                              const selected = selectedFilePaths.includes(file.path);
+                              return (
+                                <article
+                                  key={file.path}
+                                  className={`group flex flex-col overflow-hidden rounded-xl border bg-white transition-colors dark:bg-boxdark-2/30 ${selected
+                                    ? 'border-primary/40 ring-1 ring-primary/15'
+                                    : 'border-slate-200/80 hover:border-primary/30 dark:border-strokedark'
+                                    }`}
+                                >
+                                  <div className="relative aspect-4/3 w-full shrink-0 overflow-hidden bg-slate-100 dark:bg-boxdark-2">
+                                    <div className="absolute left-2 top-2 z-10" onClick={(e) => e.stopPropagation()}>
+                                      <Checkbox
+                                        checked={selected}
+                                        onChange={(e) => {
+                                          const checked = e.target.checked;
+                                          setSelectedFilePaths((prev) =>
+                                            checked ? [...prev, file.path] : prev.filter((p) => p !== file.path),
+                                          );
+                                        }}
+                                      />
+                                    </div>
+                                    <Image
+                                      src={file.url}
+                                      fallback={errorImg}
+                                      alt={file.name}
+                                      loading="lazy"
+                                      preview={{ alt: file.name }}
+                                      rootClassName="absolute inset-0 block size-full"
+                                      className="size-full h-[inherit]! cursor-zoom-in object-cover"
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="min-h-[52px] flex-1 px-3 pb-1 pt-2.5 text-left cursor-pointer"
+                                    onClick={() => {
+                                      setSelectedFilePaths((prev) =>
+                                        selected ? prev.filter((p) => p !== file.path) : [...prev, file.path],
+                                      );
+                                    }}
+                                  >
+                                    <Tooltip title={file.name} placement="topLeft">
+                                      <p className="mb-1 line-clamp-2 text-xs font-medium leading-snug text-slate-800 group-hover:text-primary dark:text-slate-100">
+                                        {file.name}
+                                      </p>
+                                    </Tooltip>
+                                    <p className="m-0 text-[11px] tabular-nums text-slate-400 dark:text-slate-500">
+                                      {formatFileSize(file.size)}
+                                    </p>
+                                  </button>
+                                  <div className="flex justify-end gap-0.5 border-t border-slate-100 px-2 py-1.5 dark:border-strokedark">
+                                    <TableIconButton label="查看详情" onClick={() => onOpenFileDetail(file.path)}>
+                                      <FiEye size={14} />
+                                    </TableIconButton>
+                                    <Popconfirm
+                                      title="确定删除该文件吗？"
+                                      okText="确定"
+                                      cancelText="取消"
+                                      onConfirm={() => onDeleteFile(file.path)}
+                                    >
+                                      <TableIconButton label="删除文件" danger>
+                                        <FiTrash2 size={14} />
+                                      </TableIconButton>
+                                    </Popconfirm>
+                                  </div>
+                                </article>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </Image.PreviewGroup>
+                    </section>
                   )}
-
-                  <span className="hidden h-5 w-px shrink-0 bg-black/10 sm:block dark:bg-white/12" aria-hidden />
-                  <Input
-                    allowClear
-                    prefix={<SearchOutlined className="text-black/35 dark:text-white/35" />}
-                    placeholder="搜索当前目录下的文件或目录"
-                    className="flex-1 w-72!"
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                  />
                 </div>
               </div>
-
-              {dirList.length > 0 && (
-                <section>
-                  <header className="mb-4 flex items-center gap-2.5">
-                    <span className="text-[15px] font-semibold tracking-wide text-black/88 dark:text-white/88">目录</span>
-                    <span className="rounded-full bg-black/4 px-2 py-0.5 text-xs font-medium leading-none text-black/45 dark:bg-white/8 dark:text-white/45">
-                      {dirList.length}
-                    </span>
-                  </header>
-                  {viewMode === 'list' ? (
-                    <Table<DirTableRow>
-                      rowKey="path"
-                      pagination={false}
-                      scroll={{ x: 'max-content' }}
-                      className="[&_.ant-table-cell]:align-middle"
-                      dataSource={dirTableRows}
-                      columns={
-                        [
-                          {
-                            title: '名称',
-                            dataIndex: 'name',
-                            ellipsis: true,
-                            render: (_, row) => (
-                              <button
-                                type="button"
-                                className="max-w-full cursor-pointer border-0 bg-transparent p-0 text-left font-inherit text-primary hover:underline"
-                                onClick={() => navigateTo(row.path)}
-                              >
-                                {row.name}
-                              </button>
-                            ),
-                          },
-                          {
-                            title: '子目录',
-                            width: 88,
-                            align: 'center',
-                            render: (_, row) => row.subDirCount,
-                          },
-                          {
-                            title: '文件数',
-                            width: 88,
-                            align: 'center',
-                            render: (_, row) => row.fileCount,
-                          },
-                          {
-                            title: '大小',
-                            width: 104,
-                            align: 'right',
-                            render: (_, row) => formatFileSize(row.totalSize),
-                          },
-                          {
-                            title: '操作',
-                            key: 'actions',
-                            width: 112,
-                            align: 'center',
-                            render: (_, row) => {
-                              const node = sortedDirList.find((d) => d.path === row.path);
-                              return (
-                                <div className="flex items-center justify-center gap-3">
-                                  <Tooltip title="重命名目录">
-                                    <Button
-                                      type="text"
-                                      icon={<EditOutlined />}
-                                      disabled={!node}
-                                      onClick={() => node && openRenameDir(node)}
-                                    />
-                                  </Tooltip>
-                                  <Tooltip title="删除目录">
-                                    <Popconfirm title="确定删除该目录吗？" okText="确定" cancelText="取消" onConfirm={() => onDeleteDir(row.path)}>
-                                      <Button type="text" danger icon={<DeleteOutlined />} />
-                                    </Popconfirm>
-                                  </Tooltip>
-                                </div>
-                              );
-                            },
-                          },
-                        ] as ColumnsType<DirTableRow>
-                      }
-                    />
-                  ) : (
-                    <div className="flex flex-wrap gap-x-4 gap-y-3">
-                      {sortedDirList.map((dir) => (
-                        <div
-                          key={dir.path}
-                          className="w-[120px] rounded-xl border border-black/6 bg-black/2 px-2 pb-2 pt-2.5 transition-[border-color,box-shadow,background] duration-200 hover:border-[#5b8ff9] hover:bg-[rgba(91,143,249,0.06)] hover:shadow-[0_4px_14px_rgba(91,143,249,0.12)] dark:border-white/8 dark:bg-white/4"
-                        >
-                          <div className="cursor-pointer text-center" onClick={() => navigateTo(dir.path)}>
-                            <img src={fileSvg} alt={dir.name} className="mx-auto mb-2 h-14 w-18 object-contain" />
-                            <Tooltip title={dir.name}>
-                              <p className="m-0 line-clamp-2 wrap-break-word text-[13px] leading-snug text-black/85 dark:text-white/88">{dir.name}</p>
-                            </Tooltip>
-                          </div>
-                          <div className="mt-2 flex justify-center gap-1">
-                            <Tooltip title="重命名目录">
-                              <Button type="text" icon={<EditOutlined />} onClick={() => openRenameDir(dir)} />
-                            </Tooltip>
-                            <Popconfirm title="确定删除该目录吗？" okText="确定" cancelText="取消" onConfirm={() => onDeleteDir(dir.path)}>
-                              <Button type="text" danger icon={<DeleteOutlined />} />
-                            </Popconfirm>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </section>
-              )}
-
-              {fileList.length > 0 && (
-                <section className={dirList.length > 0 ? 'mt-7 border-t border-black/6 pt-6 dark:border-white/8' : ''}>
-                  <header className="mb-4 flex items-center gap-2.5">
-                    <span className="text-[15px] font-semibold tracking-wide text-black/88 dark:text-white/88">文件</span>
-                    <span className="rounded-full bg-black/4 px-2 py-0.5 text-xs font-medium leading-none text-black/45 dark:bg-white/8 dark:text-white/45">
-                      {fileList.length}
-                    </span>
-                  </header>
-                  <Image.PreviewGroup>
-                    {viewMode === 'list' ? (
-                      <Table<AppFile>
-                        rowKey="path"
-                        pagination={false}
-                        scroll={{ x: 'max-content' }}
-                        className="[&_.ant-table-cell]:align-middle"
-                        dataSource={sortedFileList}
-                        rowSelection={{
-                          selectedRowKeys: selectedFilePaths,
-                          onChange: (keys) => setSelectedFilePaths(keys as string[]),
-                          columnWidth: 40,
-                        }}
-                        columns={
-                          [
-                            {
-                              title: '预览',
-                              key: 'thumb',
-                              width: 88,
-                              render: (_, file) => (
-                                <div className="relative size-14 overflow-hidden rounded-lg bg-linear-to-br from-[#f4f6f9] to-[#eceff4] dark:from-[#1f2937] dark:to-[#111827]">
-                                  <Image
-                                    src={file.url}
-                                    fallback={errorImg}
-                                    alt={file.name}
-                                    loading="lazy"
-                                    preview={{ alt: file.name }}
-                                    rootClassName="absolute inset-0 block size-full"
-                                    className="size-full h-[inherit]! object-cover"
-                                  />
-                                </div>
-                              ),
-                            },
-                            {
-                              title: '名称',
-                              dataIndex: 'name',
-                              ellipsis: true,
-                              render: (name: string) => (
-                                <Tooltip title={name} placement="topLeft">
-                                  <span className="font-medium text-black/88 dark:text-white/88">{name}</span>
-                                </Tooltip>
-                              ),
-                            },
-                            {
-                              title: '大小',
-                              width: 108,
-                              align: 'right',
-                              render: (_, file) => (
-                                <span className="tabular-nums text-black/88 dark:text-white/88">{formatFileSize(file.size)}</span>
-                              ),
-                            },
-                            {
-                              title: '类型',
-                              width: 88,
-                              ellipsis: true,
-                              render: (_, file) => (
-                                <span className="font-mono text-xs text-black/65 dark:text-white/65">{getFileTypeLabel(file)}</span>
-                              ),
-                            },
-                            {
-                              title: '操作',
-                              key: 'actions',
-                              width: 112,
-                              align: 'center',
-                              render: (_, file) => (
-                                <div className="flex items-center justify-center gap-3">
-                                  <Tooltip title="查看详情">
-                                    <Button type="text" icon={<EyeOutlined />} onClick={() => onOpenFileDetail(file.path)} />
-                                  </Tooltip>
-                                  <Tooltip title="删除文件">
-                                    <Popconfirm title="确定删除该文件吗？" okText="确定" cancelText="取消" onConfirm={() => onDeleteFile(file.path)}>
-                                      <Button type="text" danger icon={<DeleteOutlined />} />
-                                    </Popconfirm>
-                                  </Tooltip>
-                                </div>
-                              ),
-                            },
-                          ] as ColumnsType<AppFile>
-                        }
-                      />
-                    ) : (
-                      <div className="grid gap-[18px] grid-cols-[repeat(auto-fill,minmax(232px,1fr))]">
-                        {sortedFileList.map((file) => (
-                          <div
-                            key={file.path}
-                            className="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-black/6 bg-white p-0 transition-[border-color,box-shadow,transform] duration-200 ease-out dark:border-white/8 dark:bg-white/4 hover:-translate-y-1 hover:border-[rgba(91,143,249,0.45)] hover:shadow-[0_14px_36px_rgba(17,24,39,0.12)] dark:hover:border-[rgba(91,143,249,0.45)] dark:hover:shadow-[0_14px_36px_rgba(0,0,0,0.45)]"
-                          >
-                            <div className="relative aspect-4/3 w-full shrink-0 overflow-hidden bg-linear-to-br from-[#f4f6f9] to-[#eceff4] transition-[filter] duration-200 group-hover:brightness-[1.03] dark:from-[#1f2937] dark:to-[#111827] dark:group-hover:brightness-[1.06]">
-                              <div className="absolute left-2 top-2 z-10" onClick={(e) => e.stopPropagation()}>
-                                <Checkbox
-                                  checked={selectedFilePaths.includes(file.path)}
-                                  onChange={(e) => {
-                                    const checked = e.target.checked;
-                                    setSelectedFilePaths((prev) =>
-                                      checked ? [...prev, file.path] : prev.filter((p) => p !== file.path),
-                                    );
-                                  }}
-                                />
-                              </div>
-                              <Image
-                                src={file.url}
-                                fallback={errorImg}
-                                alt={file.name}
-                                loading="lazy"
-                                preview={{ alt: file.name }}
-                                rootClassName="absolute inset-0 block size-full"
-                                className="size-full h-[inherit]! cursor-zoom-in object-cover transition-transform duration-300 ease-out group-hover:scale-105"
-                              />
-                            </div>
-                            <div
-                              className="min-h-[52px] flex-1 px-3 pb-1 pt-2.5"
-                              onClick={() => {
-                                setSelectedFilePaths((prev) =>
-                                  prev.includes(file.path) ? prev.filter((p) => p !== file.path) : [...prev, file.path],
-                                );
-                              }}
-                            >
-                              <Tooltip title={file.name} placement="topLeft">
-                                <p className="mb-1 line-clamp-2 break-all text-[13px] font-medium leading-[1.45] text-black/88 group-hover:text-primary dark:text-white/88">
-                                  {file.name}
-                                </p>
-                              </Tooltip>
-                              <p className="m-0 text-xs text-black/45 dark:text-white/45">{formatFileSize(file.size)}</p>
-                            </div>
-                            <div className="mt-auto flex justify-end gap-0.5 px-2 pb-2">
-                              <Tooltip title="查看详情">
-                                <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => onOpenFileDetail(file.path)} />
-                              </Tooltip>
-                              <Tooltip title="删除文件">
-                                <Popconfirm title="确定删除该文件吗？" okText="确定" cancelText="取消" onConfirm={() => onDeleteFile(file.path)}>
-                                  <Button type="text" size="small" danger icon={<DeleteOutlined />} />
-                                </Popconfirm>
-                              </Tooltip>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </Image.PreviewGroup>
-                </section>
-              )}
-            </>
-          )}
-        </Spin>
-      </Card>
+            )}
+          </Spin>
+        </div>
+      </section>
 
       <FileUpload
         multiple
@@ -919,33 +1058,32 @@ export default () => {
       <Modal title="文件详情" open={detailOpen} onCancel={() => setDetailOpen(false)} footer={null} destroyOnHidden>
         <Spin spinning={detailLoading}>
           {fileInfo && (
-            <div className="rounded-xl border border-black/6 bg-gray-50/50 dark:border-white/10 dark:bg-white/5">
-              <dl className="divide-y divide-black/6 dark:divide-white/10">
-                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
-                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">名称</dt>
-                  <dd className="min-w-0 text-sm leading-relaxed text-black/88 wrap-break-word dark:text-white/90">{fileInfo.name}</dd>
-                </div>
-                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
-                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">路径</dt>
-                  <dd className="min-w-0 font-mono text-xs leading-relaxed text-black/80 break-all dark:text-white/85">{fileInfo.path}</dd>
-                </div>
-                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
-                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">类型</dt>
-                  <dd className="min-w-0 font-mono text-xs text-black/80 break-all dark:text-white/85">{fileInfo.mimeType}</dd>
-                </div>
-                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
-                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">大小</dt>
-                  <dd className="min-w-0 text-sm tabular-nums text-black/88 dark:text-white/90">{formatFileSize(fileInfo.size)}</dd>
-                </div>
-                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
-                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">上传时间</dt>
-                  <dd className="min-w-0 text-sm tabular-nums text-black/88 dark:text-white/90">
-                    {dayjs(fileInfo.putTime).format('YYYY-MM-DD HH:mm:ss')}
-                  </dd>
-                </div>
-                <div className="grid gap-1.5 px-4 py-3.5 sm:grid-cols-[6.75rem_1fr] sm:gap-x-4 sm:items-baseline">
-                  <dt className="shrink-0 text-xs font-medium text-black/50 dark:text-white/45">链接</dt>
-                  <dd className="min-w-0 text-sm leading-relaxed">
+            <div className="overflow-hidden rounded-xl border border-slate-200/80 dark:border-strokedark">
+              <dl className="divide-y divide-slate-100 dark:divide-strokedark">
+                {(
+                  [
+                    ['名称', fileInfo.name, 'text-sm text-slate-800 dark:text-slate-100'],
+                    ['路径', fileInfo.path, 'font-mono text-xs break-all text-slate-600 dark:text-slate-300'],
+                    ['类型', fileInfo.mimeType, 'font-mono text-xs text-slate-600 dark:text-slate-300'],
+                    ['大小', formatFileSize(fileInfo.size), 'text-sm tabular-nums text-slate-800 dark:text-slate-100'],
+                    [
+                      '上传时间',
+                      dayjs(fileInfo.putTime).format('YYYY-MM-DD HH:mm:ss'),
+                      'text-sm tabular-nums text-slate-800 dark:text-slate-100',
+                    ],
+                  ] as const
+                ).map(([label, value, valueClass]) => (
+                  <div
+                    key={label}
+                    className="grid gap-1 bg-slate-50/50 px-4 py-3 sm:grid-cols-[5.5rem_1fr] sm:items-baseline sm:gap-x-4 dark:bg-boxdark-2/30"
+                  >
+                    <dt className="text-xs font-medium text-slate-400 dark:text-slate-500">{label}</dt>
+                    <dd className={`min-w-0 leading-relaxed ${valueClass}`}>{value}</dd>
+                  </div>
+                ))}
+                <div className="grid gap-1 bg-slate-50/50 px-4 py-3 sm:grid-cols-[5.5rem_1fr] sm:items-baseline sm:gap-x-4 dark:bg-boxdark-2/30">
+                  <dt className="text-xs font-medium text-slate-400 dark:text-slate-500">链接</dt>
+                  <dd className="min-w-0 text-sm">
                     <a
                       href={fileInfo.url}
                       target="_blank"
