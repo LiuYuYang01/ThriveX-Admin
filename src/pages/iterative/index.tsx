@@ -9,7 +9,6 @@ import {
   FiGithub,
   FiLayout,
   FiServer,
-  FiTrendingUp,
 } from 'react-icons/fi';
 import { useConfigStore } from '@/stores';
 import Title from '@/components/Title';

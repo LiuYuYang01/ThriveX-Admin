@@ -1,18 +1,18 @@
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { notification } from 'antd';
 import { useUserStore } from '@/stores';
-
-// 配置项目API域名
-// 最新调整：在本地 .env 文件配置你的后端API地址
-export const baseURL = import.meta.env.VITE_PROJECT_API;
+import { getApiUrl } from './config';
 
 // 创建 axios 实例
 export const instance = axios.create({
-    // 项目API根路径
-    baseURL,
-    // 请求超时的时间
+    baseURL: getApiUrl(),
     timeout: 10000,
 });
+
+// 更新 baseURL（运行时配置加载后调用）
+export const updateBaseURL = () => {
+    instance.defaults.baseURL = getApiUrl();
+};
 
 // 用于取消请求
 const CancelToken = axios.CancelToken;
