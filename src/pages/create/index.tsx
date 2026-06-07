@@ -12,7 +12,7 @@ import {
 } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi2';
 
-import Title from '@/components/Title';
+import { getAssistantDisplayLabel } from '@/pages/assistant/modelConfig';
 import Drawer from '@/components/Drawer';
 import useAssistant from '@/hooks/useAssistant';
 import { Article } from '@/types/app/article';
@@ -20,6 +20,7 @@ import { getArticleDataAPI } from '@/api/article';
 
 import Editor from './components/Editor';
 import PublishForm from './components/PublishForm';
+import Title from '@/components/Title';
 
 function countChars(text: string) {
   return text.replace(/\s/g, '').length;
@@ -41,7 +42,8 @@ export default function CreatePage() {
 
   const assistantName = useMemo(() => {
     if (!assistant) return '选择助手';
-    return list.find((a) => a.id === Number(assistant))?.name || '选择助手';
+    const item = list.find((a) => a.id === Number(assistant));
+    return item ? getAssistantDisplayLabel(item.model) : '选择助手';
   }, [assistant, list]);
 
   const charCount = useMemo(() => countChars(content), [content]);

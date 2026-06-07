@@ -1,5 +1,10 @@
 import { message } from 'antd';
+import { getAssistantProviderApiUrl } from '@/pages/assistant/modelConfig';
 import { Assistant } from '@/types/app/assistant';
+
+function resolveBaseUrl(assistant: Assistant): string {
+  return assistant.url || getAssistantProviderApiUrl(assistant.model) || 'https://api.deepseek.com/v1';
+}
 
 /**
  * 将用户输入的通用模型名（不区分大小写）映射为实际 API 使用的模型名
@@ -8,85 +13,20 @@ export const getModelName = (rawModel: string): string => {
   const key = rawModel.toLowerCase().trim();
 
   const modelMap: Record<string, string> = {
-    // === OpenAI ===
-    'gpt-3.5': 'gpt-3.5-turbo',
-    'gpt-3.5-16k': 'gpt-3.5-turbo-16k',
-    'gpt-4': 'gpt-4',
-    'gpt-4-32k': 'gpt-4-32k',
-    'gpt-4o': 'gpt-4o',
-    'gpt-4-turbo': 'gpt-4-turbo',
-
-    // === Moonshot ===
-    moonshot: 'moonshot-v1-8k',
-    'moonshot-8k': 'moonshot-v1-8k',
-    'moonshot-32k': 'moonshot-v1-32k',
-
-    // === DeepSeek ===
     deepseek: 'deepseek-chat',
-    'deepseek-coder': 'deepseek-coder',
-
-    // === Kimi（Moonshot）===
-    kimi: 'moonshot-v1-8k',
-
-    // === Claude（Anthropic）兼容 OpenAI 接口时的别名 ===
-    claude: 'claude-3-opus-20240229',
-    'claude-3': 'claude-3-opus-20240229',
-    'claude-opus': 'claude-3-opus-20240229',
-    'claude-sonnet': 'claude-3-sonnet-20240229',
-    'claude-haiku': 'claude-3-haiku-20240307',
-
-    // === MiniMax ===
-    minimax: 'abab5.5s-chat',
-    'minimax-5.5': 'abab5.5s-chat',
-    'minimax-pro': 'abab6-chat',
-
-    // === 通义 Qwen（阿里）===
+    'deepseek-v3': 'deepseek-chat',
     qwen: 'qwen-max',
-    'qwen-plus': 'qwen-plus',
     'qwen-max': 'qwen-max',
-    'qwen-turbo': 'qwen-turbo',
-
-    // === 智谱 AI ===
-    glm: 'glm-4',
-    'glm-3': 'glm-3-turbo',
-    'glm-4': 'glm-4',
-    chatglm: 'glm-3-turbo',
-    chatglm3: 'glm-3-turbo',
-    chatglm4: 'glm-4',
-
-    // === 百川 Baichuan ===
-    baichuan: 'baichuan2-53b',
-    baichuan2: 'baichuan2-53b',
-    'baichuan-13b': 'baichuan2-13b-chat',
-    'baichuan-53b': 'baichuan2-53b',
-
-    // === 01.AI（Yi）===
-    yi: 'yi-34b-chat',
-    'yi-6b': 'yi-6b-chat',
-    'yi-34b': 'yi-34b-chat',
-
-    // === 上海 AI 实验室 InternLM ===
-    internlm: 'internlm2-chat-20b',
-    internlm2: 'internlm2-chat-20b',
-
-    // === Mistral / Mixtral ===
-    mistral: 'mistral-7b-instruct',
-    mixtral: 'mixtral-8x7b-instruct',
-
-    // === Command R (by Cohere) ===
-    'command-r': 'command-r',
-    'command-r+': 'command-r-plus',
-    'command-r-plus': 'command-r-plus',
-
-    // === Google Gemini（如通过 proxy 接 OpenAI 格式）===
-    gemini: 'gemini-pro',
-    'gemini-pro': 'gemini-pro',
-
-    // === 豆包（字节）===
-    doubao: 'doubao-2', // 通用别名
-    'doubao-2': 'doubao-2', // 官方 API 兼容模型
-    'doubao-lite': 'doubao-lite',
-    'doubao-pro': 'doubao-pro',
+    glm: 'glm-4-long',
+    'glm-4': 'glm-4-long',
+    'glm-4-plus': 'glm-4-long',
+    'glm-4-long': 'glm-4-long',
+    ernie: 'ernie-4.5-turbo-128k',
+    'ernie-4.5': 'ernie-4.5-turbo-128k',
+    'ernie-4.5-turbo-128k': 'ernie-4.5-turbo-128k',
+    doubao: 'doubao-pro-128k',
+    'doubao-pro': 'doubao-pro-128k',
+    'doubao-pro-128k': 'doubao-pro-128k',
   };
 
   return modelMap[key] || rawModel;
@@ -97,7 +37,7 @@ export const getModelName = (rawModel: string): string => {
  */
 export const testAssistantConnection = async (assistant: Assistant): Promise<boolean> => {
   try {
-    const baseUrl = assistant.url || 'https://api.deepseek.com/v1';
+    const baseUrl = resolveBaseUrl(assistant);
     const apiKey = assistant.key.trim();
 
     const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -151,7 +91,7 @@ export const callAssistantAPI = async (
   } = {},
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
   try {
-    const baseUrl = assistant.url || 'https://api.deepseek.com/v1';
+    const baseUrl = resolveBaseUrl(assistant);
     const apiKey = assistant.key.trim();
 
     const response = await fetch(`${baseUrl}/chat/completions`, {

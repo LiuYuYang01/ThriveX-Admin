@@ -21,7 +21,41 @@ import useAssistant from '@/hooks/useAssistant';
 import type { Assistant } from '@/types/app/assistant';
 
 import AssistantPageSkeleton from './Skeleton';
-import { ASSISTANT_MODEL_INFO_MAP, getAssistantModelTheme } from './modelConfig';
+import { ASSISTANT_PROVIDER_LIST, ASSISTANT_PROVIDER_MAP, getAssistantDisplayLabel, getAssistantModelInfo, getAssistantModelLogo, getAssistantModelTheme, resolveProviderId } from './modelConfig';
+
+type ModelIconProps = {
+  model: string;
+  size?: 'sm' | 'md';
+};
+
+function ModelIcon({ model, size = 'md' }: ModelIconProps) {
+  const theme = getAssistantModelTheme(model);
+  const logo = getAssistantModelLogo(model);
+  const isSm = size === 'sm';
+  const boxClass = isSm ? 'size-6 rounded-md' : 'size-12 rounded-xl';
+  const imgClass = isSm ? 'size-4' : 'size-8';
+  const isAvatar = theme.logoShape === 'avatar';
+
+  if (logo) {
+    return (
+      <div className={`flex shrink-0 items-center justify-center ${boxClass}`}>
+        <img
+          src={logo}
+          alt=""
+          className={`${imgClass} object-contain ${isAvatar ? 'rounded-full' : ''}`}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`flex ${boxClass} shrink-0 items-center justify-center text-sm font-bold tracking-tight ${theme.bgClass} ${theme.textClass}`}
+    >
+      {theme.icon}
+    </div>
+  );
+}
 
 const EMPTY_ASSISTANT: Assistant = {} as Assistant;
 
@@ -35,8 +69,8 @@ type AssistantCardProps = {
 };
 
 function AssistantCard({ item, isTesting, onEdit, onSetDefault, onDelete, onTest }: AssistantCardProps) {
-  const info = ASSISTANT_MODEL_INFO_MAP[item.model];
-  const theme = getAssistantModelTheme(item.model);
+  const info = getAssistantModelInfo(item.model);
+  const displayLabel = getAssistantDisplayLabel(item.model);
   const isDefault = !!item.isDefault;
 
   const menuItems: MenuProps['items'] = [
@@ -72,38 +106,27 @@ function AssistantCard({ item, isTesting, onEdit, onSetDefault, onDelete, onTest
     >
       <header className="mb-4 flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <div
-            className={`flex size-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold tracking-tight ${theme.bgClass} ${theme.textClass}`}
-          >
-            {theme.icon}
-          </div>
+          <ModelIcon model={item.model} />
 
           <div className="min-w-0 flex-1">
-            <div className='flex items-center gap-4'>
-              <h3 className="truncate text-base font-semibold text-slate-800 dark:text-slate-100">{item.name}</h3>
-
-              {isDefault && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary dark:bg-primary/20">
-                  <FiCheck size={12} />
-                  当前使用
-                </span>
-              )}
-            </div>
-
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-boxdark-2 dark:text-slate-300">
-                {info ? info.label : item.model}
-              </span>
+            <div className="flex items-center gap-2">
+              <h3 className="truncate text-base font-semibold text-slate-800 dark:text-slate-100">{displayLabel}</h3>
               {info && (
                 <Tooltip title={info.desc}>
                   <button
                     type="button"
-                    className="inline-flex text-slate-400 transition-colors hover:text-primary dark:text-slate-500"
+                    className="inline-flex shrink-0 text-slate-400 transition-colors hover:text-primary dark:text-slate-500"
                     aria-label="模型说明"
                   >
                     <FiInfo size={14} />
                   </button>
                 </Tooltip>
+              )}
+              {isDefault && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary dark:bg-primary/20">
+                  <FiCheck size={12} />
+                  当前使用
+                </span>
               )}
             </div>
           </div>
@@ -149,7 +172,28 @@ export default function AssistantPage() {
   const [form] = Form.useForm();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAssistant, setEditingAssistant] = useState<Assistant>(EMPTY_ASSISTANT);
-  const [inputModelValue, setInputModelValue] = useState('');
+
+  const providerSelectOptions = useMemo(
+    () =>
+      ASSISTANT_PROVIDER_LIST.map((item) => ({
+        label: item.label,
+        value: item.id,
+      })),
+    [],
+  );
+
+  const handleProviderChange = useCallback(
+    (providerId: string) => {
+      const provider = ASSISTANT_PROVIDER_MAP[providerId];
+      if (!provider) return;
+
+      form.setFieldsValue({
+        model: providerId,
+        url: provider.apiUrl,
+      });
+    },
+    [form],
+  );
 
   const {
     list,
@@ -164,27 +208,23 @@ export default function AssistantPage() {
 
   const defaultAssistant = useMemo(() => list.find((a) => a.isDefault), [list]);
 
-  const modelSelectOptions = useMemo(() => {
-    const base = Object.entries(ASSISTANT_MODEL_INFO_MAP).map(([value, info]) => ({
-      label: info.label,
-      value,
-    }));
-    if (inputModelValue && !base.some((opt) => opt.value === inputModelValue)) {
-      return [...base, { label: inputModelValue, value: inputModelValue }];
-    }
-    return base;
-  }, [inputModelValue]);
-
   const resetModalState = useCallback(() => {
     form.resetFields();
-    setInputModelValue('');
     setEditingAssistant(EMPTY_ASSISTANT);
   }, [form]);
 
   const handleSubmit = useCallback(() => {
     form.validateFields().then((values) => {
-      const model = values.model as string;
-      saveAssistant({ ...editingAssistant, ...values, model }).then((success) => {
+      const providerId = values.provider as string;
+      const provider = ASSISTANT_PROVIDER_MAP[providerId];
+      if (!provider) return;
+
+      saveAssistant({
+        ...editingAssistant,
+        ...values,
+        model: providerId,
+        url: provider.apiUrl,
+      }).then((success) => {
         if (success) {
           setModalOpen(false);
           resetModalState();
@@ -200,8 +240,11 @@ export default function AssistantPage() {
 
   const openEditModal = useCallback(
     (record: Assistant) => {
-      form.setFieldsValue(record);
-      setInputModelValue(record.model);
+      const providerId = resolveProviderId(record.model);
+      form.setFieldsValue({
+        ...record,
+        provider: ASSISTANT_PROVIDER_MAP[providerId] ? providerId : undefined,
+      });
       setEditingAssistant(record);
       setModalOpen(true);
     },
@@ -212,7 +255,7 @@ export default function AssistantPage() {
     (record: Assistant) => {
       Modal.confirm({
         title: '确认删除',
-        content: `确定要删除助手「${record.name}」吗？删除后不可恢复。`,
+        content: `确定要删除「${getAssistantDisplayLabel(record.model)}」吗？删除后不可恢复。`,
         okText: '删除',
         okType: 'danger',
         cancelText: '取消',
@@ -239,7 +282,7 @@ export default function AssistantPage() {
       </Title>
 
       {/* 概览条 */}
-      <div className="flex flex-wrap items-center gap-3 bg-white rounded-2xl border border-slate-200/80 bg-slate-50/60 px-4 py-3 dark:border-strokedark dark:bg-boxdark-2/40">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/60 px-4 py-3 dark:border-strokedark dark:bg-boxdark-2/40">
         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
           <span className="flex size-8 items-center justify-center rounded-lg bg-white text-primary dark:bg-boxdark">
             <FiCpu size={16} />
@@ -253,7 +296,7 @@ export default function AssistantPage() {
           {defaultAssistant ? (
             <>
               当前默认：
-              <span className="font-medium text-slate-700 dark:text-slate-200">{defaultAssistant.name}</span>
+              <span className="font-medium text-slate-700 dark:text-slate-200">{getAssistantDisplayLabel(defaultAssistant.model)}</span>
             </>
           ) : (
             <span className="text-amber-600 dark:text-amber-400">尚未设置默认助手，请在卡片菜单中指定</span>
@@ -320,54 +363,67 @@ export default function AssistantPage() {
         classNames={{ body: 'pt-2!' }}
       >
         <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-          填写模型服务商提供的 API 地址与密钥，保存后可一键测试连通性。
+          选择服务商并填写 API 密钥即可，接口地址将自动配置。保存后可一键测试连通性。
         </p>
         <Form form={form} layout="vertical" size="large" requiredMark="optional">
-          <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入助手名称' }]}>
-            <Input placeholder="例如：DeepSeek、OpenAI 等" />
-          </Form.Item>
-
-          <Form.Item
-            name="url"
-            label="API 地址"
-            tooltip="填写完整的 API 接口地址，如 https://api.deepseek.com/v1"
-            rules={[
-              { required: true, message: '请输入 API 地址' },
-              { pattern: /^https?:\/\//, message: '请输入正确的 API 地址' },
-            ]}
-          >
-            <Input placeholder="https://api.deepseek.com/v1" autoComplete="off" prefix={<FiLink className="text-slate-400" />} />
+          <Form.Item label="服务商" required>
+            <Form.Item name="provider" noStyle rules={[{ required: true, message: '请选择服务商' }]}>
+              <Select
+                placeholder="选择 AI 服务商"
+                options={providerSelectOptions}
+                onChange={handleProviderChange}
+                labelRender={(option) => {
+                  const providerId = option.value as string;
+                  return (
+                    <div className="flex items-center gap-2">
+                      <ModelIcon model={providerId} size="sm" />
+                      <span>{option.label}</span>
+                    </div>
+                  );
+                }}
+                optionRender={(option) => {
+                  const providerId = option.value as string;
+                  const meta = ASSISTANT_PROVIDER_MAP[providerId];
+                  return (
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <ModelIcon model={providerId} size="sm" />
+                        <span className="truncate">{option.label}</span>
+                      </div>
+                      {meta && (
+                        <Tooltip title={meta.desc}>
+                          <FiInfo className="shrink-0 text-slate-300" />
+                        </Tooltip>
+                      )}
+                    </div>
+                  );
+                }}
+              />
+            </Form.Item>
+            <Form.Item noStyle shouldUpdate={(prev, cur) => prev.provider !== cur.provider}>
+              {({ getFieldValue }) => {
+                const providerId = getFieldValue('provider') as string | undefined;
+                const provider = providerId ? ASSISTANT_PROVIDER_MAP[providerId] : undefined;
+                if (!provider) return null;
+                return (
+                  <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 dark:border-strokedark dark:bg-boxdark-2/60">
+                    <FiLink size={14} className="shrink-0 text-slate-400" />
+                    <span className="break-all font-mono text-xs text-slate-500 dark:text-slate-400">{provider.apiUrl}</span>
+                  </div>
+                );
+              }}
+            </Form.Item>
           </Form.Item>
 
           <Form.Item name="key" label="API 密钥" rules={[{ required: true, message: '请输入 API 密钥' }]}>
             <Input.Password placeholder="请输入 API 密钥" autoComplete="new-password" />
           </Form.Item>
 
-          <Form.Item name="model" label="模型" rules={[{ required: true, message: '请选择或输入模型' }]}>
-            <Select
-              showSearch
-              placeholder="选择或输入模型"
-              filterOption={(input, option) =>
-                (option?.label ?? '').toString().toLowerCase().includes((input ?? '').toLowerCase())
-              }
-              onSearch={(val) => setInputModelValue(val)}
-              optionLabelProp="label"
-              options={modelSelectOptions}
-              optionRender={(option) => {
-                const meta = ASSISTANT_MODEL_INFO_MAP[option.value as string];
-                if (meta) {
-                  return (
-                    <div className="flex items-center justify-between gap-2">
-                      <span>{option.label}</span>
-                      <Tooltip title={meta.desc}>
-                        <FiInfo className="shrink-0 text-slate-300" />
-                      </Tooltip>
-                    </div>
-                  );
-                }
-                return <span>{option.label}</span>;
-              }}
-            />
+          <Form.Item name="url" hidden>
+            <Input />
+          </Form.Item>
+          <Form.Item name="model" hidden>
+            <Input />
           </Form.Item>
         </Form>
       </Modal>
