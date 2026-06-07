@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_AI_MODEL: string;
 
   readonly VITE_GAODE_WEB_API: string;
+
+  readonly DEV: string;
 }
 
 interface ImportMeta {

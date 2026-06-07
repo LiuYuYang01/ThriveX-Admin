@@ -8,7 +8,7 @@ import 'highlight.js/styles/vs2015.css';
 import 'bytemd/dist/index.css';
 import zh from 'bytemd/lib/locales/zh_Hans.json';
 
-import { baseURL } from '@/utils/request';
+import { getApiUrl } from '@/utils/config';
 import { useUserStore } from '@/stores';
 import Material from '@/components/Material';
 
@@ -48,7 +48,7 @@ const EditorMD = ({ value, onChange }: Props) => {
 
       const {
         data: { data },
-      } = await axios.post(`${baseURL}/file`, formData, {
+      } = await axios.post(`${getApiUrl()}/file`, formData, {
         headers: {
           Authorization: `Bearer ${store.token}`,
           'Content-Type': 'multipart/form-data',

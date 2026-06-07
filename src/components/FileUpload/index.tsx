@@ -3,7 +3,7 @@ import { InboxOutlined } from '@ant-design/icons';
 import { message, Modal, Radio, Select, Spin } from 'antd';
 import { useUserStore } from '@/stores';
 import { DirList } from '@/types/app/file';
-import { baseURL } from '@/utils/request';
+import { getApiUrl } from '@/utils/config';
 import Compressor from 'compressorjs';
 
 interface Props {
@@ -56,7 +56,7 @@ export default ({ multiple, dir, open, onCancel, onSuccess }: Props) => {
       }
 
       // 发起网络请求
-      const res = await fetch(`${baseURL}/file`, {
+      const res = await fetch(`${getApiUrl()}/file`, {
         method: 'POST',
         body: formData,
         headers: {
