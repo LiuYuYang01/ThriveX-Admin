@@ -1,23 +1,24 @@
+import TitleSkeleton from '@/components/Title/Skeleton';
+
 /** 分类管理首屏骨架 */
 export default function Skeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="px-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="skeleton h-8 rounded-md" style={{ width: 140 }} />
-          <div className="skeleton h-9 rounded-xl" style={{ width: 108 }} />
-        </div>
-      </div>
+    <div className="flex min-h-0 flex-1 flex-col text-slate-600 dark:text-slate-300">
+      <TitleSkeleton titleWidth={96} action="button" actionWidth={108} />
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
-          <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
-            <div className="flex items-center gap-2">
-              <div className="skeleton h-5 rounded-md" style={{ width: 72 }} />
-              <div className="skeleton h-5 rounded-full" style={{ width: 40 }} />
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+          <header className="flex shrink-0 flex-col gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark sm:flex-row sm:items-center sm:justify-between">
+            <div className="hidden items-center gap-3 sm:flex">
+              <div className="skeleton h-3 rounded-md" style={{ width: 48 }} />
+              <div className="skeleton h-3 rounded-md" style={{ width: 48 }} />
             </div>
-            <div className="skeleton h-9 max-w-[200px] flex-1 rounded-lg" />
-          </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="skeleton h-9 w-full rounded-lg sm:w-[200px]" />
+              <div className="skeleton size-8 rounded-lg" />
+              <div className="skeleton size-8 rounded-lg" />
+            </div>
+          </header>
 
           <div className="flex-1 space-y-3 p-5">
             {[1, 2, 3, 4, 5].map((item) => (
@@ -45,7 +46,7 @@ export default function Skeleton() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

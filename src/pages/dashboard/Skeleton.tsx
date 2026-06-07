@@ -1,8 +1,8 @@
 export default () => {
   return (
     <div className="space-y-2">
-      <div className="bg-primary rounded-xl p-6 sm:p-10 flex flex-col justify-center h-[170px] relative overflow-hidden mb-3">
-        <div className="relative z-10 w-full flex flex-col gap-2.5">
+      <div className="relative mb-3 flex h-[170px] flex-col justify-center overflow-hidden rounded-xl bg-primary p-6 sm:p-10">
+        <div className="relative z-10 flex w-full flex-col gap-2.5">
           <div className="skeleton h-7 rounded-sm" style={{ width: 400, maxWidth: '100%', opacity: 0.8 }} />
           <div className="skeleton h-5 rounded-sm" style={{ width: 300, maxWidth: '80%', opacity: 0.75 }} />
           <div className="skeleton h-8 rounded-sm" style={{ width: 120, maxWidth: '40%', opacity: 0.7 }} />
@@ -13,7 +13,7 @@ export default () => {
         {[1, 2, 3, 4].map((item) => (
           <div
             key={item}
-            className="rounded-xl border border-stroke py-6 px-7 shadow-default dark:border-transparent bg-light-gradient dark:bg-dark-gradient"
+            className="rounded-xl border border-stroke bg-light-gradient px-7 py-6 shadow-default dark:border-transparent dark:bg-dark-gradient"
           >
             <div className="space-y-2">
               <div className="skeleton h-4 rounded-sm" style={{ width: 80 }} />
@@ -23,15 +23,15 @@ export default () => {
         ))}
       </div>
 
-      <div className="rounded-xl mt-2 grid grid-cols-12 gap-2">
-        <div className="col-span-12 xl:col-span-8 rounded-xl border border-stroke px-5 pt-7 pb-5 shadow-default dark:border-transparent bg-light-gradient dark:bg-dark-gradient">
-          <div className="skeleton h-6 rounded-sm mb-4" style={{ width: 120 }} />
-          <div className="skeleton h-[400px] rounded-sm w-full" />
+      <div className="mt-2 mb-[15px] grid grid-cols-12 gap-2">
+        <div className="col-span-12 rounded-xl border border-stroke bg-light-gradient px-5 pb-5 pt-7 shadow-default dark:border-transparent dark:bg-dark-gradient sm:px-7 xl:col-span-8">
+          <div className="skeleton mb-4 h-6 rounded-sm" style={{ width: 120 }} />
+          <div className="skeleton h-[400px] w-full rounded-sm" />
         </div>
 
-        <div className="col-span-12 xl:col-span-4 rounded-xl border border-stroke px-5 pt-7 pb-5 shadow-default dark:border-transparent bg-light-gradient dark:bg-dark-gradient">
-          <div className="skeleton h-6 rounded-sm mb-4" style={{ width: 100 }} />
-          <div className="skeleton h-[300px] rounded-sm w-full" />
+        <div className="col-span-12 rounded-xl border border-stroke bg-light-gradient px-5 pb-4 pt-7 shadow-default dark:border-transparent dark:bg-dark-gradient sm:px-7 xl:col-span-4">
+          <div className="skeleton mb-4 h-6 rounded-sm" style={{ width: 100 }} />
+          <div className="skeleton h-[300px] w-full rounded-sm" />
         </div>
       </div>
     </div>

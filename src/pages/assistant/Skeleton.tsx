@@ -1,15 +1,21 @@
+import TitleSkeleton from '@/components/Title/Skeleton';
+
 /** 助手管理首屏骨架 */
 export default function AssistantPageSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="px-3">
-        <div className="flex items-center justify-between">
-          <div className="skeleton h-8 rounded-md" style={{ width: 160 }} />
-          <div className="skeleton h-9 rounded-lg" style={{ width: 108 }} />
+    <div className="flex min-h-0 flex-1 flex-col">
+      <TitleSkeleton titleWidth={96} action="button" actionWidth={96} />
+
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/60 px-4 py-3 dark:border-strokedark dark:bg-boxdark-2/40">
+        <div className="flex items-center gap-2">
+          <div className="skeleton size-8 shrink-0 rounded-lg" />
+          <div className="skeleton h-4 rounded-md" style={{ width: 140 }} />
         </div>
+        <div className="hidden h-4 w-px bg-slate-200 sm:block dark:bg-strokedark" />
+        <div className="skeleton h-4 rounded-md" style={{ width: 180 }} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 px-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 5 }, (_, i) => (
           <div
             key={i}
