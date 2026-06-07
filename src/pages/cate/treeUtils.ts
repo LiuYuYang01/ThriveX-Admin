@@ -2,6 +2,12 @@ import { Cate } from '@/types/app/cate';
 
 export type CateDropZone = 'before' | 'after' | 'inside';
 
+export type CateSelectOption = {
+  value: number;
+  label: string;
+  children?: CateSelectOption[];
+};
+
 export type SiblingContext = {
   parentLevel: number;
   siblings: Cate[];
@@ -288,4 +294,29 @@ export function filterCates(items: Cate[], keyword: string): Cate[] {
     acc.push(next);
     return acc;
   }, []);
+}
+
+/** 将分类树转为 Select 级联 options；编辑时可排除当前节点及其子树 */
+export function buildCateSelectOptions(
+  data: Cate[],
+  isRoot = true,
+  excludeId?: number,
+): CateSelectOption[] {
+  const options: CateSelectOption[] = isRoot ? [{ value: 0, label: '一级分类' }] : [];
+
+  for (const item of data) {
+    if (excludeId != null && item.id === excludeId) continue;
+
+    const children = item.children?.length
+      ? buildCateSelectOptions(item.children, false, excludeId)
+      : undefined;
+
+    options.push({
+      value: item.id!,
+      label: item.name,
+      ...(children?.length ? { children } : {}),
+    });
+  }
+
+  return options;
 }

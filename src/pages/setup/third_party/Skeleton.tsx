@@ -5,7 +5,7 @@ export default function ThirdPartySkeleton() {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="skeleton mb-4 h-8 w-32 rounded" />
 
-      <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-12">
+      <div className="grid flex-1 min-h-0 grid-cols-1 gap-y-2 lg:grid-cols-12">
         <div className="lg:col-span-3 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-strokedark dark:bg-boxdark">
           <div className="flex flex-col p-2 gap-0.5">
             {Array.from({ length: THIRD_PARTY_ENV_NAMES.length }).map((_, i) => (
@@ -20,7 +20,7 @@ export default function ThirdPartySkeleton() {
           </div>
         </div>
 
-        <div className="lg:col-span-9 flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-strokedark dark:bg-boxdark">
+        <div className="lg:col-span-9 flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-strokedark dark:bg-boxdark lg:mx-2">
           <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-3 dark:border-strokedark">
             <div className="skeleton h-4 w-20 rounded" />
             <div className="skeleton h-4 w-12 rounded" />

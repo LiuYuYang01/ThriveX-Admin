@@ -40,21 +40,11 @@ import CateTree, { type CateDropPayload } from './CateTree';
 import Skeleton from './Skeleton';
 import {
   applyCateDrop,
+  buildCateSelectOptions,
   collectKeys,
   filterCates,
   sortCateTree,
 } from './treeUtils';
-
-function buildCascaderOptions(data: Cate[], isRoot = true): any[] {
-  return [
-    ...(isRoot ? [{ value: 0, label: '一级分类' }] : []),
-    ...data.map((item) => ({
-      value: item.id!,
-      label: item.name,
-      children: item.children?.length ? buildCascaderOptions(item.children, false) : undefined,
-    })),
-  ];
-}
 
 export default function CatePage() {
   const [loading, setLoading] = useState(false);
@@ -358,7 +348,10 @@ export default function CatePage() {
     }
   };
 
-  const cascaderOptions = useMemo(() => buildCascaderOptions(list), [list]);
+  const cascaderOptions = useMemo(
+    () => buildCateSelectOptions(list, true, isEditing ? selectedTreeId : undefined),
+    [list, isEditing, selectedTreeId],
+  );
 
   const handleExpandAll = () => setExpandedKeys(collectKeys(list));
   const handleCollapseAll = () => setExpandedKeys([]);
@@ -379,7 +372,7 @@ export default function CatePage() {
         </Button>
       </Title>
 
-      <div className="flex min-h-0 flex-1 flex-col px-3">
+      <div className="flex min-h-0 flex-1 flex-col">
         <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
           <header className="flex shrink-0 flex-col gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">

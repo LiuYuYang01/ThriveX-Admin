@@ -85,8 +85,8 @@ export default () => {
         </span>
       </Title>
 
-      <div className="grid grid-cols-1 gap-3 px-3 sm:grid-cols-3">
-        {NAV_ITEMS.map(({ key, label, desc, icon: Icon }) => {
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 mt-1">
+        {NAV_ITEMS.map(({ key, desc, icon: Icon }) => {
           const count =
             key === 'comment'
               ? commentList.length
@@ -140,7 +140,7 @@ export default () => {
         })}
       </div>
 
-      <div className="mt-5 flex min-h-0 flex-1 flex-col px-3">
+      <div className="mt-3 flex min-h-0 flex-1 flex-col">
         <Spin spinning={loading}>
           <div className="flex-1 overflow-y-auto">
             {activeList.length === 0 ? (

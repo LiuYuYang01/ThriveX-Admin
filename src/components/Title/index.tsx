@@ -6,12 +6,11 @@ interface Props {
     className?: string
 }
 
-export default ({ value, children }: Props) => {
+export default ({ value, children, className = '' }: Props) => {
     return (
-        // <div className="px-6 py-2.5 bg-white dark:bg-boxdark rounded-xl shadow-xs border border-gray-100 dark:border-strokedark mb-2">
-        <div className="px-3 mb-4">
-            <div className="overflow-auto flex justify-between items-center">
-                <h2 className="font-semibold text-black dark:text-white text-xl min-w-24">{value}</h2>
+        <div className={`mb-2 rounded-2xl border border-slate-200/80 bg-white px-5 py-3.5 dark:border-strokedark dark:bg-boxdark ${className}`}>
+            <div className="flex items-center justify-between gap-4 overflow-auto">
+                <h2 className="min-w-24 text-xl font-bold text-slate-900 dark:text-white">{value}</h2>
 
                 {children}
             </div>

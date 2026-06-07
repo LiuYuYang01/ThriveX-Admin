@@ -171,8 +171,6 @@ const IterativePage = () => {
     [blogData, adminData, serverData],
   );
 
-  const totalCommits = blogData.length + adminData.length + serverData.length;
-
   const getCommitData = async (project: string) => {
     try {
       if (isFirstLoadRef.current) setInitialLoading(true);
@@ -253,7 +251,7 @@ const IterativePage = () => {
         </div>
       </Title>
 
-      <div className="mb-2 px-3">
+      <div className="mb-2">
         <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white px-5 py-4 sm:flex-row sm:items-center dark:border-strokedark dark:bg-boxdark">
           <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
             <img src="/logo.png" alt="" className="size-9 shrink-0 rounded-lg" />
@@ -267,7 +265,7 @@ const IterativePage = () => {
       </div>
 
 
-      <section className="mb-4 px-3">
+      <section className="mb-4">
         <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
           <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
             <FiGithub size={18} className="text-slate-500 dark:text-slate-400" />
@@ -297,7 +295,7 @@ const IterativePage = () => {
         </div>
       </section>
 
-      <section className="min-h-0 flex-1 px-3 pb-3">
+      <section className="min-h-0 flex-1 pb-3">
         <div className="mb-3 flex justify-center items-center gap-2">
           <FiGitCommit size={16} className="text-slate-400" />
           <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">

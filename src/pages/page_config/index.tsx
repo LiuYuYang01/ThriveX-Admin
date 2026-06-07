@@ -178,7 +178,7 @@ export default () => {
     <div className="flex min-h-0 flex-1 flex-col">
       <Title value="页面配置" />
 
-      <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-12">
+      <div className="grid flex-1 min-h-0 grid-cols-1 gap-y-2 lg:grid-cols-12">
         <div className="lg:col-span-3 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-strokedark dark:bg-boxdark">
           <div className="flex-1 overflow-y-auto">
             {!data.length ? (
@@ -239,7 +239,7 @@ export default () => {
           </div>
         </div>
 
-        <div className="lg:col-span-9 flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-strokedark dark:bg-boxdark">
+        <div className="lg:col-span-9 flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-strokedark dark:bg-boxdark lg:mx-2">
           {!activeConfig ? (
             <div className="flex h-full items-center justify-center">
               <Empty description="请选择一个配置项" />

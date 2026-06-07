@@ -50,6 +50,7 @@ const INIT_STEPS: InitStep[] = [
 ];
 
 const INIT_STEP_STORAGE_KEY = 'thrivex-init-current-step';
+const INIT_CACHE_KEY = 'thrivex_system_initialized';
 
 export default function SetupInitializePage() {
   const [currentStep, setCurrentStep] = useState(() => {
@@ -60,6 +61,7 @@ export default function SetupInitializePage() {
     return Math.min(Math.max(cachedStep, 0), INIT_STEPS.length - 1);
   });
   const [completing, setCompleting] = useState(false);
+  const [skipping, setSkipping] = useState(false);
   const [shouldCompleteInit, setShouldCompleteInit] = useState(false);
   const navigate = useNavigate();
   const store = useUserStore();
@@ -72,6 +74,21 @@ export default function SetupInitializePage() {
   useEffect(() => {
     localStorage.setItem(INIT_STEP_STORAGE_KEY, String(currentStep));
   }, [currentStep]);
+
+  const handleSkipInit = async () => {
+    setSkipping(true);
+    try {
+      await completeSystemInitAPI();
+      sessionStorage.setItem(INIT_CACHE_KEY, '1');
+      localStorage.removeItem(INIT_STEP_STORAGE_KEY);
+      message.success('已跳过初始化');
+      window.location.href = '/';
+    } catch {
+      message.error('跳过失败，请重试');
+    } finally {
+      setSkipping(false);
+    }
+  };
 
   const handleStepSuccess = async () => {
     if (isLastStep && shouldCompleteInit) {
@@ -114,14 +131,23 @@ export default function SetupInitializePage() {
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 dark:hidden bg-[radial-gradient(circle_at_18%_12%,rgba(59,130,246,0.22),transparent_48%),radial-gradient(circle_at_82%_18%,rgba(168,85,247,0.18),transparent_52%),radial-gradient(circle_at_50%_92%,rgba(34,197,94,0.14),transparent_50%)]" />
         <div className="absolute inset-0 hidden dark:block bg-[radial-gradient(circle_at_20%_12%,rgba(96,165,250,0.18),transparent_55%),radial-gradient(circle_at_85%_20%,rgba(147,51,234,0.18),transparent_58%),radial-gradient(circle_at_50%_92%,rgba(34,197,94,0.12),transparent_58%)]" />
-        <div className="absolute inset-0 dark:hidden opacity-[0.45] bg-[radial-gradient(rgba(148,163,184,0.35)_1px,transparent_1px)] [background-size:22px_22px]" />
-        <div className="absolute inset-0 hidden dark:block opacity-[0.25] bg-[radial-gradient(rgba(148,163,184,0.25)_1px,transparent_1px)] [background-size:26px_26px]" />
+        <div className="absolute inset-0 dark:hidden opacity-[0.45] bg-[radial-gradient(rgba(148,163,184,0.35)_1px,transparent_1px)] bg-size-[22px_22px]" />
+        <div className="absolute inset-0 hidden dark:block opacity-[0.25] bg-[radial-gradient(rgba(148,163,184,0.25)_1px,transparent_1px)] bg-size-[26px_26px]" />
         <div className="absolute -top-24 -right-28 h-[340px] w-[340px] rounded-full blur-3xl opacity-40 bg-linear-to-br from-sky-300 via-blue-200 to-transparent dark:from-sky-500/30 dark:via-indigo-500/20 dark:to-transparent" />
         <div className="absolute -bottom-28 -left-36 h-[420px] w-[420px] rounded-full blur-3xl opacity-35 bg-linear-to-tr from-violet-300 via-fuchsia-200 to-transparent dark:from-violet-500/25 dark:via-fuchsia-500/15 dark:to-transparent" />
       </div>
 
       <div className="relative w-full lg:max-w-6xl mx-auto rounded-xl bg-white/75 dark:bg-[#243244]/45 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-black/5 dark:ring-white/5 shadow-[0_10px_38px_rgba(15,23,42,0.12)]">
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          <Popconfirm
+            title="警告"
+            description="跳过初始化后仍可以在设置中完成配置"
+            onConfirm={handleSkipInit}
+            okText="确定跳过"
+            cancelText="取消"
+          >
+            <Button loading={skipping}>跳过</Button>
+          </Popconfirm>
           <Tooltip title="退出登录">
             <Popconfirm
               title="确定要退出登录吗？"
@@ -139,22 +165,26 @@ export default function SetupInitializePage() {
           </Tooltip>
         </div>
         <div className="px-6 md:px-10 pt-8 pb-5 border-b border-stroke dark:border-strokedark">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-slate-800 dark:text-slate-100">欢迎使用 ThriveX</h1>
-              <p className="mt-2 text-sm md:text-base text-slate-500 dark:text-slate-300">
-                接下来将引导您完成 ThriveX 的必要配置，帮助你快速上手
-              </p>
-            </div>
+          <div className="pr-28 md:pr-36">
+            <h1 className="text-2xl md:text-3xl font-semibold text-slate-800 dark:text-slate-100">欢迎使用 ThriveX</h1>
+            <p className="mt-2 text-sm md:text-base text-slate-500 dark:text-slate-300">
+              接下来将引导您完成 ThriveX 的必要配置，帮助你快速上手
+            </p>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-6 w-full">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-slate-500 dark:text-slate-300">当前进度</span>
-              <span className="hidden sm:block absolute top-[2%] lg:top-[3%] right-12 text-[70px] text-primary font-bold">{progress}%</span>
-              <span className="block sm:hidden text-xl text-primary font-bold">{progress}%</span>
+              <span className="sm:hidden text-xl text-primary font-bold tabular-nums">{progress}%</span>
             </div>
-            <Progress percent={progress} showInfo={false} strokeColor={{ '0%': '#93c5fd', '100%': '#60a5fa' }} />
+            <div className="flex w-full items-center gap-4 sm:gap-5">
+              <div className="flex-1 min-w-0 w-full">
+                <Progress className="w-full" percent={progress} showInfo={false} strokeColor={{ '0%': '#93c5fd', '100%': '#60a5fa' }} />
+              </div>
+              <span className="hidden sm:block shrink-0 text-5xl lg:text-6xl leading-none text-primary font-bold tabular-nums pointer-events-none select-none">
+                {progress}%
+              </span>
+            </div>
           </div>
         </div>
 

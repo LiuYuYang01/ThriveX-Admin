@@ -3,7 +3,7 @@ export default function ConfigSkeleton() {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="skeleton mb-4 h-8 w-32 rounded" />
 
-      <div className="grid flex-1 min-h-0 grid-cols-1 gap-4 lg:grid-cols-12">
+      <div className="grid flex-1 min-h-0 grid-cols-1 gap-y-2 lg:grid-cols-12">
         <div className="lg:col-span-3 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-strokedark dark:bg-boxdark">
           <div className="flex items-center gap-2 border-b border-gray-100 px-5 py-4 dark:border-strokedark">
             <div className="skeleton h-5 w-5 rounded" />
@@ -21,7 +21,7 @@ export default function ConfigSkeleton() {
           </div>
         </div>
 
-        <div className="lg:col-span-9 flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-strokedark dark:bg-boxdark">
+        <div className="lg:col-span-9 flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-strokedark dark:bg-boxdark lg:mx-2">
           <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-strokedark">
             <div className="flex items-center gap-3">
               <div className="skeleton h-10 w-10 rounded-lg" />

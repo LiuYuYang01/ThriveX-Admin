@@ -20,7 +20,7 @@ export default function WorkSkeleton() {
         ))}
       </div>
 
-      <div className="mt-5 flex min-h-0 flex-1 flex-col px-3">
+      <div className="mt-5 flex min-h-0 flex-1 flex-col">
         <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/70 bg-white dark:border-strokedark dark:bg-boxdark">
           <div className="flex items-center justify-between border-b border-slate-100/80 px-6 py-4 dark:border-strokedark">
             <div className="flex items-center gap-1 rounded-xl bg-slate-100/60 p-1 dark:bg-boxdark-2">
