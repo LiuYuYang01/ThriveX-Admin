@@ -1,5 +1,3 @@
-import TitleSkeleton from '@/components/Title/Skeleton';
-
 const ProjectCardSkeleton = () => (
   <div className="flex h-full min-h-[420px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
     <div className="flex shrink-0 items-center gap-3 border-b border-slate-100 px-4 py-3.5 dark:border-strokedark">
@@ -25,14 +23,13 @@ const ProjectCardSkeleton = () => (
 export default function Skeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <TitleSkeleton titleWidth={100} action="select" actionWidth={140} />
-
       <div className="mb-2">
-        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white px-5 py-4 sm:flex-row sm:items-center dark:border-strokedark dark:bg-boxdark">
-          <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
+        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-strokedark dark:bg-boxdark">
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-3 sm:justify-start">
             <div className="skeleton size-9 shrink-0 rounded-lg" />
             <div className="skeleton h-5 rounded-md" style={{ width: 180 }} />
           </div>
+          <div className="skeleton h-9 shrink-0 rounded-xl" style={{ width: 140 }} />
         </div>
       </div>
 

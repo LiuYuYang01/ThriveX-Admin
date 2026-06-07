@@ -11,7 +11,6 @@ import {
   FiServer,
 } from 'react-icons/fi';
 import { useConfigStore } from '@/stores';
-import Title from '@/components/Title';
 import Skeleton from './Skeleton';
 
 interface Commit {
@@ -236,30 +235,27 @@ const IterativePage = () => {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Title value="持续迭代">
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-1 dark:border-strokedark dark:bg-boxdark-2">
-          <FiCalendar size={15} className="shrink-0 text-slate-400" />
-          <span className="text-xs text-slate-500 dark:text-slate-400">年份</span>
-          <Select
-            variant="borderless"
-            value={year}
-            options={yearList}
-            onChange={setYear}
-            className="min-w-[72px]! font-medium! text-slate-700 dark:text-slate-200 [&_.ant-select-selector]:bg-transparent! [&_.ant-select-selector]:px-0!"
-            popupMatchSelectWidth={false}
-          />
-        </div>
-      </Title>
-
       <div className="mb-2">
-        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white px-5 py-4 sm:flex-row sm:items-center dark:border-strokedark dark:bg-boxdark">
-          <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
+        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-strokedark dark:bg-boxdark">
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-3 sm:justify-start">
             <img src="/logo.png" alt="" className="size-9 shrink-0 rounded-lg" />
             <div className="min-w-0">
-              <p className="text-base font-semibold tracking-tight text-slate-800 dark:text-slate-100">
+              <p className="text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-100">
                 不断改善、成为最佳
               </p>
             </div>
+          </div>
+          <div className="flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-1 dark:border-strokedark dark:bg-boxdark-2">
+            <FiCalendar size={15} className="shrink-0 text-slate-400" />
+            <span className="text-xs text-slate-500 dark:text-slate-400">年份</span>
+            <Select
+              variant="borderless"
+              value={year}
+              options={yearList}
+              onChange={setYear}
+              className="min-w-[72px]! font-medium! text-slate-700 dark:text-slate-200 [&_.ant-select-selector]:bg-transparent! [&_.ant-select-selector]:px-0!"
+              popupMatchSelectWidth={false}
+            />
           </div>
         </div>
       </div>
