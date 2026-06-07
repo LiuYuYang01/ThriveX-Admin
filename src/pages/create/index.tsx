@@ -283,7 +283,7 @@ export default function CreatePage() {
         open={publishOpen}
         onClose={() => setPublishOpen(false)}
       >
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-6xl px-4 pb-2 sm:px-6">
           <PublishForm data={data} closeModel={() => setPublishOpen(false)} />
         </div>
       </Drawer>

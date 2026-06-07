@@ -282,7 +282,7 @@ export default function AssistantPage() {
       </Title>
 
       {/* 概览条 */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/60 px-4 py-3 dark:border-strokedark dark:bg-boxdark-2/40">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-strokedark dark:bg-boxdark-2/40">
         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
           <span className="flex size-8 items-center justify-center rounded-lg bg-white text-primary dark:bg-boxdark">
             <FiCpu size={16} />

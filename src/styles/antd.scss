@@ -24,6 +24,7 @@ a {
 .ant-input-focused,
 .ant-input-number:focus,
 .ant-input-number-focused,
+.ant-select-focused.ant-select-outlined,
 .ant-select-focused .ant-select-selector,
 .ant-picker-focused,
 .ant-textarea:focus,
@@ -36,6 +37,7 @@ a {
 .ant-input-status-error.ant-input-focused,
 .ant-input-number-status-error:focus,
 .ant-input-number-status-error.ant-input-number-focused,
+.ant-select-status-error.ant-select-focused.ant-select-outlined,
 .ant-select-status-error.ant-select-focused .ant-select-selector,
 .ant-picker-status-error.ant-picker-focused,
 .ant-textarea-status-error:focus,
@@ -83,6 +85,7 @@ a {
 .ant-input-affix-wrapper,
 .ant-input-number,
 .ant-input-number .ant-input-number-input-wrap,
+.ant-select.ant-select-outlined,
 .ant-select .ant-select-selector,
 .ant-picker {
     min-height: var(--antd-control-height) !important;
@@ -184,6 +187,7 @@ a {
 .ant-input:not(textarea):hover,
 .ant-input-affix-wrapper:hover,
 .ant-input-number:hover,
+.ant-select:not(.ant-select-disabled):hover.ant-select-outlined,
 .ant-select:not(.ant-select-disabled):hover .ant-select-selector,
 .ant-picker:hover {
     border-color: var(--antd-control-border-hover) !important;
@@ -193,6 +197,7 @@ a {
 .ant-input-focused,
 .ant-input-affix-wrapper-focused,
 .ant-input-number-focused,
+.ant-select-focused.ant-select-outlined,
 .ant-select-focused .ant-select-selector,
 .ant-picker-focused {
     border-color: var(--color-primary, #60a5fa) !important;
@@ -235,6 +240,7 @@ a {
 .ant-picker-outlined,
 .ant-picker-panel-layout,
 .ant-picker-range-arrow::before,
+.ant-select.ant-select-outlined,
 .ant-select,
 .ant-select-selector,
 .ant-modal-content {
