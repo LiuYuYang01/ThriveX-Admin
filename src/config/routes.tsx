@@ -81,6 +81,7 @@ export const sidebarRoutes: RouteGroupConfig[] = [
       { path: '/file', name: '文件系统', icon: <BiFolderOpen className="text-lg" /> },
       {
         path: '/iter',
+        title: '更新日志',
         name: (
           <div className="flex items-center w-full justify-between">
             <span>更新日志</span>
