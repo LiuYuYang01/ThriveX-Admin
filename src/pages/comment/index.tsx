@@ -137,36 +137,6 @@ export default function CommentPage() {
     void onFilterChange({} as CommentFilterQueryParams);
   };
 
-  const stats = useMemo(() => {
-    const withArticle = list.filter((item) => item.articleId && item.articleTitle).length;
-    const withEmail = list.filter((item) => item.email).length;
-    return { total: list.length, withArticle, withEmail };
-  }, [list]);
-
-  const statCards = useMemo(
-    () => [
-      {
-        label: '评论总数',
-        value: stats.total,
-        icon: FiMessageSquare,
-        accent: 'text-primary bg-primary/10 dark:bg-primary/20',
-      },
-      {
-        label: '已关联文章',
-        value: stats.withArticle,
-        icon: FiFileText,
-        accent: 'text-sky-600 bg-sky-50 dark:bg-sky-500/10 dark:text-sky-300',
-      },
-      {
-        label: '留有邮箱',
-        value: stats.withEmail,
-        icon: FiMail,
-        accent: 'text-violet-600 bg-violet-50 dark:bg-violet-500/10 dark:text-violet-300',
-      },
-    ],
-    [stats],
-  );
-
   const delCommentData = useCallback(
     async (id: number) => {
       try {

@@ -27,7 +27,6 @@ import {
   FiExternalLink,
   FiLock,
   FiCalendar,
-  FiCheckSquare,
   FiRotateCcw,
   FiImage,
 } from 'react-icons/fi';
@@ -111,10 +110,6 @@ export default function ArticlePage() {
   const [tagList, setTagList] = useState<ArticleTag[]>([]);
 
   const selectedCount = selectedRowKeys.length;
-  const pageViews = useMemo(
-    () => articleList.reduce((sum, item) => sum + (item.view ?? 0), 0),
-    [articleList],
-  );
 
   const getArticleList = useCallback(async () => {
     try {
@@ -526,30 +521,6 @@ export default function ArticlePage() {
       </div>
     );
   }
-
-  const statCards = [
-    {
-      label: '已选',
-      value: selectedCount,
-      icon: FiCheckSquare,
-      accent:
-        selectedCount > 0
-          ? 'text-amber-600 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300'
-          : 'text-slate-500 bg-slate-100 dark:bg-boxdark-2 dark:text-slate-400',
-    },
-    {
-      label: '文章总数',
-      value: total,
-      icon: FiFileText,
-      accent: 'text-primary bg-primary/10 dark:bg-primary/20',
-    },
-    {
-      label: '本页浏览量',
-      value: pageViews,
-      icon: FiEye,
-      accent: 'text-sky-600 bg-sky-50 dark:bg-sky-500/10 dark:text-sky-300',
-    }
-  ];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col text-slate-600 dark:text-slate-300">

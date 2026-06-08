@@ -124,7 +124,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           <img src={logo} alt="logo" className="w-8 mr-2.5" />
           <div className="flex flex-col">
             <span>Thrive X</span>
-            <span className='text-[10px] text-gray-500'>现代化 CMS 管理系统</span>
+            <span className="text-[10px] text-gray-500">现代化 CMS 管理系统</span>
           </div>
         </NavLink>
 

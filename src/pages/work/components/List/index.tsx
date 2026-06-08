@@ -217,7 +217,7 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
       <RandomAvatar className="size-10 shrink-0 rounded-full border-2 border-white dark:border-boxdark" />
     );
 
-  const actionBtnBase = "flex size-8 cursor-pointer items-center justify-center rounded-lg transition-all duration-150";
+  const actionBtnBase = 'flex size-8 cursor-pointer items-center justify-center rounded-lg transition-all duration-150';
 
   return (
     <article className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white transition-all duration-200 hover:border-slate-300/80 dark:border-strokedark dark:bg-boxdark dark:hover:border-slate-600">
