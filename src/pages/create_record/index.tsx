@@ -81,7 +81,6 @@ export default () => {
     let inputUrl = '';
     Modal.confirm({
       title: '添加网络图片',
-      icon: <BiLink className="text-blue-500 mr-2" />,
       content: (
         <Input
           className="mt-4"

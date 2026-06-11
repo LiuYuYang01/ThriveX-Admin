@@ -71,6 +71,9 @@ function getInsertIndex(from: number, overIndex: number, position: DropPosition)
 const sortBtnClass =
   'flex size-5 cursor-pointer items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-white/5';
 
+const inputBaseClass =
+  'rounded-xl! border-slate-200/80! bg-white! shadow-none! transition-colors! placeholder:text-slate-400! hover:border-slate-300! focus:border-primary! dark:border-strokedark! dark:bg-boxdark-2! dark:placeholder:text-slate-500! dark:hover:border-slate-600!';
+
 export default function SwiperPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -96,7 +99,20 @@ export default function SwiperPage() {
 
   const isEditing = Boolean(swiper.id);
   const imagePreview = Form.useWatch('image', form) as string | undefined;
+  const hasImagePreview = Boolean(imagePreview?.trim());
   const canDragSort = !search.trim();
+
+  const openMaterialPicker = useCallback(() => setIsMaterialModalOpen(true), []);
+
+  const handleImageSelect = useCallback(
+    (urls: string[]) => {
+      const url = urls[0];
+      if (!url) return;
+      form.setFieldValue('image', url);
+      void form.validateFields(['image']);
+    },
+    [form],
+  );
 
   const filteredList = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -754,45 +770,66 @@ export default function SwiperPage() {
                     />
                   </Form.Item>
 
-                  <Form.Item
-                    label="封面图"
-                    name="image"
-                    rules={[{ required: true, message: '轮播图地址不能为空' }]}
-                    className="mb-3!"
-                  >
-                    <Input
-                      placeholder="图片 URL 或从素材库选择"
-                      allowClear
-                      prefix={<FiImage className="text-slate-400" />}
-                      addonAfter={
-                        <button
-                          type="button"
-                          onClick={() => setIsMaterialModalOpen(true)}
-                          className="inline-flex cursor-pointer items-center justify-center px-3 py-2 text-slate-500 transition-colors hover:text-primary"
-                          aria-label="从素材库选择"
-                        >
-                          <FiUploadCloud size={18} />
-                        </button>
-                      }
-                      className="customizeAntdInputAddonAfter"
-                    />
-                  </Form.Item>
-
-                  {imagePreview?.trim() ? (
-                    <div className="mb-4 overflow-hidden rounded-xl border border-slate-200/80 dark:border-strokedark">
-                      <div className="border-b border-slate-100 px-3 py-1.5 text-xs text-slate-500 dark:border-strokedark dark:text-slate-400">
-                        封面预览 · 建议 21:9
-                      </div>
-                      <div className={`aspect-21/9 w-full bg-slate-50 dark:bg-boxdark-2 ${imageCellClass}`}>
-                        <Image
-                          src={imagePreview}
-                          alt="封面预览"
-                          className="object-cover"
-                          fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='171' viewBox='0 0 400 171'%3E%3Crect fill='%23f1f5f9' width='400' height='171'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-size='14' font-family='system-ui'%3E加载失败%3C/text%3E%3C/svg%3E"
+                  <Form.Item label="封面图" required className="mb-4!">
+                    <div className="flex flex-col gap-3">
+                      <Form.Item
+                        name="image"
+                        noStyle
+                        rules={[{ required: true, message: '轮播图地址不能为空' }]}
+                      >
+                        <Input
+                          placeholder="输入图片 URL"
+                          allowClear
+                          prefix={<FiImage className="text-slate-400" />}
+                          className={`${inputBaseClass} h-10! text-sm!`}
                         />
-                      </div>
+                      </Form.Item>
+
+                      <Button
+                        type="default"
+                        onClick={openMaterialPicker}
+                        className="inline-flex! h-10! w-full! items-center! justify-center! gap-2! rounded-xl! border-slate-200/80! bg-white! text-sm! font-medium! text-slate-600! shadow-none! hover:border-primary/40! hover:text-primary! dark:border-strokedark! dark:bg-boxdark-2! dark:text-slate-300! dark:hover:text-primary-400!"
+                        icon={<FiUploadCloud size={16} />}
+                      >
+                        从素材库选择
+                      </Button>
+
+                      <button
+                        type="button"
+                        onClick={openMaterialPicker}
+                        className={`group relative flex w-full shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-200 bg-slate-50 transition-colors hover:border-primary/50 dark:border-strokedark dark:bg-boxdark-2/60 dark:hover:border-primary/40 ${
+                          hasImagePreview ? 'aspect-21/9' : 'h-28'
+                        }`}
+                        aria-label={hasImagePreview ? '更换封面图' : '选择封面图'}
+                      >
+                        {hasImagePreview ? (
+                          <>
+                            <img
+                              src={imagePreview}
+                              alt="封面预览"
+                              className="size-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                            <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/35 opacity-0 transition-opacity group-hover:opacity-100">
+                              <FiUploadCloud size={20} className="text-white" />
+                              <span className="text-xs text-white/90">点击更换 · 建议 21:9</span>
+                            </span>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 px-3 text-slate-400">
+                            <FiImage size={22} />
+                            <span className="text-center text-xs leading-snug">
+                              点击选择或上传封面
+                              <br />
+                              <span className="text-slate-400/80">建议比例 21:9</span>
+                            </span>
+                          </div>
+                        )}
+                      </button>
                     </div>
-                  ) : null}
+                  </Form.Item>
 
                   <Form.Item className="mb-0!">
                     <Button
@@ -816,10 +853,7 @@ export default function SwiperPage() {
       <Material
         open={isMaterialModalOpen}
         onClose={() => setIsMaterialModalOpen(false)}
-        onSelect={(url) => {
-          form.setFieldValue('image', url.join('\n'));
-          void form.validateFields(['image']);
-        }}
+        onSelect={handleImageSelect}
       />
     </div>
   );

@@ -1,12 +1,37 @@
 import { useEffect, useState } from 'react';
 
-import { Alert, Button, Checkbox, Divider, Form, Input, notification } from 'antd';
+import { Alert, Button, Checkbox, Divider, Form, Input, notification, Space } from 'antd';
 import { CloudUploadOutlined, PictureOutlined } from '@ant-design/icons';
 
 import { Theme } from '@/types/app/config';
 import { editWebConfigDataAPI, getWebConfigDataAPI } from '@/api/config';
 import Material from '@/components/Material';
 import { ThemeFormValues } from './type';
+
+interface ImageUrlInputProps {
+  type: string;
+  placeholder: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onPick: (type: string) => void;
+}
+
+function ImageUrlInput({ type, placeholder, value, onChange, onPick }: ImageUrlInputProps) {
+  return (
+    <Space.Compact block className="image-url-compact">
+      <Input
+        value={value}
+        onChange={onChange}
+        prefix={<PictureOutlined className="text-slate-400" />}
+        allowClear
+        placeholder={placeholder}
+      />
+      <Button type="default" icon={<CloudUploadOutlined />} onClick={() => onPick(type)}>
+        选择
+      </Button>
+    </Space.Compact>
+  );
+}
 
 export default () => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -78,15 +103,14 @@ export default () => {
     return new URL(`../../image/${name}.png`, import.meta.url).href;
   };
 
-  const UploadBtn = ({ type }: { type: string }) => (
-    <CloudUploadOutlined
-      className="text-xl cursor-pointer"
-      onClick={() => {
-        setCurrentUploadType(type);
-        setIsMaterialModalOpen(true);
-      }}
-    />
-  );
+  const openMaterialPicker = (type: string) => {
+    setCurrentUploadType(type);
+    setIsMaterialModalOpen(true);
+  };
+
+  const lightLogo = Form.useWatch('light_logo', form);
+  const darkLogo = Form.useWatch('dark_logo', form);
+  const swiperImage = Form.useWatch('swiper_image', form);
 
   return (
     <div>
@@ -96,21 +120,21 @@ export default () => {
         <Form form={form} onFinish={editThemeData} layout="vertical">
           <Divider>亮色主题 Logo</Divider>
           <Form.Item name="light_logo" label="亮色主题 Logo">
-            <Input prefix={<PictureOutlined />} addonAfter={<UploadBtn type="light_logo" />} size="large" placeholder="请输入亮色Logo地址" />
+            <ImageUrlInput type="light_logo" placeholder="请输入亮色Logo地址" onPick={openMaterialPicker} />
           </Form.Item>
-          <img src={form.getFieldValue('light_logo')} alt="" className="w-1/3 mt-4 rounded-sm" />
+          {lightLogo && <img src={lightLogo} alt="" className="mt-4 w-1/3 rounded-sm" />}
 
           <Divider>暗色主题 Logo</Divider>
           <Form.Item name="dark_logo" label="暗色主题 Logo">
-            <Input prefix={<PictureOutlined />} addonAfter={<UploadBtn type="dark_logo" />} size="large" placeholder="请输入暗色Logo地址" />
+            <ImageUrlInput type="dark_logo" placeholder="请输入暗色Logo地址" onPick={openMaterialPicker} />
           </Form.Item>
-          <img src={form.getFieldValue('dark_logo')} alt="" className="w-1/3 mt-4 rounded-sm" />
+          {darkLogo && <img src={darkLogo} alt="" className="mt-4 w-1/3 rounded-sm" />}
 
           <Divider>首页背景图</Divider>
           <Form.Item name="swiper_image" label="首页背景图">
-            <Input prefix={<PictureOutlined />} addonAfter={<UploadBtn type="swiper_image" />} size="large" placeholder="请输入背景图地址" />
+            <ImageUrlInput type="swiper_image" placeholder="请输入背景图地址" onPick={openMaterialPicker} />
           </Form.Item>
-          <img src={form.getFieldValue('swiper_image')} alt="" className="w-1/3 mt-4 rounded-sm" />
+          {swiperImage && <img src={swiperImage} alt="" className="mt-4 w-1/3 rounded-sm" />}
 
           <Divider>打字机文本</Divider>
           <Form.Item name="swiper_text" label="打字机文本">

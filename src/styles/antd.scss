@@ -56,6 +56,43 @@ a {
     }
 }
 
+// 图片 URL 输入 + 选择按钮组合
+.image-url-compact {
+    display: flex !important;
+    width: 100%;
+
+    > .ant-input-affix-wrapper,
+    > .ant-input {
+        flex: 1;
+        min-width: 0;
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+
+    > .ant-btn {
+        flex-shrink: 0;
+        height: var(--antd-control-height) !important;
+        padding-inline: 14px !important;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+        border-color: var(--antd-control-border) !important;
+        background-color: var(--antd-control-bg) !important;
+        color: var(--antd-control-text);
+        font-size: 13px;
+        box-shadow: none !important;
+
+        &:hover {
+            border-color: var(--antd-control-border-hover) !important;
+            color: var(--color-primary, #3b82f6) !important;
+            z-index: 1;
+        }
+    }
+
+    &:focus-within > .ant-input-affix-wrapper {
+        z-index: 2;
+    }
+}
+
 .ant-form-inline {
     margin-inline-end: 10px;
 }
@@ -105,6 +142,7 @@ a {
 }
 
 .ant-input-affix-wrapper {
+    width: 101%;
     height: var(--antd-control-height);
     padding-inline: 10px 12px;
 
