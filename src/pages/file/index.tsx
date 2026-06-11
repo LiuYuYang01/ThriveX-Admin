@@ -173,30 +173,43 @@ function TableIconButton({
   disabled,
   danger,
   children,
+  confirm,
 }: {
   label: string;
   onClick?: () => void;
   disabled?: boolean;
   danger?: boolean;
   children: ReactNode;
+  confirm?: {
+    title: string;
+    onConfirm: () => void;
+  };
 }) {
-  return (
-    <Tooltip title={label}>
-      <button
-        type="button"
-        aria-label={label}
-        disabled={disabled}
-        onClick={onClick}
-        className={
-          danger
-            ? `${iconBtnBase} text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10`
-            : `${iconBtnBase} text-slate-400 hover:bg-slate-100 hover:text-primary dark:hover:bg-white/5 dark:hover:text-primary`
-        }
-      >
-        {children}
-      </button>
-    </Tooltip>
+  const button = (
+    <button
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={confirm ? undefined : onClick}
+      className={
+        danger
+          ? `${iconBtnBase} text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10`
+          : `${iconBtnBase} text-slate-400 hover:bg-slate-100 hover:text-primary dark:hover:bg-white/5 dark:hover:text-primary`
+      }
+    >
+      {children}
+    </button>
   );
+
+  const trigger = confirm ? (
+    <Popconfirm title={confirm.title} okText="确定" cancelText="取消" onConfirm={confirm.onConfirm}>
+      {button}
+    </Popconfirm>
+  ) : (
+    button
+  );
+
+  return <Tooltip title={label}>{trigger}</Tooltip>;
 }
 
 function ViewModeToggle({
@@ -306,6 +319,7 @@ export default () => {
   const navigateTo = (path: string) => {
     if (!treeData) return;
     const targetPath = normalizePath(path);
+    setKeyword('');
     if (!rootPath) {
       const exists = targetPath === '' || !!findNode(treeData.result, targetPath);
       setCurrentPath(exists ? targetPath : '');
@@ -375,6 +389,13 @@ export default () => {
     if (!keyword.trim()) return list;
     return list.filter((item) => item.name.toLowerCase().includes(keyword.toLowerCase()));
   }, [currentNode, keyword]);
+
+  const rawDirList = currentNode?.children ?? [];
+  const rawFileList = currentNode?.files ?? [];
+  const hasFilteredEntries = dirList.length > 0 || fileList.length > 0;
+  const hasRawEntries = rawDirList.length > 0 || rawFileList.length > 0;
+  const isSearchActive = !!keyword.trim();
+  const isSearchEmpty = isSearchActive && !hasFilteredEntries && hasRawEntries;
 
   const sortedDirList = useMemo(() => sortDirNodes(dirList, dirSortField, dirSortOrder), [dirList, dirSortField, dirSortOrder]);
 
@@ -611,105 +632,113 @@ export default () => {
             spinning={loading}
             className="flex min-h-0 flex-1 flex-col [&_.ant-spin-container]:flex [&_.ant-spin-container]:min-h-0 [&_.ant-spin-container]:flex-1 [&_.ant-spin-container]:flex-col"
           >
-            {dirList.length === 0 && fileList.length === 0 ? (
-              <div className="flex min-h-[320px] flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 dark:border-strokedark dark:bg-boxdark-2/30">
-                <Empty description="当前目录暂无内容" />
-              </div>
-            ) : (
-              <div className="flex min-h-0 flex-1 flex-col">
-                <div className="mb-4 flex shrink-0 flex-col gap-2 rounded-xl border border-slate-200/70 bg-slate-50/50 px-3 py-2.5 dark:border-strokedark dark:bg-boxdark-2/40 sm:px-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {fileList.length > 0 && viewMode === 'grid' && (
-                      <Checkbox
-                        className="shrink-0"
-                        checked={allFileSelected}
-                        indeterminate={someFileSelected && !allFileSelected}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedFilePaths(fileList.map((f) => f.path));
-                          } else {
-                            setSelectedFilePaths([]);
-                          }
-                        }}
-                      >
-                        全选文件
-                      </Checkbox>
-                    )}
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="mb-4 flex shrink-0 flex-col gap-2 rounded-xl border border-slate-200/70 bg-slate-50/50 px-3 py-2.5 dark:border-strokedark dark:bg-boxdark-2/40 sm:px-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  {fileList.length > 0 && viewMode === 'grid' && (
+                    <Checkbox
+                      className="shrink-0"
+                      checked={allFileSelected}
+                      indeterminate={someFileSelected && !allFileSelected}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedFilePaths(fileList.map((f) => f.path));
+                        } else {
+                          setSelectedFilePaths([]);
+                        }
+                      }}
+                    >
+                      全选文件
+                    </Checkbox>
+                  )}
 
-                    {selectedFilePaths.length > 0 && (
-                      <Popconfirm
-                        title={`确定删除选中的 ${selectedFilePaths.length} 个文件吗？`}
-                        okText="确定"
-                        cancelText="取消"
-                        onConfirm={onBatchDeleteFiles}
-                      >
-                        <Button type="primary" danger icon={<FiTrash2 />}>
-                          批量删除 ({selectedFilePaths.length})
-                        </Button>
-                      </Popconfirm>
-                    )}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-                    <ViewModeToggle value={viewMode} onChange={setViewMode} />
-
-                    {dirList.length > 0 && (
-                      <>
-                        <span className="hidden h-4 w-px shrink-0 bg-slate-200 sm:block dark:bg-strokedark" aria-hidden />
-                        <div className="flex items-center gap-2">
-                          <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">目录</span>
-                          <Select<DirSortField>
-                            className="min-w-22"
-                            value={dirSortField}
-                            options={DIR_SORT_FIELD_OPTIONS}
-                            onChange={setDirSortField}
-                          />
-                          <Segmented<'ascend' | 'descend'>
-                            value={dirSortOrder}
-                            onChange={setDirSortOrder}
-                            options={[
-                              { label: '升序', value: 'ascend' },
-                              { label: '降序', value: 'descend' },
-                            ]}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {fileList.length > 0 && (
-                      <>
-                        <span className="hidden h-4 w-px shrink-0 bg-slate-200 sm:block dark:bg-strokedark" aria-hidden />
-                        <div className="flex items-center gap-2">
-                          <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">文件</span>
-                          <Select<FileSortField>
-                            className="min-w-22"
-                            value={fileSortField}
-                            options={FILE_SORT_FIELD_OPTIONS}
-                            onChange={setFileSortField}
-                          />
-                          <Segmented<'ascend' | 'descend'>
-                            value={fileSortOrder}
-                            onChange={setFileSortOrder}
-                            options={[
-                              { label: '升序', value: 'ascend' },
-                              { label: '降序', value: 'descend' },
-                            ]}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    <Input
-                      allowClear
-                      prefix={<FiSearch className="text-slate-400" size={15} />}
-                      placeholder="搜索当前目录"
-                      className="w-full sm:w-52!"
-                      value={keyword}
-                      onChange={(e) => setKeyword(e.target.value)}
-                    />
-                  </div>
+                  {selectedFilePaths.length > 0 && (
+                    <Popconfirm
+                      title={`确定删除选中的 ${selectedFilePaths.length} 个文件吗？`}
+                      okText="确定"
+                      cancelText="取消"
+                      onConfirm={onBatchDeleteFiles}
+                    >
+                      <Button type="primary" danger icon={<FiTrash2 />}>
+                        批量删除 ({selectedFilePaths.length})
+                      </Button>
+                    </Popconfirm>
+                  )}
                 </div>
 
+                <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                  <ViewModeToggle value={viewMode} onChange={setViewMode} />
+
+                  {rawDirList.length > 0 && (
+                    <>
+                      <span className="hidden h-4 w-px shrink-0 bg-slate-200 sm:block dark:bg-strokedark" aria-hidden />
+                      <div className="flex items-center gap-2">
+                        <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">目录</span>
+                        <Select<DirSortField>
+                          className="min-w-22"
+                          value={dirSortField}
+                          options={DIR_SORT_FIELD_OPTIONS}
+                          onChange={setDirSortField}
+                        />
+                        <Segmented<'ascend' | 'descend'>
+                          value={dirSortOrder}
+                          onChange={setDirSortOrder}
+                          options={[
+                            { label: '升序', value: 'ascend' },
+                            { label: '降序', value: 'descend' },
+                          ]}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {rawFileList.length > 0 && (
+                    <>
+                      <span className="hidden h-4 w-px shrink-0 bg-slate-200 sm:block dark:bg-strokedark" aria-hidden />
+                      <div className="flex items-center gap-2">
+                        <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">文件</span>
+                        <Select<FileSortField>
+                          className="min-w-22"
+                          value={fileSortField}
+                          options={FILE_SORT_FIELD_OPTIONS}
+                          onChange={setFileSortField}
+                        />
+                        <Segmented<'ascend' | 'descend'>
+                          value={fileSortOrder}
+                          onChange={setFileSortOrder}
+                          options={[
+                            { label: '升序', value: 'ascend' },
+                            { label: '降序', value: 'descend' },
+                          ]}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <Input
+                    allowClear
+                    prefix={<FiSearch className="text-slate-400" size={15} />}
+                    placeholder="搜索当前目录"
+                    className="w-full sm:w-52!"
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {!hasFilteredEntries ? (
+                <div className="flex min-h-[320px] flex-1 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 dark:border-strokedark dark:bg-boxdark-2/30">
+                  {isSearchEmpty ? (
+                    <Empty description={`未找到匹配「${keyword.trim()}」的内容`}>
+                      <Button type="primary" onClick={() => setKeyword('')}>
+                        清除搜索
+                      </Button>
+                    </Empty>
+                  ) : (
+                    <Empty description="当前目录暂无内容" />
+                  )}
+                </div>
+              ) : (
                 <div className="min-h-0 flex-1 overflow-y-auto">
 
                   {dirList.length > 0 && (
@@ -780,16 +809,16 @@ export default () => {
                                       >
                                         <FiEdit2 size={16} />
                                       </TableIconButton>
-                                      <Popconfirm
-                                        title="确定删除该目录吗？"
-                                        okText="确定"
-                                        cancelText="取消"
-                                        onConfirm={() => onDeleteDir(row.path)}
+                                      <TableIconButton
+                                        label="删除目录"
+                                        danger
+                                        confirm={{
+                                          title: '确定删除该目录吗？',
+                                          onConfirm: () => onDeleteDir(row.path),
+                                        }}
                                       >
-                                        <TableIconButton label="删除目录" danger>
-                                          <FiTrash2 size={16} />
-                                        </TableIconButton>
-                                      </Popconfirm>
+                                        <FiTrash2 size={16} />
+                                      </TableIconButton>
                                     </div>
                                   );
                                 },
@@ -823,16 +852,16 @@ export default () => {
                                 <TableIconButton label="重命名目录" onClick={() => openRenameDir(dir)}>
                                   <FiEdit2 size={14} />
                                 </TableIconButton>
-                                <Popconfirm
-                                  title="确定删除该目录吗？"
-                                  okText="确定"
-                                  cancelText="取消"
-                                  onConfirm={() => onDeleteDir(dir.path)}
+                                <TableIconButton
+                                  label="删除目录"
+                                  danger
+                                  confirm={{
+                                    title: '确定删除该目录吗？',
+                                    onConfirm: () => onDeleteDir(dir.path),
+                                  }}
                                 >
-                                  <TableIconButton label="删除目录" danger>
-                                    <FiTrash2 size={14} />
-                                  </TableIconButton>
-                                </Popconfirm>
+                                  <FiTrash2 size={14} />
+                                </TableIconButton>
                               </div>
                             </div>
                           ))}
@@ -917,16 +946,16 @@ export default () => {
                                       <TableIconButton label="查看详情" onClick={() => onOpenFileDetail(file.path)}>
                                         <FiEye size={16} />
                                       </TableIconButton>
-                                      <Popconfirm
-                                        title="确定删除该文件吗？"
-                                        okText="确定"
-                                        cancelText="取消"
-                                        onConfirm={() => onDeleteFile(file.path)}
+                                      <TableIconButton
+                                        label="删除文件"
+                                        danger
+                                        confirm={{
+                                          title: '确定删除该文件吗？',
+                                          onConfirm: () => onDeleteFile(file.path),
+                                        }}
                                       >
-                                        <TableIconButton label="删除文件" danger>
-                                          <FiTrash2 size={16} />
-                                        </TableIconButton>
-                                      </Popconfirm>
+                                        <FiTrash2 size={16} />
+                                      </TableIconButton>
                                     </div>
                                   ),
                                 },
@@ -989,16 +1018,16 @@ export default () => {
                                     <TableIconButton label="查看详情" onClick={() => onOpenFileDetail(file.path)}>
                                       <FiEye size={14} />
                                     </TableIconButton>
-                                    <Popconfirm
-                                      title="确定删除该文件吗？"
-                                      okText="确定"
-                                      cancelText="取消"
-                                      onConfirm={() => onDeleteFile(file.path)}
+                                    <TableIconButton
+                                      label="删除文件"
+                                      danger
+                                      confirm={{
+                                        title: '确定删除该文件吗？',
+                                        onConfirm: () => onDeleteFile(file.path),
+                                      }}
                                     >
-                                      <TableIconButton label="删除文件" danger>
-                                        <FiTrash2 size={14} />
-                                      </TableIconButton>
-                                    </Popconfirm>
+                                      <FiTrash2 size={14} />
+                                    </TableIconButton>
                                   </div>
                                 </article>
                               );
@@ -1009,8 +1038,8 @@ export default () => {
                     </section>
                   )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </Spin>
         </div>
       </section>

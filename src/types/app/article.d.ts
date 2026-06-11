@@ -29,7 +29,7 @@ export interface Article {
 
 export interface ArticleFilterDataForm {
   title?: string;
-  cateId?: number;
+  cateIds?: number[][];
   tagId?: number;
   createTime: Date[];
 }
