@@ -51,3 +51,22 @@ export interface FileTreeData {
   total: number;
   result: FileTreeNode[];
 }
+
+export interface FileCompressItem {
+  path: string;
+  name: string;
+  status: 'queued' | 'processing' | 'success' | 'skipped' | 'failed';
+  taskId?: string;
+  beforeSize?: number;
+  afterSize?: number;
+  savedPercent?: number;
+  message?: string;
+}
+
+export interface FileCompressResult {
+  items: FileCompressItem[];
+  successCount: number;
+  skippedCount: number;
+  failedCount: number;
+  totalSavedBytes: number;
+}

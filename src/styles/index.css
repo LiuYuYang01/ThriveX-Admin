@@ -80,3 +80,29 @@ body {
   width: 0;
   height: 0;
 }
+
+@keyframes compress-progress-shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes compress-progress-stripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 1rem 0;
+  }
+}
+
+.animate-compress-progress-shine {
+  animation: compress-progress-shine 1.4s ease-in-out infinite;
+}
+
+.animate-compress-progress-stripes {
+  animation: compress-progress-stripes 0.75s linear infinite;
+}

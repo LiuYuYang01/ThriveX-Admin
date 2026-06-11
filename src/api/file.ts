@@ -1,5 +1,5 @@
 import Request from '@/utils/request'
-import { File, FileInfo, FileTreeData } from '@/types/app/file'
+import { File, FileCompressItem, FileCompressResult, FileInfo, FileTreeData } from '@/types/app/file'
 
 export interface CreateDirBody {
   dir: string;
@@ -15,6 +15,20 @@ export const delFileDataAPI = (filePath: string) => Request<null>('DELETE', `/fi
 
 // 批量删除文件
 export const batchDelFileDataAPI = (filePaths: string[]) => Request<null>('DELETE', '/file/batch', { data: filePaths })
+
+// 图片瘦身（七牛 pfop 异步提交）
+export const compressFileDataAPI = (paths: string[], mode = 'auto') =>
+  Request<FileCompressResult>('POST', '/file/compress', {
+    data: { paths, mode },
+    timeout: 30000,
+  })
+
+// 批量查询瘦身任务状态
+export const queryCompressTasksAPI = (taskIds: string[]) =>
+  Request<FileCompressItem[]>('POST', '/file/compress/tasks', {
+    data: { taskIds },
+    timeout: 30000,
+  })
 
 // 获取文件
 export const getFileDataAPI = (filePath: string) => Request<FileInfo>('GET', `/file/info?filePath=${encodeURIComponent(filePath)}`)

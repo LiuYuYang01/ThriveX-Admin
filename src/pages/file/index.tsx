@@ -24,16 +24,19 @@ import {
   FiFolderPlus,
   FiGrid,
   FiList,
+  FiLoader,
+  FiMinimize2,
   FiRotateCcw,
   FiSearch,
   FiTrash2,
   FiUploadCloud,
+  FiX,
 } from 'react-icons/fi';
 import dayjs from 'dayjs';
-import { batchDelFileDataAPI, createDirAPI, deleteDirAPI, delFileDataAPI, getFileDataAPI, getFileTreeAPI, renameDirAPI } from '@/api/file';
+import { batchDelFileDataAPI, compressFileDataAPI, createDirAPI, deleteDirAPI, delFileDataAPI, getFileDataAPI, getFileTreeAPI, queryCompressTasksAPI, renameDirAPI } from '@/api/file';
 import FileUpload from '@/components/FileUpload';
 import Title from '@/components/Title';
-import { File as AppFile, FileInfo, FileTreeData, FileTreeNode } from '@/types/app/file';
+import { File as AppFile, FileCompressItem, FileCompressResult, FileInfo, FileTreeData, FileTreeNode } from '@/types/app/file';
 import Skeleton from './Skeleton';
 import errorImg from './image/error.png';
 import fileSvg from './image/file.svg';
@@ -258,6 +261,375 @@ function SectionHeading({ title, count }: { title: string; count: number }) {
   );
 }
 
+function summarizeCompressResult(items: FileCompressItem[]): FileCompressResult {
+  let successCount = 0;
+  let skippedCount = 0;
+  let failedCount = 0;
+  let totalSavedBytes = 0;
+  for (const item of items) {
+    if (item.status === 'success') {
+      successCount++;
+      if (item.beforeSize != null && item.afterSize != null) {
+        totalSavedBytes += Math.max(0, item.beforeSize - item.afterSize);
+      }
+    } else if (item.status === 'skipped') {
+      skippedCount++;
+    } else if (item.status === 'failed') {
+      failedCount++;
+    }
+  }
+  return { items, successCount, skippedCount, failedCount, totalSavedBytes };
+}
+
+function getCompressSummaryText(result: FileCompressResult, processing: boolean): string {
+  const processingCount = result.items.filter((item) => item.status === 'processing').length;
+  if (processing && processingCount > 0) {
+    const done = result.items.length - processingCount;
+    return `正在处理 ${done}/${result.items.length} 张，请稍候…`;
+  }
+  const parts = [`成功 ${result.successCount} 张`];
+  if (result.skippedCount > 0) parts.push(`跳过 ${result.skippedCount} 张`);
+  if (result.failedCount > 0) parts.push(`失败 ${result.failedCount} 张`);
+  let text = parts.join('，');
+  if (result.totalSavedBytes > 0) {
+    text += `，共节省 ${formatFileSize(result.totalSavedBytes)}`;
+  }
+  return text;
+}
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+type CompressItemStatus = FileCompressItem['status'];
+
+const COMPRESS_STATUS_META: Record<
+  CompressItemStatus,
+  { label: string; badge: string; dot: string }
+> = {
+  success: {
+    label: '成功',
+    badge: 'bg-emerald-500/10 text-emerald-700 ring-emerald-500/25 dark:text-emerald-400',
+    dot: 'bg-emerald-500',
+  },
+  processing: {
+    label: '处理中',
+    badge: 'bg-sky-500/10 text-sky-700 ring-sky-500/25 dark:text-sky-400',
+    dot: 'bg-sky-500 animate-pulse',
+  },
+  skipped: {
+    label: '跳过',
+    badge: 'bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-400',
+    dot: 'bg-amber-500',
+  },
+  failed: {
+    label: '失败',
+    badge: 'bg-red-500/10 text-red-700 ring-red-500/25 dark:text-red-400',
+    dot: 'bg-red-500',
+  },
+  queued: {
+    label: '排队中',
+    badge: 'bg-slate-500/10 text-slate-600 ring-slate-500/20 dark:text-slate-400',
+    dot: 'bg-slate-400',
+  },
+};
+
+function CompressStatusBadge({ status }: { status: CompressItemStatus }) {
+  const meta = COMPRESS_STATUS_META[status] ?? COMPRESS_STATUS_META.failed;
+  return (
+    <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${meta.badge}`}>
+      {meta.label}
+    </span>
+  );
+}
+
+function CompressProgressBar({ percent }: { percent: number }) {
+  const clamped = Math.min(100, Math.max(0, percent));
+  const fillWidth = clamped > 0 ? clamped : 15;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <span>处理进度</span>
+        <span className="tabular-nums font-medium text-slate-700 dark:text-slate-200">{clamped}%</span>
+      </div>
+      <div className="relative h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+        <div
+          className="relative h-full overflow-hidden rounded-full transition-[width] duration-500 ease-out"
+          style={{ width: `${fillWidth}%` }}
+        >
+          <div className="absolute inset-0 bg-linear-to-r from-primary via-sky-500 to-cyan-400" />
+          <div
+            className="animate-compress-progress-stripes absolute inset-0 opacity-30"
+            style={{
+              backgroundImage:
+                'linear-gradient(45deg, rgba(255,255,255,.35) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.35) 50%, rgba(255,255,255,.35) 75%, transparent 75%, transparent)',
+              backgroundSize: '1rem 1rem',
+            }}
+          />
+          <div className="animate-compress-progress-shine absolute inset-y-0 w-1/2 bg-linear-to-r from-transparent via-white/45 to-transparent" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompressResultItemRow({ item }: { item: FileCompressItem }) {
+  const meta = COMPRESS_STATUS_META[item.status] ?? COMPRESS_STATUS_META.failed;
+  const savedBytes =
+    item.status === 'success' && item.beforeSize != null && item.afterSize != null
+      ? Math.max(0, item.beforeSize - item.afterSize)
+      : 0;
+  const savedPercent =
+    item.status === 'success' && item.beforeSize != null && item.beforeSize > 0 && item.afterSize != null
+      ? Math.round((savedBytes / item.beforeSize) * 100)
+      : 0;
+
+  return (
+    <li className="rounded-xl border border-slate-200/80 bg-white p-3.5 dark:border-strokedark dark:bg-boxdark-2/60">
+      <div className="flex items-start gap-3">
+        <span className={`mt-1.5 size-2 shrink-0 rounded-full ${meta.dot}`} aria-hidden />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <p className="m-0 truncate text-sm font-medium text-slate-800 dark:text-slate-100" title={item.name}>
+              {item.name}
+            </p>
+            <CompressStatusBadge status={item.status} />
+          </div>
+
+          {item.status === 'success' && item.beforeSize != null && item.afterSize != null ? (
+            <div className="mt-3 space-y-2">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm tabular-nums">
+                <span className="text-slate-400 line-through">{formatFileSize(item.beforeSize)}</span>
+                <span className="text-slate-300">→</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatFileSize(item.afterSize)}</span>
+                {savedBytes > 0 && (
+                  <span className="text-xs font-medium text-emerald-600/80 dark:text-emerald-400/80">
+                    省 {formatFileSize(savedBytes)}
+                  </span>
+                )}
+              </div>
+              {savedPercent > 0 && (
+                <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-emerald-500/80 transition-all duration-700"
+                    style={{ width: `${savedPercent}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="mt-2 mb-0 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              {item.status === 'processing'
+                ? '七牛云端处理中，请稍候…'
+                : item.message || (item.status === 'skipped' ? '未执行压缩' : '处理未完成')}
+            </p>
+          )}
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function CompressConfirmOverlay({
+  count,
+  onCancel,
+  onConfirm,
+}: {
+  count: number;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-1000 flex items-center justify-center p-4">
+      <button type="button" aria-label="关闭" className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={onCancel} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="compress-confirm-title"
+        className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl dark:border-strokedark dark:bg-boxdark"
+      >
+        <div className="border-b border-slate-100 bg-linear-to-br from-primary/5 via-white to-sky-50/50 px-6 py-5 dark:border-strokedark dark:from-primary/10 dark:via-boxdark dark:to-boxdark-2/50">
+          <div className="flex items-start gap-4">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <FiMinimize2 size={20} />
+            </div>
+            <div>
+              <h2 id="compress-confirm-title" className="m-0 text-lg font-semibold text-slate-900 dark:text-white">
+                确认图片瘦身
+              </h2>
+              <p className="mt-1.5 mb-0 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                将对 <strong className="font-semibold text-slate-800 dark:text-slate-200">{count}</strong>{' '}
+                张图片自适应压缩，覆盖原文件且链接不变。
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="px-6 py-4">
+          <p className="m-0 rounded-xl bg-slate-50 px-3.5 py-3 text-xs leading-relaxed text-slate-500 dark:bg-boxdark-2/80 dark:text-slate-400">
+            由七牛云端持久化处理，通常数秒内完成。处理期间请勿关闭进度窗口。
+          </p>
+        </div>
+        <div className="flex gap-3 border-t border-slate-100 px-6 py-4 dark:border-strokedark">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 rounded-xl border border-slate-200/80 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-strokedark dark:bg-boxdark-2 dark:text-slate-300 dark:hover:bg-white/5 cursor-pointer"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-primary/20 transition-colors hover:bg-primary/90 cursor-pointer"
+          >
+            开始瘦身
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompressResultOverlay({
+  open,
+  processing,
+  result,
+  progress,
+  onClose,
+}: {
+  open: boolean;
+  processing: boolean;
+  result: FileCompressResult | null;
+  progress: number;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!open || processing) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, processing, onClose]);
+
+  if (!open || !result) return null;
+
+  const processingCount = result.items.filter((item) => item.status === 'processing').length;
+  const doneCount = result.items.length - processingCount;
+
+  return (
+    <div className="fixed inset-0 z-1000 flex items-center justify-center p-4">
+      {!processing && (
+        <button type="button" aria-label="关闭" className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={onClose} />
+      )}
+      {processing && <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" aria-hidden />}
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="compress-result-title"
+        className="relative flex max-h-[min(640px,90vh)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl dark:border-strokedark dark:bg-boxdark"
+      >
+        <div className="shrink-0 border-b border-slate-100 bg-linear-to-br from-primary/5 via-white to-emerald-50/30 px-6 py-5 dark:border-strokedark dark:from-primary/10 dark:via-boxdark dark:to-emerald-500/5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div
+                className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${
+                  processing ? 'bg-sky-500/10 text-sky-600' : 'bg-emerald-500/10 text-emerald-600'
+                }`}
+              >
+                {processing ? <FiLoader size={20} className="animate-spin" /> : <FiMinimize2 size={20} />}
+              </div>
+              <div>
+                <h2 id="compress-result-title" className="m-0 text-lg font-semibold text-slate-900 dark:text-white">
+                  {processing ? '正在瘦身' : '瘦身完成'}
+                </h2>
+                <p className="mt-1 mb-0 text-sm text-slate-500 dark:text-slate-400">
+                  {processing
+                    ? `已完成 ${doneCount}/${result.items.length} 张，七牛云端处理中…`
+                    : getCompressSummaryText(result, false)}
+                </p>
+              </div>
+            </div>
+            {!processing && (
+              <button
+                type="button"
+                aria-label="关闭"
+                onClick={onClose}
+                className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/5 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <FiX size={18} />
+              </button>
+            )}
+          </div>
+
+          {!processing && result.totalSavedBytes > 0 && (
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {[
+                { label: '成功', value: result.successCount, tone: 'text-emerald-600 dark:text-emerald-400' },
+                { label: '跳过', value: result.skippedCount, tone: 'text-amber-600 dark:text-amber-400' },
+                { label: '失败', value: result.failedCount, tone: 'text-red-600 dark:text-red-400' },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-xl border border-slate-200/60 bg-white/80 px-3 py-2 text-center dark:border-strokedark dark:bg-boxdark-2/50"
+                >
+                  <p className={`m-0 text-lg font-semibold tabular-nums ${stat.tone}`}>{stat.value}</p>
+                  <p className="m-0 text-[11px] text-slate-400">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!processing && result.totalSavedBytes > 0 && (
+            <div className="mt-3 rounded-xl bg-emerald-500/10 px-4 py-3 text-center">
+              <p className="m-0 text-xs text-emerald-700/80 dark:text-emerald-400/80">累计节省空间</p>
+              <p className="m-0 mt-0.5 text-2xl font-bold tabular-nums tracking-tight text-emerald-700 dark:text-emerald-400">
+                {formatFileSize(result.totalSavedBytes)}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+          {processing && (
+            <div className="mb-4">
+              <CompressProgressBar percent={progress} />
+            </div>
+          )}
+          <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
+            {result.items.map((item) => (
+              <CompressResultItemRow key={item.taskId ?? item.path} item={item} />
+            ))}
+          </ul>
+        </div>
+
+        <div className="shrink-0 border-t border-slate-100 px-6 py-4 dark:border-strokedark">
+          {processing ? (
+            <button
+              type="button"
+              disabled
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-400 dark:bg-boxdark-2"
+            >
+              <FiLoader size={16} className="animate-spin" />
+              处理中…
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-primary/20 transition-colors hover:bg-primary/90 cursor-pointer"
+            >
+              完成
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default () => {
   const [loading, setLoading] = useState(false);
   const [skeletonLoading, setSkeletonLoading] = useState(true);
@@ -285,6 +657,16 @@ export default () => {
   const [dirSortOrder, setDirSortOrder] = useState<'ascend' | 'descend'>('descend');
   const [fileSortField, setFileSortField] = useState<FileSortField>('time');
   const [fileSortOrder, setFileSortOrder] = useState<'ascend' | 'descend'>('descend');
+  const [compressProcessing, setCompressProcessing] = useState(false);
+  const [compressResultOpen, setCompressResultOpen] = useState(false);
+  const [compressResult, setCompressResult] = useState<FileCompressResult | null>(null);
+  const [compressConfirmPaths, setCompressConfirmPaths] = useState<string[] | null>(null);
+
+  const compressProgress = useMemo(() => {
+    if (!compressResult?.items.length) return 0;
+    const pending = compressResult.items.filter((item) => item.status === 'processing').length;
+    return Math.round(((compressResult.items.length - pending) / compressResult.items.length) * 100);
+  }, [compressResult]);
 
   const rootPath = useMemo(() => inferRootPathFromTree(treeData), [treeData]);
 
@@ -535,6 +917,53 @@ export default () => {
     }
   };
 
+  const onCompressFiles = async (paths: string[]) => {
+    if (paths.length === 0) return;
+    try {
+      setCompressProcessing(true);
+      setCompressResult(null);
+      setCompressResultOpen(true);
+      const { data } = await compressFileDataAPI(paths);
+      let items = [...data.items];
+      setCompressResult(summarizeCompressResult(items));
+
+      while (true) {
+        const pendingIds = items
+          .filter((item) => item.taskId && item.status === 'processing')
+          .map((item) => item.taskId as string);
+        if (pendingIds.length === 0) break;
+        await sleep(2000);
+        const { data: polled } = await queryCompressTasksAPI(pendingIds);
+        const polledMap = new Map(polled.map((item) => [item.taskId, item]));
+        items = items.map((item) => (item.taskId && polledMap.has(item.taskId) ? polledMap.get(item.taskId)! : item));
+        setCompressResult(summarizeCompressResult(items));
+      }
+
+      const finalResult = summarizeCompressResult(items);
+      setCompressResult(finalResult);
+
+      if (finalResult.successCount > 0) {
+        await fetchTree(currentPath);
+      }
+    } catch (error) {
+      console.error(error);
+      setCompressResultOpen(false);
+    } finally {
+      setCompressProcessing(false);
+    }
+  };
+
+  const confirmCompressFiles = (paths: string[]) => {
+    setCompressConfirmPaths(paths);
+  };
+
+  const handleConfirmCompress = () => {
+    if (!compressConfirmPaths?.length) return;
+    const paths = compressConfirmPaths;
+    setCompressConfirmPaths(null);
+    void onCompressFiles(paths);
+  };
+
   const onOpenFileDetail = async (filePath: string) => {
     try {
       setDetailLoading(true);
@@ -653,16 +1082,25 @@ export default () => {
                   )}
 
                   {selectedFilePaths.length > 0 && (
-                    <Popconfirm
-                      title={`确定删除选中的 ${selectedFilePaths.length} 个文件吗？`}
-                      okText="确定"
-                      cancelText="取消"
-                      onConfirm={onBatchDeleteFiles}
-                    >
-                      <Button type="primary" danger icon={<FiTrash2 />}>
-                        批量删除 ({selectedFilePaths.length})
+                    <>
+                      <Button
+                        icon={<FiMinimize2 />}
+                        disabled={compressProcessing}
+                        onClick={() => confirmCompressFiles(selectedFilePaths)}
+                      >
+                        批量瘦身 ({selectedFilePaths.length})
                       </Button>
-                    </Popconfirm>
+                      <Popconfirm
+                        title={`确定删除选中的 ${selectedFilePaths.length} 个文件吗？`}
+                        okText="确定"
+                        cancelText="取消"
+                        onConfirm={onBatchDeleteFiles}
+                      >
+                        <Button type="primary" danger icon={<FiTrash2 />}>
+                          批量删除 ({selectedFilePaths.length})
+                        </Button>
+                      </Popconfirm>
+                    </>
                   )}
                 </div>
 
@@ -939,12 +1377,19 @@ export default () => {
                                 {
                                   title: '操作',
                                   key: 'actions',
-                                  width: 96,
+                                  width: 128,
                                   align: 'center',
                                   render: (_, file) => (
                                     <div className="flex items-center justify-center gap-0.5">
                                       <TableIconButton label="查看详情" onClick={() => onOpenFileDetail(file.path)}>
                                         <FiEye size={16} />
+                                      </TableIconButton>
+                                      <TableIconButton
+                                        label="图片瘦身"
+                                        disabled={compressProcessing}
+                                        onClick={() => confirmCompressFiles([file.path])}
+                                      >
+                                        <FiMinimize2 size={16} />
                                       </TableIconButton>
                                       <TableIconButton
                                         label="删除文件"
@@ -1017,6 +1462,13 @@ export default () => {
                                   <div className="flex justify-end gap-0.5 border-t border-slate-100 px-2 py-1.5 dark:border-strokedark">
                                     <TableIconButton label="查看详情" onClick={() => onOpenFileDetail(file.path)}>
                                       <FiEye size={14} />
+                                    </TableIconButton>
+                                    <TableIconButton
+                                      label="图片瘦身"
+                                      disabled={compressProcessing}
+                                      onClick={() => confirmCompressFiles([file.path])}
+                                    >
+                                      <FiMinimize2 size={14} />
                                     </TableIconButton>
                                     <TableIconButton
                                       label="删除文件"
@@ -1128,6 +1580,22 @@ export default () => {
           )}
         </Spin>
       </Modal>
+
+      {compressConfirmPaths && (
+        <CompressConfirmOverlay
+          count={compressConfirmPaths.length}
+          onCancel={() => setCompressConfirmPaths(null)}
+          onConfirm={handleConfirmCompress}
+        />
+      )}
+
+      <CompressResultOverlay
+        open={compressResultOpen}
+        processing={compressProcessing}
+        result={compressResult}
+        progress={compressProgress}
+        onClose={() => setCompressResultOpen(false)}
+      />
     </div>
   );
 };
