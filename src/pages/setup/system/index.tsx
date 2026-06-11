@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { BiGlobe, BiLayout, BiShieldQuarter, BiUser } from 'react-icons/bi';
+import { BiGlobe, BiImage, BiLayout, BiShieldQuarter, BiUser } from 'react-icons/bi';
 
 import Title from '@/components/Title';
 import My from './components/My';
@@ -9,6 +9,7 @@ import System from './components/System';
 import Theme from './components/Theme';
 import Web from './components/Web';
 import Other from './components/Other';
+import File from './components/File';
 import Skeleton from './Skeleton';
 
 interface Setup {
@@ -24,7 +25,7 @@ export default () => {
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const isFirstLoadRef = useRef<boolean>(true);
 
-  const validKeys = ['system', 'web', 'theme', 'my', 'other'];
+  const validKeys = ['system', 'web', 'theme', 'my', 'file', 'other'];
   const initialActive = tabFromUrl && validKeys.includes(tabFromUrl) ? tabFromUrl : 'system';
 
   const [active, setActive] = useState(initialActive);
@@ -74,6 +75,12 @@ export default () => {
       description: '头像、昵称、邮箱与社交信息',
       icon: <BiUser />,
       key: 'my',
+    },
+    {
+      title: '文件配置',
+      description: '上传图片压缩策略与存储相关设置',
+      icon: <BiImage />,
+      key: 'file',
     },
   ];
 
@@ -153,6 +160,7 @@ export default () => {
             {active === 'web' && <Web />}
             {active === 'theme' && <Theme />}
             {active === 'my' && <My />}
+            {active === 'file' && <File />}
             {active === 'other' && <Other />}
           </div>
         </div>

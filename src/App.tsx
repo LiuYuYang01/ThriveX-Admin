@@ -6,7 +6,8 @@ import RouteList from './components/RouteList';
 import '@/styles/antd.scss';
 
 import { getWebConfigDataAPI } from '@/api/config';
-import { useWebStore, useUserStore, useConfigStore } from './stores';
+import { useWebStore, useUserStore, useConfigStore, useFileStore } from './stores';
+import { fetchFileConfig } from '@/utils/fileConfig';
 
 import zhCN from 'antd/locale/zh_CN';
 import 'dayjs/locale/zh-cn';
@@ -23,14 +24,17 @@ function App() {
   }, [pathname]);
 
   const setWeb = useWebStore((state) => state.setWeb);
-  const getWebData = async () => {
+  const setFile = useFileStore((state) => state.setFile);
+
+  const loadAppConfig = async () => {
     if (!token) return;
-    const { data } = await getWebConfigDataAPI('web');
-    setWeb(data.value);
+    const [webRes, fileConfig] = await Promise.all([getWebConfigDataAPI('web'), fetchFileConfig()]);
+    setWeb(webRes.data.value);
+    setFile(fileConfig);
   };
 
   useEffect(() => {
-    getWebData();
+    loadAppConfig();
   }, [token]);
 
   return (

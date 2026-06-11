@@ -1,5 +1,25 @@
 // 网站配置类型
-export type WebConfigType = 'web' | 'theme' | 'other';
+export type WebConfigType = 'web' | 'theme' | 'other' | 'file';
+
+/** 上传图片压缩策略（与七牛 pfop mode 对齐） */
+export type UploadCompressMode = 'original' | 'auto' | 'light' | 'medium' | 'strong';
+
+export const UPLOAD_COMPRESS_MODE_OPTIONS: { value: UploadCompressMode; label: string; description: string }[] = [
+  { value: 'original', label: '原图', description: '不压缩，保留原始画质与元数据' },
+  { value: 'auto', label: '自适应', description: '按图片体积自动选择压缩强度（推荐）' },
+  { value: 'light', label: '高清', description: '轻量压缩，画质优先' },
+  { value: 'medium', label: '均衡', description: '体积与画质平衡' },
+  { value: 'strong', label: '强力', description: '优先减小体积' },
+];
+
+export const DEFAULT_FILE_CONFIG: FileConfig = {
+  upload_compress_mode: 'auto',
+};
+
+// 文件与存储配置
+export interface FileConfig {
+  upload_compress_mode: UploadCompressMode;
+}
 
 export interface Social {
   name: string;

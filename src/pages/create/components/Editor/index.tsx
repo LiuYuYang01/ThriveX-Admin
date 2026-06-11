@@ -9,7 +9,8 @@ import 'bytemd/dist/index.css';
 import zh from 'bytemd/lib/locales/zh_Hans.json';
 
 import { getApiUrl } from '@/utils/config';
-import { useUserStore } from '@/stores';
+import { useUserStore, useFileStore } from '@/stores';
+import { compressImageFiles } from '@/utils/imageCompress';
 import Material from '@/components/Material';
 
 import './index.scss';
@@ -21,6 +22,7 @@ interface Props {
 
 const EditorMD = ({ value, onChange }: Props) => {
   const store = useUserStore();
+  const uploadCompressMode = useFileStore((state) => state.file.upload_compress_mode);
   const [loading, setLoading] = useState(false);
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
   const [currentCtx, setCurrentCtx] = useState<{ appendBlock: (block: string) => void }>();
@@ -41,10 +43,11 @@ const EditorMD = ({ value, onChange }: Props) => {
   const uploadImages = async (files: File[]) => {
     try {
       setLoading(true);
-      // 处理成后端需要的格式
+      const compressedFiles = await compressImageFiles(files, uploadCompressMode);
+
       const formData = new FormData();
       formData.append('dir', 'article');
-      for (let i = 0; i < files.length; i++) formData.append('files', files[i]);
+      for (let i = 0; i < compressedFiles.length; i++) formData.append('files', compressedFiles[i]);
 
       const {
         data: { data },
@@ -57,8 +60,8 @@ const EditorMD = ({ value, onChange }: Props) => {
 
       setLoading(false);
 
-      // 返回图片信息数组
-      return data.map((url: string) => ({ url }));
+      const urls = Array.isArray(data) ? data : data?.urls ?? [];
+      return urls.map((url: string) => ({ url }));
     } catch (error) {
       console.error(error);
       setLoading(false);

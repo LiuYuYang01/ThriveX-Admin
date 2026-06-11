@@ -60,9 +60,9 @@ export default () => {
 
   return (
     <div>
-      <h2 className="text-xl py-4 pl-10">闪念配置</h2>
+      <h2 className="text-xl py-4">闪念配置</h2>
 
-      <div className="w-full lg:w-[500px] md:ml-10">
+      <div className="w-full lg:w-[500px]">
         <Form form={form} onFinish={editThemeData} layout="vertical">
           <Form.Item name="record_name" label="个人名称">
             <Input size="large" placeholder="请输入个人名称" />

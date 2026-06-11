@@ -1,10 +1,11 @@
 import Request from '@/utils/request';
-import { Config, EnvConfigName, Other, Theme, Web, WebConfigType } from '@/types/app/config';
+import { Config, EnvConfigName, FileConfig, Other, Theme, Web, WebConfigType } from '@/types/app/config';
 
 type WebConfigValueMap = {
   web: Web;
   theme: Theme;
   other: Other;
+  file: FileConfig;
 };
 
 // 获取网站配置
