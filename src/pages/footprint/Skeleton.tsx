@@ -16,7 +16,7 @@ export default function FootprintSkeleton() {
           </div>
         </header>
 
-        <div className="min-h-0 flex-1">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="flex gap-4 border-b border-slate-100 bg-slate-50/80 px-5 py-3 dark:border-strokedark dark:bg-boxdark-2/50">
             {[72, 'flex-1', 120, 140, 100].map((w, i) => (
               <div

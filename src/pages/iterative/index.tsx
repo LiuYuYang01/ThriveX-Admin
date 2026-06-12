@@ -291,7 +291,7 @@ const IterativePage = () => {
         </div>
       </section>
 
-      <section className="min-h-0 flex-1 pb-3">
+      <section className="min-h-0 flex-1 overflow-y-auto pb-3">
         <div className="mb-3 flex justify-center items-center gap-2">
           <FiGitCommit size={16} className="text-slate-400" />
           <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">

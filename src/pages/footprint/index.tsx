@@ -492,7 +492,7 @@ export default function FootprintPage() {
           </Form>
         </header>
 
-        <div className="min-h-0 flex-1">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <Table
             rowKey="id"
             dataSource={footprintList}

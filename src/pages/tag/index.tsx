@@ -222,7 +222,7 @@ export default function TagPage() {
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
         {/* 列表区 */}
-        <section className="flex min-w-0 flex-1 flex-col rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
           <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">全部标签</h3>
@@ -240,6 +240,7 @@ export default function TagPage() {
             />
           </header>
 
+          <div className="min-h-0 flex-1 overflow-y-auto">
           <Table
             rowKey="id"
             dataSource={filteredList}
@@ -269,6 +270,7 @@ export default function TagPage() {
               ),
             }}
           />
+          </div>
         </section>
 
         {/* 表单区 */}

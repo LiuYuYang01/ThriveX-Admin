@@ -580,6 +580,7 @@ export default function WallPage() {
             </Form>
           </header>
 
+          <div className="min-h-0 flex-1 overflow-y-auto">
           <Table
             rowKey="id"
             dataSource={list}
@@ -625,6 +626,7 @@ export default function WallPage() {
               ),
             }}
           />
+          </div>
         </section>
 
         <aside

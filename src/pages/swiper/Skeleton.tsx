@@ -7,7 +7,7 @@ export default function Skeleton() {
       <TitleSkeleton titleWidth={112} />
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
-        <section className="flex min-w-0 flex-1 flex-col rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
           <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
             <div className="flex flex-wrap items-center gap-2">
               <div className="skeleton h-4 rounded-md" style={{ width: 88 }} />
@@ -16,7 +16,7 @@ export default function Skeleton() {
             <div className="skeleton h-9 w-full max-w-[220px] rounded-lg" />
           </header>
 
-          <div className="min-h-0 flex-1 px-5 py-2">
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-2">
             <div className="flex gap-4 border-b border-slate-100 pb-3 dark:border-strokedark">
               {[32, 132, 'flex-1', 120, 72].map((w, i) => (
                 <div

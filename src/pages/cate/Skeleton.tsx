@@ -20,7 +20,7 @@ export default function Skeleton() {
             </div>
           </header>
 
-          <div className="flex-1 space-y-3 p-5">
+          <div className="min-h-0 flex-1 overflow-y-auto space-y-3 p-5">
             {[1, 2, 3, 4, 5].map((item) => (
               <div key={item} className="space-y-2">
                 <div className="flex items-center justify-between gap-3">

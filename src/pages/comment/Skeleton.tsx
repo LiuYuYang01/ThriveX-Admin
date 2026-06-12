@@ -19,7 +19,7 @@ export default function Skeleton() {
             </div>
           </header>
 
-          <div className="min-h-0 flex-1 px-4 py-2">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2">
             <div className="flex gap-3 border-b border-slate-100 bg-slate-50/80 px-1 py-3 dark:border-strokedark dark:bg-boxdark-2/50">
               {['flex-1', 120, 100, 72].map((w, i) => (
                 <div

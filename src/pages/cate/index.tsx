@@ -422,8 +422,11 @@ export default function CatePage() {
             </div>
           </header>
 
-          <Spin spinning={loading} className="min-h-0 flex-1">
-            <div className="min-h-[320px] p-4 sm:p-5">
+          <Spin
+            spinning={loading}
+            className="flex min-h-0 flex-1 flex-col [&_.ant-spin-container]:flex [&_.ant-spin-container]:min-h-0 [&_.ant-spin-container]:flex-1 [&_.ant-spin-container]:flex-col"
+          >
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
               {hasSearch && list.length > 0 ? (
                 <p className="mb-3 rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300">
                   搜索模式下仅可浏览，清空搜索后可拖拽排序与移动层级

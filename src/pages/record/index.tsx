@@ -280,7 +280,7 @@ export default function RecordPage() {
           </Form>
         </header>
 
-        <div className="min-h-0 flex-1">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <Table
             rowKey="id"
             dataSource={recordList}

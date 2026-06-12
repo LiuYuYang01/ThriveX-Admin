@@ -141,8 +141,11 @@ export default () => {
       </div>
 
       <div className="mt-3 flex min-h-0 flex-1 flex-col">
-        <Spin spinning={loading}>
-          <div className="flex-1 overflow-y-auto">
+        <Spin
+          spinning={loading}
+          className="flex min-h-0 flex-1 flex-col [&_.ant-spin-container]:flex [&_.ant-spin-container]:min-h-0 [&_.ant-spin-container]:flex-1 [&_.ant-spin-container]:flex-col"
+        >
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {activeList.length === 0 ? (
               <div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white dark:border-strokedark dark:bg-boxdark">
                 <Empty />
