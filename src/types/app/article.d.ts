@@ -36,7 +36,7 @@ export interface ArticleFilterDataForm {
 
 export interface ArticleFilterQueryParams extends QueryParams {
   title?: string;
-  cateId?: number;
+  cateIds?: number[];
   tagId?: number;
   isDraft?: boolean;
   isDel?: boolean;

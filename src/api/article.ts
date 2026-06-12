@@ -24,7 +24,22 @@ export const editArticleDataAPI = (data: Article) =>
 export const getArticleDataAPI = (id?: number) => Request<Article>('GET', `/article/${id}`)
 
 // 获取文章列表
-export const getArticlePagingAPI = (params?: ArticleFilterQueryParams) => Request<Paginate<Article[]>>('GET', `/article`, { params })
+export const getArticlePagingAPI = (params?: ArticleFilterQueryParams) =>
+  Request<Paginate<Article[]>>('GET', `/article`, {
+    params,
+    paramsSerializer: (queryParams: ArticleFilterQueryParams) => {
+      const searchParams = new URLSearchParams();
+      Object.entries(queryParams ?? {}).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === '') return;
+        if (Array.isArray(value)) {
+          value.forEach((item) => searchParams.append(key, String(item)));
+          return;
+        }
+        searchParams.append(key, String(value));
+      });
+      return searchParams.toString();
+    },
+  });
 
 // 导入文章
 export const importArticleDataAPI = (list: File[]) => {

@@ -85,6 +85,17 @@ function findCategoryPathInTree(nodes: Cate[], targetId: number, prefix: number[
   return null;
 }
 
+function resolveArticleCateIds(data: Article): number[] {
+  const fromCateIds = data.cateIds?.filter((id): id is number => id != null);
+  if (fromCateIds?.length) return fromCateIds;
+  return (data.cateList ?? []).map((item) => item.id).filter((id): id is number => id !== undefined);
+}
+
+function toCascaderPaths(ids: number[], tree: Cate[]): number[][] {
+  if (!ids.length || !tree.length) return [];
+  return ids.map((id) => findCategoryPathInTree(tree, id)).filter((path): path is number[] => path != null);
+}
+
 type PanelProps = {
   title: string;
   description?: string;
@@ -165,9 +176,13 @@ const PublishForm = ({ data, closeModel }: Props) => {
     if (!id) return form.resetFields();
 
     const tagIds = (data?.tagList ?? []).map((item: Tag) => item.id);
+    const rawCateIds = resolveArticleCateIds(data);
+    const catePaths = toCascaderPaths(rawCateIds, cateList);
+
+    const { cateIds: _cateIds, cateList: _cateList, tagList: _tagList, ...articleFields } = data;
 
     const formValues = {
-      ...data,
+      ...articleFields,
       status: data.config.status,
       password: data.config.password,
       isEncrypt: data.config.isEncrypt,
@@ -175,20 +190,9 @@ const PublishForm = ({ data, closeModel }: Props) => {
       createTime: dayjs(data.createTime!),
     };
 
-    const fromCateIds = data?.cateIds?.filter((x): x is number => x != null);
-    const rawCateIds =
-      fromCateIds?.length ?? 0
-        ? fromCateIds!
-        : (data?.cateList?.map((item) => item.id).filter((cid): cid is number => cid !== undefined) ?? []);
-
-    const catePaths =
-      cateList.length > 0 && rawCateIds.length > 0
-        ? rawCateIds.map((cid) => findCategoryPathInTree(cateList, cid)).filter((p): p is number[] => p != null)
-        : undefined;
-
     form.setFieldsValue({
       ...formValues,
-      ...(catePaths?.length ? { cateIds: catePaths } : {}),
+      ...(cateList.length > 0 ? { cateIds: catePaths } : {}),
       tagIds: formValues.tagIds?.filter((id): id is number => id !== undefined),
     });
     setIsEncryptEnabled(formValues.isEncrypt);
