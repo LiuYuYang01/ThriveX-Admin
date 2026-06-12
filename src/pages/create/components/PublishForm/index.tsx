@@ -2,6 +2,8 @@ import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Form, Input, Button, Select, DatePicker, Cascader, message, Switch, Radio, Tooltip } from 'antd';
+
+const { SHOW_CHILD } = Cascader;
 import TextArea from 'antd/es/input/TextArea';
 import { RuleObject } from 'antd/es/form';
 import dayjs, { Dayjs } from 'dayjs';
@@ -130,7 +132,7 @@ function Panel({ title, description, icon, action, children, className = '' }: P
 }
 
 const formItemClass =
-  '[&_.ant-form-item-label>label]:text-slate-500! [&_.ant-form-item-label>label]:text-xs! [&_.ant-form-item-label>label]:font-medium! dark:[&_.ant-form-item-label>label]:text-slate-400! [&_.ant-form-item]:mb-4! [&_.ant-form-item-explain]:text-xs!';
+  '[&.ant-form-item]:mb-4! [&_.ant-form-item-label>label]:text-slate-500! [&_.ant-form-item-label>label]:text-xs! [&_.ant-form-item-label>label]:font-medium! dark:[&_.ant-form-item-label>label]:text-slate-400! [&_.ant-form-item-explain]:mt-1! [&_.ant-form-item-explain]:text-xs!';
 
 const inputBaseClass =
   'rounded-xl! border-slate-200/80! bg-white! shadow-none! transition-colors! placeholder:text-slate-400! hover:border-slate-300! focus:border-primary! dark:border-strokedark! dark:bg-boxdark-2! dark:placeholder:text-slate-500! dark:hover:border-slate-600!';
@@ -138,8 +140,12 @@ const inputBaseClass =
 const formControlClass =
   'w-full rounded-xl! border-slate-200/80! bg-white! shadow-none! hover:border-slate-300! dark:border-strokedark! dark:bg-boxdark-2! dark:hover:border-slate-600!';
 
-const selectControlClass =
-  `${formControlClass} [&_.ant-select-selection-placeholder]:text-slate-400! dark:[&_.ant-select-selection-placeholder]:text-slate-500! [&_.ant-select-selection-item]:m-0.5! [&_.ant-select-selection-item]:max-w-full! [&_.ant-select-selection-item]:truncate! [&_.ant-select-selection-item]:rounded-md! [&_.ant-select-selection-item]:border-0! [&_.ant-select-selection-item]:bg-primary/10! [&_.ant-select-selection-item]:px-2! [&_.ant-select-selection-item]:py-0! [&_.ant-select-selection-item]:text-xs! [&_.ant-select-selection-item]:font-medium! [&_.ant-select-selection-item]:text-primary! dark:[&_.ant-select-selection-item]:bg-primary/15! dark:[&_.ant-select-selection-item]:text-primary-400! [&_.ant-select-selection-item-remove]:text-primary/50! [&_.ant-select-selection-item-remove]:hover:text-primary! dark:[&_.ant-select-selection-item-remove]:text-primary-400/60! [&_.ant-select-selection-overflow-item]:rounded-md! [&_.ant-select-selection-overflow-item]:border-0! [&_.ant-select-selection-overflow-item]:bg-primary/10! [&_.ant-select-selection-overflow-item]:px-2! [&_.ant-select-selection-overflow-item]:py-0! [&_.ant-select-selection-overflow-item]:text-xs! [&_.ant-select-selection-overflow-item]:font-medium! [&_.ant-select-selection-overflow-item]:text-primary! dark:[&_.ant-select-selection-overflow-item]:bg-primary/15! dark:[&_.ant-select-selection-overflow-item]:text-primary-400!`;
+const tagChipClass =
+  '[&_.ant-select-selection-placeholder]:text-slate-400! dark:[&_.ant-select-selection-placeholder]:text-slate-500! [&_.ant-select-selection-item]:mx-0.5! [&_.ant-select-selection-item]:my-0! [&_.ant-select-selection-item]:max-w-full! [&_.ant-select-selection-item]:truncate! [&_.ant-select-selection-item]:rounded-md! [&_.ant-select-selection-item]:border-0! [&_.ant-select-selection-item]:bg-primary/10! [&_.ant-select-selection-item]:px-2! [&_.ant-select-selection-item]:py-0! [&_.ant-select-selection-item]:text-xs! [&_.ant-select-selection-item]:font-medium! [&_.ant-select-selection-item]:text-primary! dark:[&_.ant-select-selection-item]:bg-primary/15! dark:[&_.ant-select-selection-item]:text-primary-400! [&_.ant-select-selection-item-remove]:text-primary/50! [&_.ant-select-selection-item-remove]:hover:text-primary! dark:[&_.ant-select-selection-item-remove]:text-primary-400/60! [&_.ant-select-selection-overflow-item]:rounded-md! [&_.ant-select-selection-overflow-item]:border-0! [&_.ant-select-selection-overflow-item]:bg-primary/10! [&_.ant-select-selection-overflow-item]:px-2! [&_.ant-select-selection-overflow-item]:py-0! [&_.ant-select-selection-overflow-item]:text-xs! [&_.ant-select-selection-overflow-item]:font-medium! [&_.ant-select-selection-overflow-item]:text-primary! dark:[&_.ant-select-selection-overflow-item]:bg-primary/15! dark:[&_.ant-select-selection-overflow-item]:text-primary-400!';
+
+const multiSelectControlClass = `${formControlClass} ${tagChipClass}`;
+
+const selectControlClass = multiSelectControlClass;
 
 const STATUS_RADIO_GROUP_STYLE = {
   display: 'grid',
@@ -500,17 +506,19 @@ const PublishForm = ({ data, closeModel }: Props) => {
                     rules={[{ required: true, message: '请选择文章分类' }]}
                   >
                     <Cascader
+                      style={{ width: '100%' }}
                       options={cateList}
-                      maxTagCount="responsive"
                       multiple
-                      showCheckedStrategy={Cascader.SHOW_CHILD}
+                      maxTagCount="responsive"
+                      showCheckedStrategy={SHOW_CHILD}
                       fieldNames={{ label: 'name', value: 'id' }}
                       placeholder="选择分类（可多选）"
-                      className={selectControlClass}
+                      allowClear
+                      className={multiSelectControlClass}
                     />
                   </Form.Item>
 
-                  <Form.Item className={`${formItemClass} mb-0!`} label="关联标签" name="tagIds">
+                  <Form.Item className={`${formItemClass} [&.ant-form-item]:mb-0!`} label="关联标签" name="tagIds">
                     <Select
                       allowClear
                       mode="tags"

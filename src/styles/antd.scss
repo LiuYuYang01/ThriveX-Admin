@@ -184,8 +184,8 @@ a {
         align-items: center;
     }
 
-    .ant-select-selection-placeholder,
-    .ant-select-selection-item {
+    &:not(.ant-select-multiple) .ant-select-selection-placeholder,
+    &:not(.ant-select-multiple) .ant-select-selection-item {
         line-height: calc(var(--antd-control-height) - 2px) !important;
         font-size: 13px;
     }
@@ -196,6 +196,37 @@ a {
 
     .ant-select-arrow {
         color: var(--antd-control-icon);
+    }
+
+    /* Ant Design 6 多选使用 SelectInput，根节点默认 flex-start + 旧版 line-height 会导致标签贴顶 */
+    &.ant-select-multiple {
+        height: auto !important;
+        min-height: var(--antd-control-height);
+        align-items: center !important;
+
+        &.ant-select-lg {
+            min-height: 40px;
+        }
+
+        .ant-select-content {
+            align-items: center !important;
+        }
+
+        .ant-select-selection-item {
+            line-height: 20px !important;
+            height: auto !important;
+            font-size: 13px;
+        }
+
+        .ant-select-suffix {
+            align-self: center !important;
+        }
+
+        .ant-select-selector {
+            height: auto !important;
+            min-height: var(--antd-control-height) !important;
+            align-items: center !important;
+        }
     }
 }
 
