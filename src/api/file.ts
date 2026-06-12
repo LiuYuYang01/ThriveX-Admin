@@ -14,7 +14,7 @@ export interface RenameDirBody {
 export const delFileDataAPI = (filePath: string) => Request<null>('DELETE', `/file?filePath=${encodeURIComponent(filePath)}`)
 
 // 批量删除文件
-export const batchDelFileDataAPI = (filePaths: string[]) => Request<null>('DELETE', '/file/batch', { data: filePaths })
+export const batchDelFileDataAPI = (filePaths: string[]) => Request<null>('DELETE', '/file/batch', { data: { paths: filePaths } })
 
 // 图片瘦身（七牛 pfop 异步提交）
 export const compressFileDataAPI = (paths: string[], mode = 'auto') =>

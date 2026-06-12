@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { ColumnsType } from 'antd/es/table';
 import {
   Button,
@@ -11,6 +11,7 @@ import {
   Popconfirm,
   Segmented,
   Select,
+  Pagination,
   Spin,
   Table,
   Tooltip,
@@ -33,7 +34,7 @@ import {
   FiX,
 } from 'react-icons/fi';
 import dayjs from 'dayjs';
-import { batchDelFileDataAPI, compressFileDataAPI, createDirAPI, deleteDirAPI, delFileDataAPI, getFileDataAPI, getFileTreeAPI, queryCompressTasksAPI, renameDirAPI } from '@/api/file';
+import { batchDelFileDataAPI, compressFileDataAPI, createDirAPI, deleteDirAPI, delFileDataAPI, getFileDataAPI, getFileListAPI, getFileTreeAPI, queryCompressTasksAPI, renameDirAPI } from '@/api/file';
 import FileUpload from '@/components/FileUpload';
 import Title from '@/components/Title';
 import { File as AppFile, FileCompressItem, FileCompressResult, FileInfo, FileTreeData, FileTreeNode } from '@/types/app/file';
@@ -88,6 +89,16 @@ function formatFileSize(bytes: number): string {
 }
 
 const FILE_VIEW_STORAGE_KEY = 'thrivex-file-entry-view';
+const DEFAULT_FILE_PAGE_SIZE = 24;
+
+function mapListItemToFile(item: AppFile): AppFile {
+  const ext = item.ext ?? (typeof item.type === 'string' && item.type !== 'file' ? item.type : undefined);
+  return {
+    ...item,
+    ext,
+    createTime: item.createTime ?? item.date,
+  };
+}
 
 type EntryViewMode = 'grid' | 'list';
 
@@ -121,7 +132,8 @@ function sortDirNodes(list: FileTreeNode[], field: 'name' | 'fileCount' | 'total
 }
 
 function getFileTypeLabel(file: AppFile): string {
-  if (file.ext) return String(file.ext).replace(/^\./, '').toLowerCase();
+  const ext = file.ext ?? (typeof file.type === 'string' && file.type !== 'file' ? file.type : undefined);
+  if (ext) return String(ext).replace(/^\./, '').toLowerCase();
   const i = file.name.lastIndexOf('.');
   return i >= 0 ? file.name.slice(i + 1).toLowerCase() : '—';
 }
@@ -661,6 +673,12 @@ export default () => {
   const [compressResultOpen, setCompressResultOpen] = useState(false);
   const [compressResult, setCompressResult] = useState<FileCompressResult | null>(null);
   const [compressConfirmPaths, setCompressConfirmPaths] = useState<string[] | null>(null);
+  const [fileListData, setFileListData] = useState<AppFile[]>([]);
+  const [fileTotal, setFileTotal] = useState(0);
+  const [unfilteredFileCount, setUnfilteredFileCount] = useState(0);
+  const [filePageNum, setFilePageNum] = useState(1);
+  const [filePageSize, setFilePageSize] = useState(DEFAULT_FILE_PAGE_SIZE);
+  const [filesLoading, setFilesLoading] = useState(false);
 
   const compressProgress = useMemo(() => {
     if (!compressResult?.items.length) return 0;
@@ -675,6 +693,50 @@ export default () => {
 
   const findNode = (list: FileTreeNode[], targetPath: string): FileTreeNode | null =>
     findNodeInTree(list, targetPath, rootPath);
+
+  const fetchFiles = useCallback(
+    async (overridePath?: string) => {
+      const dir = trimSlash(overridePath ?? currentPath);
+      if (!dir) {
+        setFileListData([]);
+        setFileTotal(0);
+        setUnfilteredFileCount(0);
+        return;
+      }
+
+      const search = keyword.trim().toLowerCase();
+      const needsFullList = !!search || fileSortField !== 'time' || fileSortOrder !== 'descend';
+
+      setFilesLoading(true);
+      try {
+        if (needsFullList) {
+          const { data } = await getFileListAPI(dir);
+          const all = data.result.map(mapListItemToFile);
+          setUnfilteredFileCount(all.length);
+          let list = search ? all.filter((f) => f.name.toLowerCase().includes(search)) : all;
+          list = sortFiles(list, fileSortField, fileSortOrder);
+          setFileTotal(list.length);
+          const start = (filePageNum - 1) * filePageSize;
+          setFileListData(list.slice(start, start + filePageSize));
+        } else {
+          const { data } = await getFileListAPI(dir, { pageNum: filePageNum, pageSize: filePageSize });
+          const list = data.result.map(mapListItemToFile);
+          if (list.length === 0 && filePageNum > 1 && data.total > 0) {
+            setFilePageNum(Math.max(1, Math.ceil(data.total / filePageSize)));
+            return;
+          }
+          setFileListData(list);
+          setFileTotal(data.total);
+          setUnfilteredFileCount(data.total);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setFilesLoading(false);
+      }
+    },
+    [currentPath, filePageNum, filePageSize, keyword, fileSortField, fileSortOrder],
+  );
 
   /** 仅请求接口拉取整棵树；目录点击、面包屑、返回上一级不调用 */
   const fetchTree = async (keepPath?: string) => {
@@ -698,10 +760,15 @@ export default () => {
     }
   };
 
+  const refreshCurrentDir = async (keepPath?: string) => {
+    await fetchTree(keepPath);
+  };
+
   const navigateTo = (path: string) => {
     if (!treeData) return;
     const targetPath = normalizePath(path);
     setKeyword('');
+    setFilePageNum(1);
     if (!rootPath) {
       const exists = targetPath === '' || !!findNode(treeData.result, targetPath);
       setCurrentPath(exists ? targetPath : '');
@@ -714,6 +781,15 @@ export default () => {
   useEffect(() => {
     fetchTree();
   }, []);
+
+  useEffect(() => {
+    if (!treeData) return;
+    void fetchFiles();
+  }, [treeData, fetchFiles]);
+
+  useEffect(() => {
+    setFilePageNum(1);
+  }, [currentPath, keyword, fileSortField, fileSortOrder]);
 
   useEffect(() => {
     try {
@@ -766,18 +842,12 @@ export default () => {
     return list.filter((item) => item.name.toLowerCase().includes(keyword.toLowerCase()));
   }, [currentNode, keyword]);
 
-  const fileList = useMemo(() => {
-    const list = currentNode?.files || [];
-    if (!keyword.trim()) return list;
-    return list.filter((item) => item.name.toLowerCase().includes(keyword.toLowerCase()));
-  }, [currentNode, keyword]);
+  const fileList = fileListData;
 
   const rawDirList = currentNode?.children ?? [];
-  const rawFileList = currentNode?.files ?? [];
-  const hasFilteredEntries = dirList.length > 0 || fileList.length > 0;
-  const hasRawEntries = rawDirList.length > 0 || rawFileList.length > 0;
+  const hasFilteredEntries = dirList.length > 0 || fileTotal > 0;
   const isSearchActive = !!keyword.trim();
-  const isSearchEmpty = isSearchActive && !hasFilteredEntries && hasRawEntries;
+  const isSearchEmpty = isSearchActive && fileList.length === 0 && unfilteredFileCount > 0;
 
   const sortedDirList = useMemo(() => sortDirNodes(dirList, dirSortField, dirSortOrder), [dirList, dirSortField, dirSortOrder]);
 
@@ -789,8 +859,6 @@ export default () => {
       }),
     [sortedDirList],
   );
-
-  const sortedFileList = useMemo(() => sortFiles(fileList, fileSortField, fileSortOrder), [fileList, fileSortField, fileSortOrder]);
 
   const allFileSelected = useMemo(
     () => fileList.length > 0 && fileList.every((f) => selectedFilePaths.includes(f.path)),
@@ -852,7 +920,7 @@ export default () => {
       message.success('🎉 新建目录成功');
       setCreateOpen(false);
       createForm.resetFields();
-      fetchTree(currentPath);
+      await refreshCurrentDir(currentPath);
     } catch (error) {
       console.error(error);
     }
@@ -878,7 +946,7 @@ export default () => {
       setRenameOpen(false);
       setRenameTarget(null);
       renameForm.resetFields();
-      fetchTree(currentPath);
+      await refreshCurrentDir(currentPath);
     } catch (error) {
       console.error(error);
     }
@@ -888,7 +956,7 @@ export default () => {
     try {
       await deleteDirAPI(trimSlash(dirPath));
       message.success('🎉 删除目录成功');
-      fetchTree(currentPath);
+      await refreshCurrentDir(currentPath);
     } catch (error) {
       console.error(error);
     }
@@ -899,7 +967,7 @@ export default () => {
       await delFileDataAPI(filePath);
       message.success('🎉 删除文件成功');
       setSelectedFilePaths((prev) => prev.filter((p) => p !== filePath));
-      fetchTree(currentPath);
+      await refreshCurrentDir(currentPath);
     } catch (error) {
       console.error(error);
     }
@@ -911,7 +979,7 @@ export default () => {
       await batchDelFileDataAPI(selectedFilePaths);
       message.success('🎉 批量删除成功');
       setSelectedFilePaths([]);
-      fetchTree(currentPath);
+      await refreshCurrentDir(currentPath);
     } catch (error) {
       console.error(error);
     }
@@ -943,7 +1011,7 @@ export default () => {
       setCompressResult(finalResult);
 
       if (finalResult.successCount > 0) {
-        await fetchTree(currentPath);
+        await refreshCurrentDir(currentPath);
       }
     } catch (error) {
       console.error(error);
@@ -993,7 +1061,7 @@ export default () => {
     <div className="flex min-h-0 flex-1 flex-col text-slate-600 dark:text-slate-300">
       <Title value="文件管理">
         <div className="flex flex-wrap items-center gap-2">
-          <Button icon={<FiRotateCcw />} onClick={() => fetchTree(currentPath)}>
+          <Button icon={<FiRotateCcw />} onClick={() => void refreshCurrentDir(currentPath)}>
             刷新
           </Button>
           <Button icon={<FiFolderPlus />} disabled={atMultiRootHome} onClick={() => setCreateOpen(true)}>
@@ -1064,7 +1132,7 @@ export default () => {
             <div className="flex min-h-0 flex-1 flex-col">
               <div className="mb-4 flex shrink-0 flex-col gap-2 rounded-xl border border-slate-200/70 bg-slate-50/50 px-3 py-2.5 dark:border-strokedark dark:bg-boxdark-2/40 sm:px-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-wrap items-center gap-2">
-                  {fileList.length > 0 && viewMode === 'grid' && (
+                  {fileTotal > 0 && viewMode === 'grid' && (
                     <Checkbox
                       className="shrink-0"
                       checked={allFileSelected}
@@ -1130,7 +1198,7 @@ export default () => {
                     </>
                   )}
 
-                  {rawFileList.length > 0 && (
+                  {unfilteredFileCount > 0 && (
                     <>
                       <span className="hidden h-4 w-px shrink-0 bg-slate-200 sm:block dark:bg-strokedark" aria-hidden />
                       <div className="flex items-center gap-2">
@@ -1308,9 +1376,10 @@ export default () => {
                     </section>
                   )}
 
-                  {fileList.length > 0 && (
+                  {fileTotal > 0 && (
                     <section className={dirList.length > 0 ? 'mt-6 border-t border-slate-100 pt-5 dark:border-strokedark' : ''}>
-                      <SectionHeading title="文件" count={fileList.length} />
+                      <SectionHeading title="文件" count={fileTotal} />
+                      <Spin spinning={filesLoading}>
                       <Image.PreviewGroup>
                         {viewMode === 'list' ? (
                           <Table<AppFile>
@@ -1318,7 +1387,7 @@ export default () => {
                             pagination={false}
                             scroll={{ x: 'max-content' }}
                             className="[&_.ant-table-cell]:align-middle"
-                            dataSource={sortedFileList}
+                            dataSource={fileList}
                             rowSelection={{
                               selectedRowKeys: selectedFilePaths,
                               onChange: (keys) => setSelectedFilePaths(keys as string[]),
@@ -1409,7 +1478,7 @@ export default () => {
                           />
                         ) : (
                           <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-                            {sortedFileList.map((file) => {
+                            {fileList.map((file) => {
                               const selected = selectedFilePaths.includes(file.path);
                               return (
                                 <article
@@ -1487,6 +1556,30 @@ export default () => {
                           </div>
                         )}
                       </Image.PreviewGroup>
+                      {fileTotal > 0 && (
+                        <div className="mt-4 flex justify-end">
+                          <Pagination
+                            current={filePageNum}
+                            pageSize={filePageSize}
+                            total={fileTotal}
+                            showSizeChanger
+                            pageSizeOptions={[12, 24, 48, 96]}
+                            showTotal={(totalCount) => {
+                              const totalPages = Math.max(1, Math.ceil(totalCount / filePageSize));
+                              return (
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
+                                  第 {filePageNum} / {totalPages} 页 · 共 {totalCount} 个文件
+                                </span>
+                              );
+                            }}
+                            onChange={(page, size) => {
+                              setFilePageNum(size !== filePageSize ? 1 : page);
+                              setFilePageSize(size);
+                            }}
+                          />
+                        </div>
+                      )}
+                      </Spin>
                     </section>
                   )}
                 </div>
@@ -1503,7 +1596,7 @@ export default () => {
         onCancel={() => setUploadOpen(false)}
         onSuccess={() => {
           setUploadOpen(false);
-          fetchTree(currentPath);
+          void refreshCurrentDir(currentPath);
         }}
       />
 
