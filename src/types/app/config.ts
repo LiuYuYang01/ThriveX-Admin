@@ -126,7 +126,6 @@ export interface GaodeCoordinateEnvValue {
 
 export interface QiniuStorageEnvValue {
   domain: string;
-  zlevel: number;
   root_dir: string;
   end_point: string;
   access_key: string;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Form, Input, InputNumber, message } from 'antd';
+import { Form, Input, message } from 'antd';
 import { getEnvConfigDataAPI, updateEnvConfigDataAPI } from '@/api/config';
 import type { Config, QiniuStorageEnvValue } from '@/types/app/config';
 import type { InitStepFormProps } from '../types';
@@ -18,7 +18,6 @@ export default function StorageConfigForm({ onSuccess }: InitStepFormProps) {
         setQiniuConfigRow(data);
         form.setFieldsValue({
           domain: v?.domain ?? '',
-          zlevel: v?.zlevel ?? 0,
           root_dir: v?.root_dir ?? 'static',
           end_point: v?.end_point ?? '',
           access_key: v?.access_key ?? '',
@@ -70,7 +69,6 @@ export default function StorageConfigForm({ onSuccess }: InitStepFormProps) {
         bucket_name: '',
         end_point: '',
         root_dir: 'static',
-        zlevel: 0,
       }}
       onFinish={handleSave}
     >
@@ -91,9 +89,6 @@ export default function StorageConfigForm({ onSuccess }: InitStepFormProps) {
       </Form.Item>
       <Form.Item label="根目录" name="root_dir" rules={[{ required: true, message: '请输入存放文件的根目录' }]}>
         <Input placeholder="static" />
-      </Form.Item>
-      <Form.Item label="图片质量" name="zlevel" rules={[{ required: true, message: '请输入图片质量（0-10）' }]}>
-        <InputNumber className="w-full!" min={0} max={10} placeholder="1" />
       </Form.Item>
     </Form>
   );

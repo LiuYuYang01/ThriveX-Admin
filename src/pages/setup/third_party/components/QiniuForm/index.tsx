@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Form, Input, InputNumber, message } from 'antd';
+import { Button, Form, Input, message } from 'antd';
 
 import { updateEnvConfigDataAPI } from '@/api/config';
 import { QiniuStorageEnvValue } from '@/types/app/config';
@@ -14,7 +14,6 @@ export function QiniuForm({ row, onSaved }: ThirdPartyFormProps) {
     const v = row?.value as QiniuStorageEnvValue | undefined;
     form.setFieldsValue({
       domain: v?.domain ?? '',
-      zlevel: v?.zlevel ?? 0,
       root_dir: v?.root_dir ?? 'static',
       end_point: v?.end_point ?? '',
       access_key: v?.access_key ?? '',
@@ -60,9 +59,6 @@ export function QiniuForm({ row, onSaved }: ThirdPartyFormProps) {
       </Form.Item>
       <Form.Item name="root_dir" label="根目录" rules={[{ required: true, message: '请输入存放文件的根目录' }]}>
         <Input placeholder="static" />
-      </Form.Item>
-      <Form.Item name="zlevel" label="图片质量" rules={[{ required: true, message: '请输入图片质量（0-10）' }]}>
-        <InputNumber className="w-full!" min={0} max={10} placeholder="1" />
       </Form.Item>
 
       <Form.Item>
