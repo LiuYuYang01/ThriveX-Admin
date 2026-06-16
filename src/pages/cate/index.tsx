@@ -16,6 +16,7 @@ import {
   FiTrash2,
   FiFolder,
   FiLink,
+  FiFile,
   FiLayers,
   FiEyeOff,
   FiEye,
@@ -382,6 +383,10 @@ export default function CatePage() {
                   分类
                 </span>
                 <span className="inline-flex items-center gap-1">
+                  <span className="size-2 rounded-sm bg-sky-400/60" />
+                  页面
+                </span>
+                <span className="inline-flex items-center gap-1">
                   <span className="size-2 rounded-sm bg-amber-400/60" />
                   导航
                 </span>
@@ -466,7 +471,7 @@ export default function CatePage() {
                   </div>
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-300">还没有分类</p>
                   <p className="mt-1 max-w-xs text-xs text-slate-500 dark:text-slate-400">
-                    分类用于组织文章归档，导航用于站点菜单外链跳转
+                    分类用于组织文章归档，页面用于站内菜单，导航用于外链跳转
                   </p>
                   <Button
                     type="primary"
@@ -502,7 +507,7 @@ export default function CatePage() {
               <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                 {isEditing
                   ? '修改后保存，分类树将同步更新'
-                  : '支持多级分类与导航模式，用于组织文章与站点菜单'}
+                  : '支持多级分类、页面与导航模式，用于组织文章与站点菜单'}
               </p>
             </div>
           </div>
@@ -591,21 +596,26 @@ export default function CatePage() {
             <Input />
           </Form.Item>
           <Form.Item label="节点类型" className="mb-4!">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {[
                 { value: 'cate', label: '分类', desc: '归档文章', icon: FiFolder },
+                { value: 'page', label: '页面', desc: '站内页面', icon: FiFile },
                 { value: 'nav', label: '导航', desc: '外链跳转', icon: FiLink },
               ].map((opt) => {
                 const active = typeValue === opt.value;
+                const activeClass =
+                  opt.value === 'nav'
+                    ? 'border-amber-300/80 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300'
+                    : opt.value === 'page'
+                      ? 'border-sky-300/80 bg-sky-50 text-sky-800 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300'
+                      : 'border-primary/30 bg-primary/5 text-primary dark:bg-primary/10';
                 return (
                   <button
                     key={opt.value}
                     type="button"
                     onClick={() => form.setFieldValue('type', opt.value)}
                     className={`flex cursor-pointer flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-colors ${active
-                      ? opt.value === 'nav'
-                        ? 'border-amber-300/80 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300'
-                        : 'border-primary/30 bg-primary/5 text-primary dark:bg-primary/10'
+                      ? activeClass
                       : 'border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 dark:border-strokedark dark:hover:bg-white/5'
                       }`}
                   >
@@ -620,10 +630,20 @@ export default function CatePage() {
             </div>
           </Form.Item>
 
-          {typeValue === 'nav' && (
-            <Form.Item label="跳转链接" name="url" className="mb-4!">
+          {(typeValue === 'page' || typeValue === 'nav') && (
+            <Form.Item
+              label={typeValue === 'page' ? '页面路径' : '跳转链接'}
+              name="url"
+              rules={[
+                {
+                  required: true,
+                  message: typeValue === 'page' ? '页面路径不能为空' : '跳转链接不能为空',
+                },
+              ]}
+              className="mb-4!"
+            >
               <Input
-                placeholder="https://..."
+                placeholder={typeValue === 'page' ? '/my' : 'https://...'}
                 allowClear
                 prefix={<FiLink className="text-slate-400" />}
               />

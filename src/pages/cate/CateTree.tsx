@@ -36,10 +36,15 @@ function getDropZoneFromPoint(clientY: number, rowEl: HTMLElement): CateDropZone
 }
 
 function CateTreeNodeDot({ type }: { type: string }) {
-  const isNav = type === 'nav';
+  const dotClass =
+    type === 'nav'
+      ? 'bg-amber-400/70'
+      : type === 'page'
+        ? 'bg-sky-400/70'
+        : 'bg-primary/45';
   return (
     <span
-      className={`mt-0.5 size-2 shrink-0 rounded-full ${isNav ? 'bg-amber-400/70' : 'bg-primary/45'}`}
+      className={`mt-0.5 size-2 shrink-0 rounded-full ${dotClass}`}
       aria-hidden
     />
   );

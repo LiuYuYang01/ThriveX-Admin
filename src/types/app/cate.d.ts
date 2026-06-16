@@ -5,7 +5,7 @@ export interface Cate {
   url: string;
   level: number;
   order: number;
-  type: string;
+  type: 'cate' | 'page' | 'nav';
   isHide?: boolean;
   count?: number;
   children?: Cate[];
