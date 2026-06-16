@@ -185,10 +185,11 @@ const PublishForm = ({ data, closeModel }: Props) => {
     const rawCateIds = resolveArticleCateIds(data);
     const catePaths = toCascaderPaths(rawCateIds, cateList);
 
-    const { cateIds: _cateIds, cateList: _cateList, tagList: _tagList, ...articleFields } = data;
-
     const formValues = {
-      ...articleFields,
+      title: data.title,
+      description: data.description,
+      cover: data.cover,
+      config: data.config,
       status: data.config.status,
       password: data.config.password,
       isEncrypt: data.config.isEncrypt,
