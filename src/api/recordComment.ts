@@ -1,6 +1,9 @@
 import Request from '@/utils/request';
 import { RecordComment, RecordCommentFilterQueryParams } from '@/types/app/recordComment';
 
+// 新增说说评论
+export const addRecordCommentDataAPI = (data: RecordComment) => Request('POST', '/record/comment', { data });
+
 // 删除说说评论
 export const delRecordCommentDataAPI = (id: number) => Request('DELETE', `/record/comment/${id}`);
 

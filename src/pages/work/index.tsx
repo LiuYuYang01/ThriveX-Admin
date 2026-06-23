@@ -5,12 +5,14 @@ import { BiCommentDetail, BiLink, BiMessageSquareDetail } from 'react-icons/bi';
 import { IoCheckmarkDoneOutline } from 'react-icons/io5';
 
 import { getCommentListAPI } from '@/api/comment';
+import { getRecordCommentListAPI } from '@/api/recordComment';
 import { getLinkListAPI } from '@/api/web';
 import { getWallListAPI } from '@/api/wall';
 
 import { Wall } from '@/types/app/wall';
 import { Web } from '@/types/app/web';
 import { Comment as CommentType } from '@/types/app/comment';
+import { RecordComment } from '@/types/app/recordComment';
 
 import Empty from '@/components/Empty';
 import Title from '@/components/Title';
@@ -19,8 +21,8 @@ import Skeleton from './Skeleton';
 
 type Menu = 'comment' | 'link' | 'wall';
 
-const NAV_ITEMS: { key: Menu; label: string; desc: string; icon: typeof BiCommentDetail }[] = [
-  { key: 'comment', label: '评论', desc: '文章下的读者互动', icon: BiCommentDetail },
+const NAV_ITEMS: { key: Menu; label: string; desc?: string; icon: typeof BiCommentDetail }[] = [
+  { key: 'comment', label: '评论', icon: BiCommentDetail },
   { key: 'link', label: '友链', desc: '站点友链申请', icon: BiLink },
   { key: 'wall', label: '留言', desc: '留言板新消息', icon: BiMessageSquareDetail },
 ];
@@ -31,7 +33,8 @@ export default () => {
   const isFirstLoadRef = useRef<boolean>(true);
 
   const [active, setActive] = useState<Menu>('comment');
-  const [commentList, setCommentList] = useState<CommentType[]>([]);
+  const [articleCommentList, setArticleCommentList] = useState<CommentType[]>([]);
+  const [recordCommentList, setRecordCommentList] = useState<RecordComment[]>([]);
   const [linkList, setLinkList] = useState<Web[]>([]);
   const [wallList, setWallList] = useState<Wall[]>([]);
 
@@ -44,8 +47,12 @@ export default () => {
       }
 
       if (type === 'comment') {
-        const { data } = await getCommentListAPI({ status: 0, pattern: 'list' });
-        setCommentList(data.result);
+        const [articleRes, recordRes] = await Promise.all([
+          getCommentListAPI({ status: 0, pattern: 'list' }),
+          getRecordCommentListAPI({ status: 0, pageNum: 1, pageSize: 9999 }),
+        ]);
+        setArticleCommentList(articleRes.data.result);
+        setRecordCommentList(recordRes.data.result ?? []);
       } else if (type === 'link') {
         const { data } = await getLinkListAPI({ status: 0, pageNum: 1, pageSize: 9999 });
         setLinkList(data.result);
@@ -68,10 +75,22 @@ export default () => {
   }, [active]);
 
   const activeList = useMemo(() => {
-    if (active === 'comment') return commentList;
+    if (active === 'comment') {
+      return [
+        ...articleCommentList.map((item) => ({ ...item, commentSource: 'article' as const })),
+        ...recordCommentList.map((item) => ({ ...item, commentSource: 'record' as const })),
+      ].sort((a, b) => +b.createTime - +a.createTime);
+    }
     if (active === 'link') return linkList;
     return wallList;
-  }, [active, commentList, linkList, wallList]);
+  }, [active, articleCommentList, recordCommentList, linkList, wallList]);
+
+  const getNavDesc = (key: Menu) => {
+    if (key === 'comment') {
+      return `文章 ${articleCommentList.length} · 说说 ${recordCommentList.length}`;
+    }
+    return NAV_ITEMS.find((item) => item.key === key)?.desc ?? '';
+  };
 
   if (initialLoading) {
     return <Skeleton />;
@@ -86,13 +105,14 @@ export default () => {
       </Title>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 mt-1">
-        {NAV_ITEMS.map(({ key, desc, icon: Icon }) => {
+        {NAV_ITEMS.map(({ key, icon: Icon }) => {
           const count =
             key === 'comment'
-              ? commentList.length
+              ? articleCommentList.length + recordCommentList.length
               : key === 'link'
                 ? linkList.length
                 : wallList.length;
+          const desc = getNavDesc(key);
           const isActive = active === key;
 
           return (
@@ -153,7 +173,7 @@ export default () => {
             ) : (
               <ul className="space-y-3">
                 {activeList.map((item) => (
-                  <li key={item.id}>
+                  <li key={active === 'comment' ? `${item.commentSource}-${item.id}` : item.id}>
                     <List
                       item={item}
                       type={active}

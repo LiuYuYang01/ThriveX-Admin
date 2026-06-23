@@ -2,11 +2,12 @@ import { useState, type ReactNode, type ComponentType } from 'react';
 
 import { Button, message, Modal, Tooltip } from 'antd';
 import dayjs from 'dayjs';
-import { BiBook, BiCheck, BiGlobe, BiLinkExternal, BiReply, BiTag, BiX } from 'react-icons/bi';
+import { BiBook, BiCheck, BiGlobe, BiLinkExternal, BiReply, BiTag, BiX, BiBoltCircle } from 'react-icons/bi';
 import { HiOutlineMail } from 'react-icons/hi';
 import { IoTimeOutline } from 'react-icons/io5';
 
 import { auditCommentDataAPI, delCommentDataAPI, addCommentDataAPI } from '@/api/comment';
+import { auditRecordCommentDataAPI, delRecordCommentDataAPI } from '@/api/recordComment';
 import { auditWallDataAPI, delWallDataAPI } from '@/api/wall';
 import { delLinkDataAPI, auditWebDataAPI } from '@/api/web';
 import { sendDismissEmailAPI, sendReplyWallEmailAPI } from '@/api/email';
@@ -65,7 +66,11 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
       if (type === 'link') {
         await auditWebDataAPI(item.id);
       } else if (type === 'comment') {
-        await auditCommentDataAPI(item.id);
+        if (item.commentSource === 'record') {
+          await auditRecordCommentDataAPI(item.id);
+        } else {
+          await auditCommentDataAPI(item.id);
+        }
       } else if (type === 'wall') {
         await auditWallDataAPI(item.id);
       }
@@ -87,7 +92,7 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
     try {
       await handleApproval();
 
-      if (type === 'comment') {
+      if (type === 'comment' && item.commentSource !== 'record') {
         await addCommentDataAPI({
           avatar: user.avatar,
           url: web.url,
@@ -134,7 +139,11 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
       if (type === 'link') {
         await delLinkDataAPI(item.id);
       } else if (type === 'comment') {
-        await delCommentDataAPI(item.id);
+        if (item.commentSource === 'record') {
+          await delRecordCommentDataAPI(item.id);
+        } else {
+          await delCommentDataAPI(item.id);
+        }
       } else if (type === 'wall') {
         await delWallDataAPI(item.id);
       }
@@ -172,8 +181,8 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
       case 'comment':
         email_info = {
           name: item.name,
-          type: '评论',
-          url: `${web.url}/article/${item.articleId}`,
+          type: item.commentSource === 'record' ? '说说评论' : '评论',
+          url: item.commentSource === 'record' ? `${web.url}/record` : `${web.url}/article/${item.articleId}`,
         };
         break;
       case 'wall':
@@ -199,7 +208,9 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
   };
 
   const displayName = type === 'link' ? item.title : item.name;
-  const canReply = type === 'comment' || type === 'wall';
+  const canReply = type === 'wall' || (type === 'comment' && item.commentSource !== 'record');
+  const commentSourceLabel =
+    type === 'comment' ? (item.commentSource === 'record' ? '说说' : '文章') : null;
 
   const openModal = (mode: 'reply' | 'dismiss') => {
     setBtnType(mode);
@@ -233,6 +244,11 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
                 <h4 className="truncate text-[15px] font-semibold text-slate-800 dark:text-slate-100">
                   {displayName || '匿名'}
                 </h4>
+                {commentSourceLabel && (
+                  <span className="inline-flex shrink-0 items-center rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                    {commentSourceLabel}
+                  </span>
+                )}
                 <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-boxdark-2 dark:text-slate-400">
                   <IoTimeOutline size={10} />
                   {dayjs(+item.createTime!).format('MM/DD HH:mm')}
@@ -288,7 +304,7 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
             </p>
           </div>
 
-          {((type === 'comment' && (item?.url || item.articleId)) ||
+          {((type === 'comment' && (item?.url || item.articleId || item.recordId)) ||
             (type === 'link' && (item?.url || item.type?.name))) && (
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {type === 'link' && item.type?.name && (
@@ -304,10 +320,17 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
                     <ExternalLink href={item.url}>{item.url}</ExternalLink>
                   </MetaChip>
                 )}
-                {type === 'comment' && item.articleId && (
+                {type === 'comment' && item.commentSource === 'article' && item.articleId && (
                   <MetaChip icon={BiBook}>
                     <ExternalLink href={`${web.url}/article/${item.articleId}`}>
                       {item.articleTitle || '暂无'}
+                    </ExternalLink>
+                  </MetaChip>
+                )}
+                {type === 'comment' && item.commentSource === 'record' && (
+                  <MetaChip icon={BiBoltCircle}>
+                    <ExternalLink href={`${web.url}/record`}>
+                      {item.recordContent || `说说 #${item.recordId}`}
                     </ExternalLink>
                   </MetaChip>
                 )}

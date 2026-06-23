@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DoubleRightOutlined } from '@ant-design/icons';
 
 import { getCommentListAPI } from '@/api/comment';
+import { getRecordCommentListAPI } from '@/api/recordComment';
 import { getWallListAPI } from '@/api/wall';
 import { getLinkListAPI } from '@/api/web';
 
@@ -13,11 +14,15 @@ export default function InfoCard() {
   const [wallCount, setWallCount] = useState<number>(0);
 
   const getData = async () => {
-    const { data: commentList } = await getCommentListAPI({ status: 0, pattern: 'list' });
-    const { data: linkList } = await getLinkListAPI({ status: 0, pageNum: 1, pageSize: 9999 });
-    const { data: wallList } = await getWallListAPI({ status: 0 });
+    const [{ data: commentList }, { data: recordCommentList }, { data: linkList }, { data: wallList }] =
+      await Promise.all([
+        getCommentListAPI({ status: 0, pattern: 'list' }),
+        getRecordCommentListAPI({ status: 0, pageNum: 1, pageSize: 9999 }),
+        getLinkListAPI({ status: 0, pageNum: 1, pageSize: 9999 }),
+        getWallListAPI({ status: 0 }),
+      ]);
 
-    setCommentCount(commentList.total);
+    setCommentCount(commentList.total + (recordCommentList.total ?? recordCommentList.result?.length ?? 0));
     setLinkCount(linkList.total);
     setWallCount(wallList.total);
   };
