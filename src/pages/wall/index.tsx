@@ -211,7 +211,7 @@ export default function WallPage() {
 
   const [total, setTotal] = useState(0);
   const [filterParams, setFilterParams] = useState<WallFilterQueryParams>({
-    status: 0,
+    status: 1,
     pageNum: 1,
     pageSize: 8,
   });
