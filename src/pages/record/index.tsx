@@ -21,6 +21,7 @@ import {
   FiCalendar,
   FiRotateCcw,
   FiHash,
+  FiMessageCircle,
 } from 'react-icons/fi';
 
 import Title from '@/components/Title';
@@ -32,6 +33,7 @@ import type { Record, RecordFilterDataForm, RecordFilterQueryParams } from '@/ty
 
 import Skeleton from './Skeleton';
 import { RecordImagesCell } from './recordTableShared';
+import RecordCommentDrawer from './RecordCommentDrawer';
 
 export default function RecordPage() {
   const [loading, setLoading] = useState(false);
@@ -46,6 +48,8 @@ export default function RecordPage() {
     pageNum: 1,
     pageSize: 8,
   });
+  const [commentDrawerOpen, setCommentDrawerOpen] = useState(false);
+  const [activeRecord, setActiveRecord] = useState<Record | null>(null);
 
   const hasActiveFilters = Boolean(
     filter.content?.trim() || filter.startDate || filter.endDate,
@@ -158,10 +162,23 @@ export default function RecordPage() {
         title: '操作',
         key: 'action',
         fixed: 'right',
-        width: 100,
+        width: 130,
         align: 'center',
         render: (_: unknown, row: Record) => (
           <div className="flex items-center justify-center gap-0.5">
+            <Tooltip title="评论管理">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveRecord(row);
+                  setCommentDrawerOpen(true);
+                }}
+                className="flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary dark:hover:bg-white/5 dark:hover:text-primary"
+                aria-label="评论管理"
+              >
+                <FiMessageCircle size={16} />
+              </button>
+            </Tooltip>
             <Tooltip title="编辑">
               <Link
                 to={`/create_record?id=${row.id}`}
@@ -334,6 +351,15 @@ export default function RecordPage() {
           />
         </div>
       </section>
+
+      <RecordCommentDrawer
+        open={commentDrawerOpen}
+        record={activeRecord}
+        onClose={() => {
+          setCommentDrawerOpen(false);
+          setActiveRecord(null);
+        }}
+      />
     </div>
   );
 }
