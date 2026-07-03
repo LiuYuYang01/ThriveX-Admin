@@ -21,6 +21,7 @@ import {
   FiCalendar,
   FiRotateCcw,
   FiHash,
+  FiHeart,
 } from 'react-icons/fi';
 
 import Title from '@/components/Title';
@@ -133,6 +134,19 @@ export default function RecordPage() {
         key: 'images',
         width: 150,
         render: (_: unknown, row: Record) => <RecordImagesCell imagesRaw={row.images} />,
+      },
+      {
+        title: '点赞',
+        dataIndex: 'likeCount',
+        key: 'likeCount',
+        width: 88,
+        align: 'center',
+        render: (count: number | undefined) => (
+          <span className="inline-flex items-center gap-1 text-sm tabular-nums text-rose-500 dark:text-rose-400">
+            <FiHeart size={14} className="fill-current" />
+            {count ?? 0}
+          </span>
+        ),
       },
       {
         title: '发布时间',

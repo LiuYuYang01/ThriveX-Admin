@@ -30,6 +30,7 @@ import {
   FiCalendar,
   FiRotateCcw,
   FiImage,
+  FiHeart,
 } from 'react-icons/fi';
 import dayjs from 'dayjs';
 
@@ -269,6 +270,18 @@ export default function ArticlePage() {
         ),
         sorter: sortArticleByComment,
         showSorterTooltip: false,
+      },
+      {
+        title: '点赞',
+        dataIndex: 'likeCount',
+        key: 'likeCount',
+        width: 88,
+        render: (v) => (
+          <span className="inline-flex items-center gap-1.5 tabular-nums text-rose-500 dark:text-rose-400">
+            <FiHeart size={13} className="fill-current" />
+            <span className="text-sm font-medium">{v ?? 0}</span>
+          </span>
+        ),
       },
       {
         title: '状态',

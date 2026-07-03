@@ -23,6 +23,7 @@ export interface Article {
   tagIds?: number[];
   view?: number;
   comment?: number;
+  likeCount?: number;
   config: Config;
   createTime?: number;
 }
