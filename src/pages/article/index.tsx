@@ -31,6 +31,7 @@ import {
   FiRotateCcw,
   FiImage,
   FiHeart,
+  FiShare2,
 } from 'react-icons/fi';
 import dayjs from 'dayjs';
 
@@ -279,6 +280,18 @@ export default function ArticlePage() {
         render: (v) => (
           <span className="inline-flex items-center gap-1.5 tabular-nums text-rose-500 dark:text-rose-400">
             <FiHeart size={13} className="fill-current" />
+            <span className="text-sm font-medium">{v ?? 0}</span>
+          </span>
+        ),
+      },
+      {
+        title: '分享',
+        dataIndex: 'shareCount',
+        key: 'shareCount',
+        width: 88,
+        render: (v) => (
+          <span className="inline-flex items-center gap-1.5 tabular-nums text-primary dark:text-blue-400">
+            <FiShare2 size={13} />
             <span className="text-sm font-medium">{v ?? 0}</span>
           </span>
         ),

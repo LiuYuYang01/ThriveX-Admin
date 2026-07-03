@@ -24,6 +24,7 @@ export interface Article {
   view?: number;
   comment?: number;
   likeCount?: number;
+  shareCount?: number;
   config: Config;
   createTime?: number;
 }
