@@ -1,15 +1,24 @@
 import axios from 'axios';
 import { getEnvConfigDataAPI } from '@/api/config';
 
-function formatProvinceCity(province: string, city: string) {
-  if (province && city && province !== city) return `${province}${city}`;
-  return province || city;
+function formatRegionAddress(province: string, city: string, district?: string) {
+  let region = '';
+  if (province && city && province !== city) {
+    region = `${province}${city}`;
+  } else {
+    region = province || city;
+  }
+  if (district && !region.includes(district)) {
+    region += district;
+  }
+  return region;
 }
 
 function formatAmapAddress(regeocode: {
   addressComponent?: {
     province?: string;
     city?: string | string[];
+    district?: string;
   };
 }) {
   const comp = regeocode.addressComponent;
@@ -17,7 +26,8 @@ function formatAmapAddress(regeocode: {
 
   const province = comp.province || '';
   const city = (Array.isArray(comp.city) ? comp.city[0] : comp.city) || '';
-  return formatProvinceCity(province, city);
+  const district = comp.district || '';
+  return formatRegionAddress(province, city, district);
 }
 
 async function reverseGeocodeByAmap(lng: number, lat: number, key: string) {
@@ -48,11 +58,14 @@ async function reverseGeocodeByBigDataCloud(lat: number, lng: number) {
   });
 
   const admin = data.localityInfo?.administrative as { order?: number; name?: string }[] | undefined;
-  const province =
-    data.principalSubdivision || admin?.find((item) => item.order === 3)?.name || '';
-  const city = data.city || data.locality || admin?.find((item) => item.order === 4)?.name || '';
+  const province = data.principalSubdivision || admin?.find((item) => item.order === 2)?.name || '';
+  const city = data.city || admin?.find((item) => item.order === 3)?.name || '';
+  const district =
+    (data.locality && data.locality !== city ? data.locality : '') ||
+    admin?.find((item) => item.order === 4)?.name ||
+    '';
 
-  return formatProvinceCity(province, city) || null;
+  return formatRegionAddress(province, city, district) || null;
 }
 
 export async function resolveLocationAddress(lng: number, lat: number, gaodeKey?: string) {

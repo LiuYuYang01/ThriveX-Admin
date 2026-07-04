@@ -187,7 +187,7 @@ export default () => {
           {/* 主编辑器卡片 */}
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-black/20 overflow-hidden border dark:border-gray-700 transition-all duration-300 hover:shadow-2xl">
             <div className="p-3 md:p-6">
-              <Input.TextArea value={content} onChange={(e) => setContent(e.target.value)} placeholder="此刻你在想什么？..." autoSize={{ minRows: 3, maxRows: 10 }} variant="filled" className="p-4! text-lg md:text-xl text-gray-700 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 px-0 resize-none bg-transparent! dark:bg-transparent! border-none! shadow-none! focus:shadow-none" />
+              <Input.TextArea value={content} onChange={(e) => setContent(e.target.value)} placeholder="此刻你在想什么？..." autoSize={{ minRows: 3, maxRows: 10 }} variant="filled" className="text-lg md:text-xl px-0! text-gray-700 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 resize-none bg-transparent! dark:bg-transparent! border-none! shadow-none! focus:shadow-none" />
 
               <div className="mt-4 flex flex-wrap items-center gap-4">
                 <div>
