@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Dropdown, Image, Input, message, Modal, Spin, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import { BiLogoTelegram, BiLink } from 'react-icons/bi';
+import { FiNavigation } from 'react-icons/fi';
 import { LuImagePlus } from 'react-icons/lu';
 import { RiDeleteBinLine, RiLoader4Line } from 'react-icons/ri';
 import Material from '@/components/Material';
 import { addRecordDataAPI, editRecordDataAPI, getRecordDataAPI } from '@/api/record';
+import { MOOD_OPTIONS } from '@/constants/mood';
+import { loadGaodeWebKey, resolveLocationAddress } from '@/utils/location';
 import './index.scss';
 
 export default () => {
@@ -18,6 +21,10 @@ export default () => {
   const navigate = useNavigate();
 
   const [imageList, setImageList] = useState<string[]>([]);
+  const [mood, setMood] = useState('');
+  const [location, setLocation] = useState('');
+  const [locating, setLocating] = useState(false);
+  const [gaodeApKey, setGaodeApKey] = useState('');
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
 
   // 删除图片
@@ -36,11 +43,13 @@ export default () => {
       const data = {
         content: content,
         images: JSON.stringify(imageList),
+        mood: mood || undefined,
+        location: location.trim() || undefined,
         createTime: new Date().getTime().toString(),
       };
 
       if (id) {
-        await editRecordDataAPI({ id, content: data.content, images: data.images });
+        await editRecordDataAPI({ id, content: data.content, images: data.images, mood: data.mood, location: data.location });
         message.success('想法已更新');
       } else {
         await addRecordDataAPI(data);
@@ -61,6 +70,8 @@ export default () => {
       const { data } = await getRecordDataAPI(id);
       setContent(data.content);
       setImageList(JSON.parse(data.images as string));
+      setMood(data.mood || '');
+      setLocation(data.location || '');
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -71,6 +82,50 @@ export default () => {
   useEffect(() => {
     if (id) getRecordData();
   }, [id]);
+
+  const reverseGeocode = useCallback(
+    async (lng: number, lat: number) => resolveLocationAddress(lng, lat, gaodeApKey),
+    [gaodeApKey],
+  );
+
+  const handleLocate = useCallback(() => {
+    if (!navigator.geolocation) {
+      message.warning('当前浏览器不支持定位');
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const address = await reverseGeocode(pos.coords.longitude, pos.coords.latitude);
+          if (address) {
+            setLocation(address);
+          } else {
+            message.warning('未能解析当前位置，请手动输入');
+          }
+        } catch (error) {
+          console.error(error);
+          message.error('定位失败，请手动输入');
+        } finally {
+          setLocating(false);
+        }
+      },
+      (error) => {
+        setLocating(false);
+        if (error.code === error.PERMISSION_DENIED) {
+          message.warning('请允许浏览器获取位置权限');
+        } else {
+          message.error('定位失败，请手动输入');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+    );
+  }, [reverseGeocode]);
+
+  useEffect(() => {
+    loadGaodeWebKey().then(setGaodeApKey).catch((error) => console.error('获取高德配置失败:', error));
+  }, []);
 
   // 处理链接输入
   const handleLinkInput = () => {
@@ -133,6 +188,47 @@ export default () => {
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-black/20 overflow-hidden border dark:border-gray-700 transition-all duration-300 hover:shadow-2xl">
             <div className="p-3 md:p-6">
               <Input.TextArea value={content} onChange={(e) => setContent(e.target.value)} placeholder="此刻你在想什么？..." autoSize={{ minRows: 3, maxRows: 10 }} variant="filled" className="p-4! text-lg md:text-xl text-gray-700 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 px-0 resize-none bg-transparent! dark:bg-transparent! border-none! shadow-none! focus:shadow-none" />
+
+              <div className="mt-4 flex flex-wrap items-center gap-4">
+                <div>
+                  <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">此刻心情</div>
+                  <div className="flex flex-wrap gap-2">
+                    {MOOD_OPTIONS.map((item) => (
+                      <Tooltip key={item.emoji} title={item.label}>
+                        <button
+                          type="button"
+                          onClick={() => setMood(mood === item.emoji ? '' : item.emoji)}
+                          className={`grid h-10 w-10 place-items-center rounded-lg text-xl transition-all cursor-pointer ${mood === item.emoji ? 'bg-blue-100 ring-2 ring-blue-400 dark:bg-blue-900/40' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600'}`}
+                        >
+                          {item.emoji}
+                        </button>
+                      </Tooltip>
+                    ))}
+                  </div>
+                </div>
+                <div className="min-w-[200px] flex-1">
+                  <div className="mb-2 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <span>当前位置</span>
+                    <Tooltip title="获取当前位置">
+                      <button
+                        type="button"
+                        onClick={handleLocate}
+                        disabled={locating}
+                        className="inline-flex items-center gap-1 text-blue-500 transition-colors hover:text-blue-600 disabled:opacity-50 dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
+                      >
+                        {locating ? <RiLoader4Line className="animate-spin" /> : <FiNavigation />}
+                        <span>{locating ? '定位中' : '定位'}</span>
+                      </button>
+                    </Tooltip>
+                  </div>
+                  <Input
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="如：厦门市 · 环岛路"
+                    allowClear
+                  />
+                </div>
+              </div>
             </div>
 
             {/* 图片预览网格区*/}
