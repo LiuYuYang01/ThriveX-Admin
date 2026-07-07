@@ -118,7 +118,7 @@ export default function RecordPage() {
           <Tooltip title={text} placement="topLeft">
             <div className="max-w-md py-0.5">
               {text ? (
-                <p className="line-clamp-2 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                <p className="line-clamp-2 whitespace-pre-line text-sm leading-relaxed text-slate-700 dark:text-slate-200">
                   {text}
                 </p>
               ) : (
@@ -127,6 +127,21 @@ export default function RecordPage() {
             </div>
           </Tooltip>
         ),
+      },
+      {
+        title: '心情',
+        dataIndex: 'mood',
+        key: 'mood',
+        width: 100,
+        align: 'center',
+        render: (mood: string | undefined) =>
+          mood ? (
+            <span className="inline-block rounded-full text-xl font-medium text-amber-600 dark:text-amber-400">
+              {mood}
+            </span>
+          ) : (
+            <span className="text-xs text-slate-300 dark:text-slate-600">—</span>
+          ),
       },
       {
         title: '图片',

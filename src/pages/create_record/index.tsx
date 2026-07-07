@@ -83,10 +83,7 @@ export default () => {
     if (id) getRecordData();
   }, [id]);
 
-  const reverseGeocode = useCallback(
-    async (lng: number, lat: number) => resolveLocationAddress(lng, lat, gaodeApKey),
-    [gaodeApKey],
-  );
+  const reverseGeocode = useCallback(async (lng: number, lat: number) => resolveLocationAddress(lng, lat, gaodeApKey), [gaodeApKey]);
 
   const handleLocate = useCallback(() => {
     if (!navigator.geolocation) {
@@ -124,13 +121,15 @@ export default () => {
   }, [reverseGeocode]);
 
   useEffect(() => {
-    loadGaodeWebKey().then(setGaodeApKey).catch((error) => console.error('获取高德配置失败:', error));
+    loadGaodeWebKey()
+      .then(setGaodeApKey)
+      .catch((error) => console.error('获取高德配置失败:', error));
   }, []);
 
-  // 处理链接输入
+  //处理链接输入
   const handleLinkInput = () => {
     if (imageList.length >= 4) {
-      message.warning('最多只能上传 4 张图片');
+      message.warning('最多只能上传4 张图片');
       return;
     }
     let inputUrl = '';
@@ -167,7 +166,7 @@ export default () => {
         label: <span>从素材库选择</span>,
         icon: <LuImagePlus className="text-base!" />,
         onClick: () => {
-          if (imageList.length >= 4) return message.warning('最多只能上传 4 张图片');
+          if (imageList.length >= 4) return message.warning('最多只能上传4 张图片');
           setIsMaterialModalOpen(true);
         },
       },
@@ -181,129 +180,93 @@ export default () => {
   };
 
   return (
-    <div className="create_record_page min-h-screen p-4 md:p-6 lg:p-10 transition-colors duration-300">
-      <div className="max-w-3xl mx-auto space-y-6">
-        <Spin spinning={loading} indicator={<RiLoader4Line className="text-3xl animate-spin text-blue-500" />}>
-          {/* 主编辑器卡片 */}
-          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-black/20 overflow-hidden border dark:border-gray-700 transition-all duration-300 hover:shadow-2xl">
-            <div className="p-3 md:p-6">
-              <Input.TextArea value={content} onChange={(e) => setContent(e.target.value)} placeholder="此刻你在想什么？..." autoSize={{ minRows: 3, maxRows: 10 }} variant="filled" className="text-lg md:text-xl px-0! text-gray-700 dark:text-gray-200 placeholder:text-gray-300 dark:placeholder:text-gray-600 resize-none bg-transparent! dark:bg-transparent! border-none! shadow-none! focus:shadow-none" />
+    <div className="create_record_page min-h-screen overflow-hidden py-6 transition-colors duration-300">
+      <div className="pointer-events-none fixed inset-0 -z-10" />
 
-              <div className="mt-4 flex flex-wrap items-center gap-4">
-                <div>
-                  <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">此刻心情</div>
-                  <div className="flex flex-wrap gap-2">
-                    {MOOD_OPTIONS.map((item) => (
-                      <Tooltip key={item.emoji} title={item.label}>
-                        <button
-                          type="button"
-                          onClick={() => setMood(mood === item.emoji ? '' : item.emoji)}
-                          className={`grid h-10 w-10 place-items-center rounded-lg text-xl transition-all cursor-pointer ${mood === item.emoji ? 'bg-blue-100 ring-2 ring-blue-400 dark:bg-blue-900/40' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600'}`}
-                        >
-                          {item.emoji}
-                        </button>
-                      </Tooltip>
-                    ))}
+      <div>
+        <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between ml-4">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-white md:text-4xl">此刻你在想什么？</h1>
+          <Button type="primary" size="large" onClick={onSubmit} loading={loading} icon={!loading && <BiLogoTelegram size={18} />} className="h-12 rounded-2xl border-none bg-blue-500 px-7 font-medium shadow-xl shadow-blue-500/25 hover:bg-blue-600">
+            {id ? '更新' : '发布'}
+          </Button>
+        </div>
+
+        <Spin spinning={loading} indicator={<RiLoader4Line className="text-3xl animate-spin text-blue-500" />}>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <section className="overflow-hidden rounded-4xl border border-slate-200/80 bg-linear-to-br from-white via-white to-slate-50/80 backdrop-blur-xl transition-all duration-300 dark:border-strokedark dark:from-boxdark dark:via-boxdark dark:to-boxdark-2/80 dark:shadow-black/20">
+              <div className="border-b border-slate-100 px-5 py-4 dark:border-strokedark md:px-7">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white">内容正文</div>
+                    <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">先写下来，不需要组织得很完整</div>
                   </div>
-                </div>
-                <div className="min-w-[200px] flex-1">
-                  <div className="mb-2 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                    <span>当前位置</span>
-                    <Tooltip title="获取当前位置">
-                      <button
-                        type="button"
-                        onClick={handleLocate}
-                        disabled={locating}
-                        className="inline-flex items-center gap-1 text-blue-500 transition-colors hover:text-blue-600 disabled:opacity-50 dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
-                      >
-                        {locating ? <RiLoader4Line className="animate-spin" /> : <FiNavigation />}
-                        <span>{locating ? '定位中' : '定位'}</span>
-                      </button>
-                    </Tooltip>
-                  </div>
-                  <Input
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="如：厦门市 · 环岛路"
-                    allowClear
-                  />
+                  <div className="rounded-full bg-slate-100 px-3 py-1 text-xs text-gray-500 dark:bg-boxdark-2 dark:text-gray-400">{content.trim().length} 字</div>
                 </div>
               </div>
-            </div>
 
-            {/* 图片预览网格区*/}
-            {imageList.length > 0 && (
-              <div className="px-6 md:px-8 pb-6 animate-fade-in">
-                {imageList.length === 3 ? (
-                  // 微信朋友圈风格的三图布局：左大右小双排
-                  <div className="grid grid-cols-3 gap-2">
-                    <div key={0} className="group relative aspect-auto col-span-2 row-span-1 min-h-0 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 image-container">
-                      <Image src={imageList[0]} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" classNames={{ root: '!w-full !h-full' }} preview={true} />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                        <Tooltip title="移除图片">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelImage(imageList[0]);
-                            }}
-                            className="bg-white/20 hover:bg-red-500 text-white p-2.5 rounded-full backdrop-blur-md transition-all duration-200 transform scale-90 group-hover:scale-100 hover:rotate-90"
-                          >
-                            <RiDeleteBinLine size={20} />
+              <div className="p-5 md:p-7">
+                <Input.TextArea value={content} onChange={(e) => setContent(e.target.value)} placeholder="写下一个念头、一段感受，或今天值得记录的小事..." autoSize={{ minRows: 10, maxRows: 18 }} variant="filled" className="min-h-[320px] resize-none border-none! bg-transparent! px-0! text-xl leading-9 text-gray-800 shadow-none! outline-none placeholder:text-gray-300 focus:shadow-none dark:bg-transparent! dark:text-gray-100 dark:placeholder:text-gray-600 md:text-2xl" />
+              </div>
+            </section>
+
+            <aside className="space-y-5">
+              <section className="rounded-4xl border border-slate-200/80 bg-white p-5 shadow-xl shadow-slate-200/60 backdrop-blur-xl dark:border-strokedark dark:bg-boxdark dark:shadow-black/20">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white">发布设置</div>
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                  <div>
+                    <div className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">此刻心情</div>
+                    <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 lg:grid-cols-6">
+                      {MOOD_OPTIONS.map((item) => (
+                        <Tooltip key={item.emoji} title={item.label}>
+                          <button type="button" onClick={() => setMood(mood === item.emoji ? '' : item.emoji)} className={`grid h-11 w-11 place-items-center rounded-2xl text-xl transition-all duration-200 cursor-pointer ${mood === item.emoji ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 ring-4 ring-blue-100 scale-105 dark:ring-blue-900/50' : 'bg-slate-100 hover:bg-slate-200 hover:scale-105 dark:bg-boxdark-2 dark:hover:bg-slate-700'}`}>
+                            {item.emoji}
                           </button>
                         </Tooltip>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div key={1} className="group relative aspect-square min-h-0 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 image-container">
-                        <Image src={imageList[1]} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" classNames={{ root: '!w-full !h-full' }} preview={true} />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                          <Tooltip title="移除图片">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelImage(imageList[1]);
-                              }}
-                              className="bg-white/20 hover:bg-red-500 text-white p-2.5 rounded-full backdrop-blur-md transition-all duration-200 transform scale-90 group-hover:scale-100 hover:rotate-90"
-                            >
-                              <RiDeleteBinLine size={20} />
-                            </button>
-                          </Tooltip>
-                        </div>
-                      </div>
-                      <div key={2} className="group relative aspect-square min-h-0 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 image-container">
-                        <Image src={imageList[2]} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" classNames={{ root: '!w-full !h-full' }} preview={true} />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                          <Tooltip title="移除图片">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelImage(imageList[2]);
-                              }}
-                              className="bg-white/20 hover:bg-red-500 text-white p-2.5 rounded-full backdrop-blur-md transition-all duration-200 transform scale-90 group-hover:scale-100 hover:rotate-90"
-                            >
-                              <RiDeleteBinLine size={20} />
-                            </button>
-                          </Tooltip>
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
-                ) : (
-                  <div className={`grid gap-4 ${imageList.length === 1 ? 'grid-cols-1' : imageList.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'}`}>
-                    {imageList.map((item, index) => (
-                      <div key={index} className="group relative aspect-square min-h-0 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 image-container">
-                        {/* 图片主体 */}
-                        <Image src={item} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110" classNames={{ root: '!w-full !h-full' }} preview={true} />
 
-                        {/* 删除遮罩层 */}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                  <div>
+                    <div className="mb-3 flex items-center justify-between text-xs font-medium uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+                      <span>此刻位置</span>
+                      <Tooltip title="获取当前位置">
+                        <button type="button" onClick={handleLocate} disabled={locating} className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs normal-case tracking-normal text-blue-600 transition-colors hover:bg-blue-100 disabled:opacity-50 dark:bg-blue-950/50 dark:text-blue-300 dark:hover:bg-blue-900/60 cursor-pointer">
+                          {locating ? <RiLoader4Line className="animate-spin" /> : <FiNavigation />}
+                          <span>{locating ? '定位中' : '自动定位'}</span>
+                        </button>
+                      </Tooltip>
+                    </div>
+                    <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="如：厦门市 · 环岛路" allowClear className="h-12 rounded-2xl border-slate-200/80 bg-slate-50 px-4 dark:border-strokedark dark:bg-boxdark-2" />
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-4xl border border-slate-200/80 bg-white p-5 shadow-xl shadow-slate-200/60 backdrop-blur-xl dark:border-strokedark dark:bg-boxdark dark:shadow-black/20">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white">图片素材</div>
+                    <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">最多添加4 张，建议保持统一风格</div>
+                  </div>
+                </div>
+
+                {imageList.length > 0 ? (
+                  <div className={`grid gap-3 ${imageList.length === 1 ? 'grid-cols-1' : imageList.length === 2 ? 'grid-cols-2' : imageList.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                    {imageList.map((item, index) => (
+                      <div key={index} className={`group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-sm image-container dark:border-strokedark dark:bg-boxdark-2 ${imageList.length === 1 ? 'aspect-video' : imageList.length === 3 && index === 0 ? 'col-span-2 aspect-video' : 'aspect-square'}`}>
+                        <Image src={item} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" classNames={{ root: '!w-full !h-full' }} preview={true} />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 backdrop-blur-[2px] transition-opacity duration-300 group-hover:opacity-100">
                           <Tooltip title="移除图片">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDelImage(item);
                               }}
-                              className="bg-white/20 hover:bg-red-500 text-white p-2.5 rounded-full backdrop-blur-md transition-all duration-200 transform scale-90 group-hover:scale-100 hover:rotate-90"
+                              className="rounded-full bg-white/20 p-2.5 text-white backdrop-blur-md transition-all duration-200 hover:rotate-90 hover:bg-red-500 cursor-pointer"
                             >
                               <RiDeleteBinLine size={20} />
                             </button>
@@ -312,32 +275,23 @@ export default () => {
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <Dropdown menu={dropdownItems} placement="bottom" trigger={['click']}>
+                    <button type="button" className="flex min-h-44 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/80 bg-slate-50 px-6 text-center transition-all hover:border-blue-300 hover:bg-blue-50 dark:border-strokedark dark:bg-boxdark-2 dark:hover:bg-blue-950/35 cursor-pointer">
+                      <span className="mb-3 grid h-12 w-12 place-items-center text-blue-500">
+                        <LuImagePlus size={23} />
+                      </span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">为这条闪念添加图片</span>
+                      <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">从素材库选择或输入图片链接</span>
+                    </button>
+                  </Dropdown>
                 )}
-              </div>
-            )}
-
-            {/* 底部工具栏 */}
-            <div className="bg-gray-50/80 dark:bg-gray-700/30 backdrop-blur-xs px-6 py-4 flex items-center justify-between border-t border-gray-100 dark:border-gray-700">
-              {/* 左侧：功能按钮 */}
-              <div className="flex items-center space-x-2">
-                <Dropdown menu={dropdownItems} placement="topLeft" trigger={['click']}>
-                  <Button type="text" icon={<LuImagePlus size={22} />} className="flex items-center text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl h-12 px-4 border-none transition-all">
-                    <span className="ml-1 hidden sm:inline">添加图片</span>
-                    <span className="ml-1 text-xs bg-gray-200 dark:bg-gray-600 px-1.5 py-0.5 rounded-md text-gray-500 dark:text-gray-300">{imageList.length}/4</span>
-                  </Button>
-                </Dropdown>
-              </div>
-
-              {/* 右侧：提交按钮 */}
-              <Button type="primary" size="large" onClick={onSubmit} loading={loading} icon={!loading && <BiLogoTelegram size={20} />} className="h-12 px-5 rounded-xl bg-blue-400 hover:bg-blue-500 shadow-lg shadow-blue-500/30 border-none font-medium text-base flex items-center gap-2 transition-all hover:-translate-y-0.5">
-                {id ? '更新' : '发布'}
-              </Button>
-            </div>
+              </section>
+            </aside>
           </div>
         </Spin>
       </div>
 
-      {/* 素材库弹窗 */}
       <Material
         maxCount={4 - imageList.length}
         open={isMaterialModalOpen}
