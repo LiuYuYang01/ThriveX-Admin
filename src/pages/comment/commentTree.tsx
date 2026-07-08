@@ -53,26 +53,28 @@ export const commentExpandColumn = {
   render: () => null,
 };
 
-export const commentTableExpandable: ExpandableConfig<unknown> = {
-  expandIconColumnIndex: 0,
-  columnWidth: 44,
-  expandIcon: ({ expanded, onExpand, record }) => {
-    const children = (record as TreeItem).children;
-    if (!children?.length) {
-      return <span className="inline-block w-6" aria-hidden />;
-    }
-    return (
-      <button
-        type="button"
-        aria-label={expanded ? '收起回复' : '展开回复'}
-        onClick={(e) => onExpand(record, e)}
-        className="ml-2 flex size-6 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/5 dark:hover:text-slate-300 cursor-pointer"
-      >
-        {expanded ? <FiChevronDown size={14} /> : <FiChevronRight size={14} />}
-      </button>
-    );
-  },
-};
+export function commentTableExpandable<T extends TreeItem>(): ExpandableConfig<T> {
+  return {
+    expandIconColumnIndex: 0,
+    columnWidth: 44,
+    expandIcon: ({ expanded, onExpand, record }) => {
+      const children = record.children;
+      if (!children?.length) {
+        return <span className="inline-block w-6" aria-hidden />;
+      }
+      return (
+        <button
+          type="button"
+          aria-label={expanded ? '收起回复' : '展开回复'}
+          onClick={(e) => onExpand(record, e)}
+          className="ml-2 flex size-6 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/5 dark:hover:text-slate-300 cursor-pointer"
+        >
+          {expanded ? <FiChevronDown size={14} /> : <FiChevronRight size={14} />}
+        </button>
+      );
+    },
+  };
+}
 
 export const commentTableTreeClassName =
   'min-h-0 flex-1 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! dark:[&_.ant-table-thead>tr>th]:text-slate-400! [&_.comment-tree-expand-col]:px-0! [&_.comment-tree-expand-col]:text-center!';

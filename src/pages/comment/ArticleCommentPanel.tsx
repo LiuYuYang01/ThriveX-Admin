@@ -56,6 +56,7 @@ export default function ArticleCommentPanel() {
   const [list, setList] = useState<Comment[]>([]);
 
   const [filterForm] = Form.useForm();
+  const tableExpandable = useMemo(() => commentTableExpandable<Comment>(), []);
 
   const getCommentList = useCallback(async () => {
     try {
@@ -436,7 +437,7 @@ export default function ArticleCommentPanel() {
               columns={columns}
               loading={loading}
               scroll={{ x: 'max-content' }}
-              expandable={commentTableExpandable}
+              expandable={tableExpandable}
               onRow={(record) => ({
                 onClick: () => setSelected(record),
                 className: `cursor-pointer transition-colors ${selected?.id === record.id

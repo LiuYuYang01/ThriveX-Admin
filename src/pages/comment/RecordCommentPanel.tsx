@@ -70,6 +70,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
   );
 
   const [filterForm] = Form.useForm();
+  const tableExpandable = useMemo(() => commentTableExpandable<RecordComment>(), []);
 
   useEffect(() => {
     if (initRecordId) {
@@ -158,7 +159,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
     setRecordIdFilter(undefined);
     onClearRecordFilter?.();
     if (!hadRecordFilter) {
-      void onFilterChange({} as RecordCommentFilterQueryParams);
+      void onFilterChange({});
     }
   };
 
@@ -494,10 +495,10 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
             columns={columns}
             loading={loading}
             scroll={{ x: 'max-content' }}
-            expandable={commentTableExpandable}
-            onRow={(record) => ({
-              onClick: () => setSelected(record),
-              className: `cursor-pointer transition-colors ${selected?.id === record.id
+            expandable={tableExpandable}
+            onRow={(row: RecordComment) => ({
+              onClick: () => setSelected(row),
+              className: `cursor-pointer transition-colors ${selected?.id === row.id
                 ? '[&>td]:bg-primary/5! dark:[&>td]:bg-primary/10!'
                 : 'hover:[&>td]:bg-slate-50/80! dark:hover:[&>td]:bg-boxdark-2/50!'
                 }`,
