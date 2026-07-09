@@ -3,7 +3,7 @@ export interface Milestone {
   eventDate: number | Dayjs;
   title: string;
   description: string;
-  images: string[];
+  image?: string;
   tags: string[];
 }
 

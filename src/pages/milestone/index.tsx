@@ -9,6 +9,7 @@ import {
   notification,
   Popconfirm,
   Select,
+  Space,
   Spin,
   Table,
   Tooltip,
@@ -24,6 +25,7 @@ import {
   FiRotateCcw,
   FiSearch,
   FiTrash2,
+  FiUploadCloud,
 } from 'react-icons/fi';
 
 import {
@@ -96,7 +98,7 @@ export default function MilestonePage() {
   const [filterForm] = Form.useForm<FilterFormValues>();
 
   const isEditing = modalMode === 'edit' && editingId != null;
-  const imagesPreview = (Form.useWatch('images', form) as string[] | undefined) ?? [];
+  const imagePreview = Form.useWatch('image', form) as string | undefined;
   const hasActiveFilters = Boolean(searchTitle.trim() || searchYear.trim());
 
   const filteredList = useMemo(() => {
@@ -108,6 +110,14 @@ export default function MilestonePage() {
       return matchTitle && matchYear;
     });
   }, [milestoneList, searchTitle, searchYear]);
+
+  const yearOptions = useMemo(
+    () =>
+      Array.from(new Set(milestoneList.map((item) => extractYear(item.eventDate)).filter(Boolean)))
+        .sort((a, b) => Number(b) - Number(a))
+        .map((year) => ({ label: year, value: year })),
+    [milestoneList],
+  );
 
   const pagedList = useMemo(() => {
     const start = (pagination.current - 1) * pagination.pageSize;
@@ -173,7 +183,6 @@ export default function MilestonePage() {
         form.setFieldsValue({
           ...data,
           eventDate: dayjs(data.eventDate),
-          images: data.images ?? [],
           tags: data.tags ?? [],
         });
       } catch (error) {
@@ -228,7 +237,6 @@ export default function MilestonePage() {
       const payload: Milestone = {
         ...values,
         eventDate: toTimestamp(values.eventDate),
-        images: values.images ?? [],
         tags: values.tags ?? [],
       };
 
@@ -267,15 +275,15 @@ export default function MilestonePage() {
       },
       {
         title: '封面',
-        dataIndex: 'images',
-        key: 'images',
+        dataIndex: 'image',
+        key: 'image',
         width: 120,
-        render: (images: string[]) =>
-          images?.length ? (
+        render: (url: string) =>
+          url ? (
             <div
               className={`relative aspect-video w-[100px] overflow-hidden rounded-lg border border-slate-200/80 dark:border-strokedark ${imageCellClass}`}
             >
-              <Image src={images[0]} alt="" preview={{ mask: `预览 ${images.length} 张` }} />
+              <Image src={url} alt="" preview={{ mask: '预览' }} />
             </div>
           ) : (
             <span className="inline-flex items-center gap-1 text-xs text-slate-400">
@@ -287,13 +295,13 @@ export default function MilestonePage() {
       {
         title: '事件',
         key: 'event',
+        width: 500,
         render: (_: unknown, row: Milestone) => (
           <div className="max-w-md">
             <div className="flex items-center gap-2">
               <span className="font-mono text-[11px] text-amber-600/80 dark:text-amber-400/80">
                 {formatEventDate(row.eventDate)}
               </span>
-              <span className="text-xs text-slate-400">{extractYear(row.eventDate)}</span>
             </div>
             <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-100">{row.title}</p>
             {row.description ? (
@@ -306,7 +314,6 @@ export default function MilestonePage() {
         title: '标签',
         dataIndex: 'tags',
         key: 'tags',
-        width: 160,
         render: (tags: string[]) =>
           tags?.length ? (
             <div className="flex flex-wrap gap-1">
@@ -350,7 +357,7 @@ export default function MilestonePage() {
                   type="button"
                   disabled={btnLoading === record.id}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex size-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 cursor-pointer"
+                  className="flex size-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
                 >
                   <FiTrash2 size={15} />
                 </button>
@@ -379,8 +386,13 @@ export default function MilestonePage() {
             <Form.Item name="title" className="mb-0! min-w-[180px] flex-1">
               <Input prefix={<FiSearch className="text-slate-400" />} placeholder="搜索标题" allowClear />
             </Form.Item>
-            <Form.Item name="year" className="mb-0! w-28">
-              <Input prefix={<FiCalendar className="text-slate-400" />} placeholder="年份" allowClear />
+            <Form.Item name="year" className="mb-0! w-32">
+              <Select
+                allowClear
+                placeholder="选择年份"
+                options={yearOptions}
+                suffixIcon={<FiCalendar className="text-slate-400" />}
+              />
             </Form.Item>
             {hasActiveFilters ? (
               <Button icon={<FiRotateCcw />} onClick={resetFilters}>
@@ -444,41 +456,38 @@ export default function MilestonePage() {
               />
             </Form.Item>
 
-            <Form.Item name="images" label="照片">
-              <div className="flex flex-wrap gap-3">
-                {imagesPreview.length ? (
-                  <Image.PreviewGroup>
-                    {imagesPreview.map((url) => (
-                      <div
-                        key={url}
-                        className={`group relative aspect-video w-32 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-strokedark dark:bg-boxdark ${imageCellClass}`}
-                      >
-                        <Image src={url} alt="" preview={{ mask: '预览' }} />
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            form.setFieldValue(
-                              'images',
-                              imagesPreview.filter((item) => item !== url),
-                            );
-                            void form.validateFields(['images']);
-                          }}
-                          className="absolute right-1 top-1 z-10 flex size-6 cursor-pointer items-center justify-center rounded-full bg-red-500 text-white opacity-0 transition-all group-hover:opacity-100"
-                        >
-                          <FiTrash2 size={13} className="relative -top-px left-[-0.5px]" />
-                        </button>
-                      </div>
-                    ))}
-                  </Image.PreviewGroup>
+            <Form.Item label="封面图">
+              <div className="space-y-3">
+                <Space.Compact block className="image-url-compact">
+                  <Form.Item name="image" noStyle>
+                    <Input
+                      prefix={<FiImage className="text-slate-400" />}
+                      placeholder="请输入图片地址"
+                      allowClear
+                    />
+                  </Form.Item>
+                  <Button icon={<FiUploadCloud />} onClick={() => setIsMaterialModalOpen(true)}>
+                    选择
+                  </Button>
+                </Space.Compact>
+                {imagePreview ? (
+                  <div
+                    className={`group relative aspect-video w-32 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-strokedark dark:bg-boxdark ${imageCellClass}`}
+                  >
+                    <Image src={imagePreview} alt="" preview={{ mask: '预览' }} />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        form.setFieldValue('image', undefined);
+                        void form.validateFields(['image']);
+                      }}
+                      className="absolute right-1 top-1 z-10 flex size-6 cursor-pointer items-center justify-center rounded-full bg-red-500 text-white opacity-0 transition-all group-hover:opacity-100"
+                    >
+                      <FiTrash2 size={13} className="relative -top-px left-[-0.5px]" />
+                    </button>
+                  </div>
                 ) : null}
-                <button
-                  type="button"
-                  onClick={() => setIsMaterialModalOpen(true)}
-                  className="flex aspect-video w-32 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-400 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary dark:border-strokedark dark:bg-boxdark dark:hover:border-primary cursor-pointer"
-                >
-                  <FiPlus size={28} />
-                </button>
               </div>
             </Form.Item>
           </Form>
@@ -486,13 +495,14 @@ export default function MilestonePage() {
       </Modal>
 
       <Material
-        multiple
         open={isMaterialModalOpen}
         onClose={() => setIsMaterialModalOpen(false)}
         onSelect={(urls) => {
-          const current = (form.getFieldValue('images') as string[] | undefined) ?? [];
-          form.setFieldValue('images', Array.from(new Set([...current, ...urls])));
-          void form.validateFields(['images']);
+          const url = urls[0];
+          if (url) {
+            form.setFieldValue('image', url);
+            void form.validateFields(['image']);
+          }
           setIsMaterialModalOpen(false);
         }}
       />
