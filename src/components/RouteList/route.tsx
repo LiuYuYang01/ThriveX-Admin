@@ -11,6 +11,7 @@ import Tag from '@/pages/tag';
 import Web from '@/pages/web';
 import Swiper from '@/pages/swiper';
 import Footprint from '@/pages/footprint';
+import Milestone from '@/pages/milestone';
 import SystemConfig from '@/pages/setup/system';
 import ThirdPartyConfig from '@/pages/setup/third_party';
 import File from '@/pages/file';
@@ -48,6 +49,7 @@ const componentMap: Record<string, React.ReactNode> = {
   '/web': <Web />,
   '/swiper': <Swiper />,
   '/footprint': <Footprint />,
+  '/milestone': <Milestone />,
   '/setup/system': <SystemConfig />,
   '/setup/third_party': <ThirdPartyConfig />,
   '/file': <File />,

@@ -1,4 +1,4 @@
-import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug, BiBook, BiTrash, BiChip, BiMessageSquareDetail, BiCommentDetail, BiGlobe, BiImage, BiMapPin, BiCog, BiPlug } from 'react-icons/bi';
+import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug, BiBook, BiTrash, BiChip, BiMessageSquareDetail, BiCommentDetail, BiGlobe, BiImage, BiMapPin, BiCog, BiPlug, BiStar } from 'react-icons/bi';
 import { TbBrandAirtable, TbWriting } from 'react-icons/tb';
 import { FaRegComments, FaInstagram } from 'react-icons/fa';
 import { MdOutlineArticle } from 'react-icons/md';
@@ -60,6 +60,7 @@ export const sidebarRoutes: RouteGroupConfig[] = [
           { path: '/web', name: '网站管理', icon: <BiGlobe className="text-base" /> },
           { path: '/swiper', name: '轮播图管理', icon: <BiImage className="text-base" /> },
           { path: '/footprint', name: '足迹管理', icon: <BiMapPin className="text-base" /> },
+          { path: '/milestone', name: '里程碑管理', icon: <BiStar className="text-base" /> },
           { path: '/page_config', name: '页面配置', icon: <BiCog className="text-base" /> },
         ],
       },
