@@ -466,7 +466,7 @@ export default function MilestonePage() {
                           }}
                           className="absolute right-1 top-1 z-10 flex size-6 cursor-pointer items-center justify-center rounded-full bg-red-500 text-white opacity-0 transition-all group-hover:opacity-100"
                         >
-                          <FiTrash2 size={13} className='relative -top-px left-[-0.5px]' />
+                          <FiTrash2 size={13} className="relative -top-px left-[-0.5px]" />
                         </button>
                       </div>
                     ))}
