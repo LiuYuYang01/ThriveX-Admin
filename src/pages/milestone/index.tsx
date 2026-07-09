@@ -24,7 +24,6 @@ import {
   FiRotateCcw,
   FiSearch,
   FiTrash2,
-  FiUploadCloud,
 } from 'react-icons/fi';
 
 import {
@@ -41,9 +40,13 @@ import type { Milestone } from '@/types/app/milestone';
 
 import Skeleton from './Skeleton';
 import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/zh-cn';
 import DatePicker from 'antd/lib/date-picker';
+import zhCN from 'antd/es/date-picker/locale/zh_CN';
 
 const DEFAULT_PAGE_SIZE = 8;
+
+dayjs.locale('zh-cn');
 
 const imageCellClass =
   '[&_.ant-image]:block! [&_.ant-image]:size-full! [&_.ant-image-img]:size-full! [&_.ant-image-img]:object-cover! [&_.ant-image-mask]:size-full!';
@@ -422,7 +425,7 @@ export default function MilestonePage() {
               label="日期"
               rules={[{ required: true, message: '请选择事件日期' }]}
             >
-              <DatePicker className="w-full" />
+              <DatePicker className="w-full" locale={zhCN} />
             </Form.Item>
 
             <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
@@ -430,29 +433,7 @@ export default function MilestonePage() {
             </Form.Item>
 
             <Form.Item name="description" label="描述">
-              <Input.TextArea rows={8} placeholder="描述" showCount />
-            </Form.Item>
-
-            <Form.Item name="images" label="封面图">
-              <div className="space-y-3">
-                {imagesPreview.length ? (
-                  <Image.PreviewGroup>
-                    <div className="flex flex-wrap gap-3">
-                      {imagesPreview.map((url) => (
-                        <div
-                          key={url}
-                          className="relative aspect-video w-32 overflow-hidden rounded-lg border border-slate-200 dark:border-strokedark"
-                        >
-                          <Image src={url} alt="" className="size-full object-cover" />
-                        </div>
-                      ))}
-                    </div>
-                  </Image.PreviewGroup>
-                ) : null}
-                <Button icon={<FiUploadCloud />} onClick={() => setIsMaterialModalOpen(true)}>
-                  选择图片
-                </Button>
-              </div>
+              <Input.TextArea className="min-h-[90px]!" rows={8} placeholder="描述" showCount />
             </Form.Item>
 
             <Form.Item name="tags" label="标签">
@@ -461,6 +442,44 @@ export default function MilestonePage() {
                 placeholder="输入后回车添加标签"
                 tokenSeparators={[',']}
               />
+            </Form.Item>
+
+            <Form.Item name="images" label="照片">
+              <div className="flex flex-wrap gap-3">
+                {imagesPreview.length ? (
+                  <Image.PreviewGroup>
+                    {imagesPreview.map((url) => (
+                      <div
+                        key={url}
+                        className={`group relative aspect-video w-32 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-strokedark dark:bg-boxdark ${imageCellClass}`}
+                      >
+                        <Image src={url} alt="" preview={{ mask: '预览' }} />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            form.setFieldValue(
+                              'images',
+                              imagesPreview.filter((item) => item !== url),
+                            );
+                            void form.validateFields(['images']);
+                          }}
+                          className="absolute right-1 top-1 z-10 flex size-6 cursor-pointer items-center justify-center rounded-full bg-red-500 text-white opacity-0 transition-all group-hover:opacity-100"
+                        >
+                          <FiTrash2 size={13} className='relative -top-px left-[-0.5px]' />
+                        </button>
+                      </div>
+                    ))}
+                  </Image.PreviewGroup>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => setIsMaterialModalOpen(true)}
+                  className="flex aspect-video w-32 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-400 transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary dark:border-strokedark dark:bg-boxdark dark:hover:border-primary cursor-pointer"
+                >
+                  <FiPlus size={28} />
+                </button>
+              </div>
             </Form.Item>
           </Form>
         </Spin>
@@ -471,7 +490,8 @@ export default function MilestonePage() {
         open={isMaterialModalOpen}
         onClose={() => setIsMaterialModalOpen(false)}
         onSelect={(urls) => {
-          form.setFieldValue('images', urls);
+          const current = (form.getFieldValue('images') as string[] | undefined) ?? [];
+          form.setFieldValue('images', Array.from(new Set([...current, ...urls])));
           void form.validateFields(['images']);
           setIsMaterialModalOpen(false);
         }}
