@@ -9,11 +9,6 @@ export const instance = axios.create({
     timeout: 10000,
 });
 
-// 更新 baseURL（运行时配置加载后调用）
-export const updateBaseURL = () => {
-    instance.defaults.baseURL = getApiUrl();
-};
-
 // 用于取消请求
 const CancelToken = axios.CancelToken;
 const source = CancelToken.source();
