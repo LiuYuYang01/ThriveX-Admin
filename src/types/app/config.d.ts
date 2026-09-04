@@ -57,10 +57,10 @@ export type EnvConfigName =
   | 'baidu_statis'
   | 'baidu_statis_key'
   | 'email'
-  | 'gaode_map'
+  | 'gaode_map_key'
   | 'gaode_coordinate'
   | 'qiniu_storage'
-  | 'hcaptcha';
+  | 'hcaptcha_key';
 
 export interface Config {
   id: string;

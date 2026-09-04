@@ -87,7 +87,7 @@ export async function loadGaodeWebKey() {
     const coordinateKey = (coordinate.data.value as { key?: string })?.key?.trim();
     if (coordinateKey) return coordinateKey;
 
-    const map = await getEnvConfigDataAPI('gaode_map');
+    const map = await getEnvConfigDataAPI('gaode_map_key');
     const mapKey = (map.data.value as { key_code?: string })?.key_code?.trim();
     return mapKey || '';
   } catch {

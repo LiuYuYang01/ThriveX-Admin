@@ -78,20 +78,20 @@ export type EnvConfigName =
   | 'baidu_statis'
   | 'baidu_statis_key'
   | 'email'
-  | 'gaode_map'
+  | 'gaode_map_key'
   | 'gaode_coordinate'
   | 'qiniu_storage'
-  | 'hcaptcha';
+  | 'hcaptcha_key';
 
 /** 在项目配置「环境配置」表格中隐藏、改由「第三方配置」页表单维护的 name */
 export const THIRD_PARTY_ENV_NAMES = [
   'baidu_statis',
   'baidu_statis_key',
   'email',
-  'gaode_map',
+  'gaode_map_key',
   'gaode_coordinate',
   'qiniu_storage',
-  'hcaptcha',
+  'hcaptcha_key',
 ] as const;
 export type ThirdPartyEnvName = (typeof THIRD_PARTY_ENV_NAMES)[number];
 

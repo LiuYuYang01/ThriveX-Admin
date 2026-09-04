@@ -15,7 +15,7 @@ export default function SecurityConfigForm({ onSuccess }: InitStepFormProps) {
     const loadHcaptchaConfig = async () => {
       setLoading(true);
       try {
-        const { data } = await getEnvConfigDataAPI('hcaptcha');
+        const { data } = await getEnvConfigDataAPI('hcaptcha_key');
         setRow(data);
         const value = data?.value as HcaptchaEnvValue | undefined;
         form.setFieldsValue({ key: value?.key ?? '' });

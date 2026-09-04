@@ -47,7 +47,7 @@ const MENU_LIST: MenuItem[] = [
     icon: <BiEnvelope />,
   },
   {
-    key: 'gaode_map',
+    key: 'gaode_map_key',
     title: '高德地图',
     description: '足迹页面地图展示',
     icon: <BiMap />,
@@ -65,7 +65,7 @@ const MENU_LIST: MenuItem[] = [
     icon: <BiCloud />,
   },
   {
-    key: 'hcaptcha',
+    key: 'hcaptcha_key',
     title: 'hCaptcha',
     description: '拦截机器人与恶意请求验证',
     icon: <BiShield />,
@@ -190,10 +190,10 @@ export default function ThirdPartyConfigPage() {
             {activeKey === 'baidu_statis' && <BaiduForm row={byName[activeKey]} onSaved={reload} />}
             {activeKey === 'baidu_statis_key' && <BaiduStatisKeyForm row={byName[activeKey]} onSaved={reload} />}
             {activeKey === 'email' && <EmailForm row={byName[activeKey]} onSaved={reload} />}
-            {activeKey === 'gaode_map' && <GaodeMapForm row={byName[activeKey]} onSaved={reload} />}
+            {activeKey === 'gaode_map_key' && <GaodeMapForm row={byName[activeKey]} onSaved={reload} />}
             {activeKey === 'gaode_coordinate' && <GaodeCoordinateForm row={byName[activeKey]} onSaved={reload} />}
             {activeKey === 'qiniu_storage' && <QiniuForm row={byName[activeKey]} onSaved={reload} />}
-            {activeKey === 'hcaptcha' && <HcaptchaForm row={byName[activeKey]} onSaved={reload} />}
+            {activeKey === 'hcaptcha_key' && <HcaptchaForm row={byName[activeKey]} onSaved={reload} />}
           </div>
         </div>
       </div>
