@@ -21,6 +21,7 @@ export default function SecurityConfigForm({ onSuccess }: InitStepFormProps) {
         form.setFieldsValue({ key: value?.key ?? '' });
       } catch (e) {
         console.error(e);
+        message.error('人机验证配置加载失败');
       } finally {
         setLoading(false);
       }
@@ -55,7 +56,7 @@ export default function SecurityConfigForm({ onSuccess }: InitStepFormProps) {
       requiredMark={false}
       onFinish={handleSave}
       className="w-full"
-      disabled={loading || saving}
+      disabled={loading || saving || !row}
     >
       <Form.Item
         name="key"

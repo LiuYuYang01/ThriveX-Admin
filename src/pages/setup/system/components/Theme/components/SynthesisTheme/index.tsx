@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { Alert, Button, Checkbox, Divider, Form, Input, notification, Space } from 'antd';
 import { CloudUploadOutlined, PictureOutlined } from '@ant-design/icons';
+import { LuImage, LuNewspaper } from 'react-icons/lu';
 
 import { Theme } from '@/types/app/config';
 import { editWebConfigDataAPI, getWebConfigDataAPI } from '@/api/config';
@@ -188,6 +189,27 @@ export default () => {
                 </div>
               ))}
             </div>
+          </div>
+
+          <Divider>文章头图风格</Divider>
+          <div className="flex flex-wrap gap-4">
+            {[
+              { value: 'slide', label: '轮播大图', desc: '全屏背景图居中标题', icon: <LuImage /> },
+              { value: 'editorial', label: '杂志编辑风', desc: '星空氛围左右分栏排版', icon: <LuNewspaper /> },
+            ].map((item) => {
+              const isActive = (theme.article_hero ?? 'slide') === item.value;
+              return (
+                <div
+                  key={item.value}
+                  onClick={() => setTheme({ ...theme, article_hero: item.value as Theme['article_hero'] })}
+                  className={`flex w-[220px] cursor-pointer flex-col items-center gap-2 rounded-md border-2 p-5 ${isActive ? 'border-primary' : 'border-stroke'}`}
+                >
+                  <span className={`text-3xl ${isActive ? 'text-primary' : 'text-gray-400'}`}>{item.icon}</span>
+                  <p className={`text-center font-medium ${isActive ? 'text-primary' : ''}`}>{item.label}</p>
+                  <p className="text-center text-xs text-gray-400">{item.desc}</p>
+                </div>
+              );
+            })}
           </div>
 
           <Button type="primary" size="large" className="w-full mt-4 mb-6" htmlType="submit" loading={loading}>
