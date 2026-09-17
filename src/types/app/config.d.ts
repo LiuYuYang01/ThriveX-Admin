@@ -46,6 +46,8 @@ export interface Theme {
   record_avatar?: string;
   record_cover?: string;
   record_info?: string;
+  // 闪念展现模式：modal 弹窗 / page 页面
+  record_mode?: 'modal' | 'page';
 }
 
 // 其他配置

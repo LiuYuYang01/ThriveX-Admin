@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Form, notification, Input, Button, Space } from 'antd';
+import { Form, notification, Input, Button, Space, Radio } from 'antd';
 import { CloudUploadOutlined, PictureOutlined } from '@ant-design/icons';
 
 import { Theme } from '@/types/app/config';
@@ -48,6 +48,7 @@ export default () => {
         record_name: next.record_name,
         record_avatar: next.record_avatar,
         record_cover: next.record_cover,
+        record_mode: next.record_mode ?? 'page',
       });
     } catch (error) {
       console.error(error);
@@ -64,6 +65,7 @@ export default () => {
     record_name: string;
     record_avatar: string;
     record_cover: string;
+    record_mode: 'modal' | 'page';
   }) => {
     try {
       setLoading(true);
@@ -72,6 +74,7 @@ export default () => {
         record_name: values.record_name,
         record_avatar: values.record_avatar,
         record_cover: values.record_cover,
+        record_mode: values.record_mode,
       };
       await editWebConfigDataAPI('theme', nextTheme);
       setTheme(nextTheme);
@@ -97,6 +100,13 @@ export default () => {
   return (
     <div className="w-full lg:w-[500px]">
       <Form form={form} onFinish={editThemeData} layout="vertical">
+        <Form.Item name="record_mode" label="展现模式" initialValue="page" tooltip="弹窗模式：全站点击闪念入口弹出弹窗浏览；页面模式：跳转到 /record 页面浏览">
+          <Radio.Group optionType="button" buttonStyle="solid">
+            <Radio.Button value="page">页面模式</Radio.Button>
+            <Radio.Button value="modal">弹窗模式</Radio.Button>
+          </Radio.Group>
+        </Form.Item>
+
         <Form.Item name="record_name" label="个人名称">
           <Input size="large" placeholder="请输入个人名称" />
         </Form.Item>

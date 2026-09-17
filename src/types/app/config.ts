@@ -66,6 +66,8 @@ export interface Theme {
   record_avatar?: string;
   record_cover?: string;
   record_info?: string;
+  record_mode?: string;
+  record_mode_info?: string;
 }
 
 // 其他配置
