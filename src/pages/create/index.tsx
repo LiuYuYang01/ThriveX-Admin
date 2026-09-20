@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button, Dropdown, MenuProps, message, Spin, Tooltip } from 'antd';
 import {
@@ -9,6 +9,8 @@ import {
   FiFileText,
   FiEdit3,
   FiCommand,
+  FiImage,
+  FiEye,
 } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi2';
 
@@ -18,7 +20,7 @@ import useAssistant from '@/hooks/useAssistant';
 import { Article } from '@/types/app/article';
 import { getArticleDataAPI } from '@/api/article';
 
-import Editor from './components/Editor';
+import Editor, { type MuyaEditorHandle } from './components/Editor';
 import PublishForm from './components/PublishForm';
 import Title from '@/components/Title';
 
@@ -28,6 +30,14 @@ function countChars(text: string) {
 
 export default function CreatePage() {
   const [loading, setLoading] = useState(false);
+  const editorRef = useRef<MuyaEditorHandle>(null);
+  const [focusMode, setFocusMode] = useState(false);
+
+  const toggleFocusMode = () => {
+    const next = !focusMode;
+    setFocusMode(next);
+    editorRef.current?.setFocusMode(next);
+  };
 
   const [params] = useSearchParams();
   const id = +params.get('id')!;
@@ -55,7 +65,7 @@ export default function CreatePage() {
     if (id && isDraftParams) {
       return { label: '编辑草稿', hint: '草稿内容可随时保存到本地', tone: 'text-amber-600 bg-amber-500/10 dark:text-amber-400' };
     }
-    return { label: '新建创作', hint: '支持 Markdown，Ctrl / ⌘ + S 快速保存', tone: 'text-slate-600 bg-slate-100 dark:text-slate-300 dark:bg-boxdark-2' };
+    return { label: '新建创作', hint: '所见即所得编辑 · 段落左侧按钮快速插入 · Ctrl / ⌘ + S 保存', tone: 'text-slate-600 bg-slate-100 dark:text-slate-300 dark:bg-boxdark-2' };
   }, [id, isDraftParams]);
 
   const nextBtn = () => {
@@ -240,7 +250,7 @@ export default function CreatePage() {
       </Title>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-clip rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
           <header className="flex shrink-0 flex-col gap-2 border-b border-slate-100 px-4 py-3 dark:border-strokedark sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span
@@ -258,6 +268,28 @@ export default function CreatePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+              <Tooltip title="从素材库插入图片">
+                <button
+                  type="button"
+                  onClick={() => editorRef.current?.openMaterial()}
+                  className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-primary dark:text-slate-400 dark:hover:bg-boxdark-2"
+                >
+                  <FiImage size={14} />
+                </button>
+              </Tooltip>
+              <Tooltip title={focusMode ? '退出专注模式' : '专注模式（淡化非当前段落）'}>
+                <button
+                  type="button"
+                  onClick={toggleFocusMode}
+                  className={`inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-boxdark-2 ${
+                    focusMode
+                      ? 'text-primary'
+                      : 'text-slate-500 hover:text-primary dark:text-slate-400'
+                  }`}
+                >
+                  <FiEye size={14} />
+                </button>
+              </Tooltip>
               <span className="inline-flex items-center gap-1.5 tabular-nums">
                 <span className="font-medium text-slate-700 dark:text-slate-200">{charCount}</span>
                 字
@@ -272,7 +304,11 @@ export default function CreatePage() {
 
           <div className="create-editor-shell min-h-0 flex-1">
             <Spin spinning={loading} className="h-full [&_.ant-spin-container]:h-full">
-              <Editor value={content} onChange={(value) => setContent(value)} />
+              <Editor
+                ref={editorRef}
+                value={content}
+                onChange={(value) => setContent(value)}
+              />
             </Spin>
           </div>
         </section>

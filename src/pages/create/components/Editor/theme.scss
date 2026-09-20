@@ -1,0 +1,152 @@
+/**
+ * MarkText 沉浸式编辑器主题（基于 muya 引擎的 CSS 变量体系）
+ *
+ * 亮色：直接使用引擎内置的 marktext 默认亮色主题；
+ * 暗色：通过 body.dark 作用域覆盖引擎变量，色调对齐后台的暗色面板配色。
+ */
+
+// ---------------------------------------------------------------- 容器高度链
+// 页面结构：.create-editor-shell > Spin(页面级) > Editor > Spin(上传) > .mu-editor
+.create-editor-shell {
+
+  .ant-spin-nested-loading,
+  .ant-spin-container {
+    height: 100%;
+  }
+}
+
+// getContainer 会把容器 div 替换为 .mu-editor 根节点并拷贝其 class，
+// 因此 .create-muya-editor 就是编辑器根节点本身。
+// 注意：不要设 min-height，否则小视口下会压过 height:100% 撑破 section。
+.create-muya-editor {
+    height: 100%;
+
+    // 与 marktext 桌面端一致：muya 根节点自身滚动。
+    // 否则浏览器会把光标滚动委托给外层 overflow:hidden 的 section（overflow:hidden
+    // 仍是可编程滚动容器），把工具栏 header 顶出可视区。
+    overflow-y: auto;
+
+    background: var(--editor-bg-color);
+}
+
+// ---------------------------------------------------------------- 暗色主题
+body.dark .create-muya-editor {
+    /* editor 基础 */
+    --theme-color: var(--color-primary);
+    --highlight-color: rgb(96 165 250 / 40%);
+    --selection-color: rgb(96 165 250 / 30%);
+    --editor-color: #cbd5e1;
+    --editor-color-80: #e2e8f0;
+    --editor-color-50: #94a3b8;
+    --editor-color-30: #64748b;
+    --editor-color-10: #3b4d63;
+    --editor-color-04: rgb(255 255 255 / 4%);
+    --editor-bg-color: transparent;
+
+    --delete-color: #ff6969;
+    --icon-color: #94a3b8;
+    --code-block-bg-color: rgb(255 255 255 / 6%);
+    --table-border-color: var(--color-strokedark);
+    --input-bg-color: rgb(255 255 255 / 8%);
+
+    /* 按钮 */
+    --button-font-color: #cbd5e1;
+    --button-bg-color: #334459;
+    --button-border: 1px solid var(--color-strokedark);
+    --button-bg-color-hover: linear-gradient(#3d5069, #36485e);
+    --button-border-hover: var(--button-border);
+
+    /* 浮层（格式工具栏 / 快捷插入 / 表格菜单等） */
+    --float-bg-color: var(--color-boxdark-2);
+    --float-hover-color: rgb(255 255 255 / 6%);
+    --float-border-color: var(--color-strokedark);
+    --float-shadow:
+        rgb(0 0 0 / 40%) 0 0 0 1px,
+        rgb(0 0 0 / 30%) 0 3px 6px,
+        rgb(0 0 0 / 35%) 0 9px 24px;
+
+    /* markdown 元素 */
+    --link-color: var(--color-primary);
+    --blockquote-text-color: #94a3b8;
+    --blockquote-border-color: #64748b;
+    --hr-color: #3b4d63;
+
+    /* :root 上的派生变量（如 --h1-color: var(--editor-color-80)）已在 html
+       层固化为亮色值，仅在子树重定义 --editor-color-* 无法生效，
+       必须在这里显式覆盖这些派生变量本身。 */
+    --h1-color: var(--editor-color-80);
+    --h2-color: var(--editor-color-80);
+    --h3-color: var(--editor-color-80);
+    --h4-color: var(--editor-color-80);
+    --h5-color: var(--editor-color-80);
+    --h6-color: var(--editor-color-80);
+    --button-font-color: #cbd5e1;
+}
+
+// ---------------------------------------------------------------- 暗色代码高亮
+// 引擎只内置了 prism 亮色 token 配色，暗色下覆盖为 one-dark 风格
+body.dark .create-muya-editor {
+
+    .token.comment,
+    .token.prolog,
+    .token.doctype,
+    .token.cdata {
+        color: #7f848e;
+    }
+
+    .token.punctuation {
+        color: #abb2bf;
+    }
+
+    .token.property,
+    .token.tag,
+    .token.boolean,
+    .token.number,
+    .token.constant,
+    .token.symbol {
+        color: #e06c75;
+    }
+
+    .token.selector,
+    .token.attr-name,
+    .token.string,
+    .token.char,
+    .token.builtin {
+        color: #98c379;
+    }
+
+    .token.inserted {
+        color: #98c379;
+        background: rgb(152 195 121 / 12%);
+    }
+
+    .token.deleted {
+        color: #e06c75;
+        background: rgb(224 108 117 / 12%);
+    }
+
+    .token.operator,
+    .token.entity,
+    .token.url,
+    .language-css .token.string,
+    .style .token.string {
+        color: #56b6c2;
+    }
+
+    .token.atrule,
+    .token.attr-value,
+    .token.keyword {
+        color: #c678dd;
+    }
+
+    .token.function,
+    .token.class-name {
+        color: #61afef;
+    }
+
+    .token.regex,
+    .token.important,
+    .token.variable {
+        color: #d19a66;
+    }
+}
