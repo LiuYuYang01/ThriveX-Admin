@@ -84,7 +84,7 @@ export const zhCN = {
         'Alt text': '替代文本',
         'Image link or local path': '图片链接或本地路径',
         'Image title': '图片标题',
-        'Embed Image': '嵌入图片',
+        'Embed Image': '确定',
         'Paste web image or local image path. Use': '粘贴网络图片或本地路径。切换模式',
         'simple mode': '简洁模式',
         'full mode': '完整模式',

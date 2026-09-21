@@ -12,6 +12,9 @@ import { SelectionType } from './types';
 class ImageSelection {
     selected: IImageSelectionData | null = null;
 
+    /** 当前选中图片所在的内容块，用于专注模式下点亮 / 取消点亮 */
+    private _activeImageBlock: Format | null = null;
+
     constructor(private _muya: Muya, private _selection: Selection) {}
 
     attach(): void {
@@ -26,6 +29,11 @@ class ImageSelection {
     }
 
     private _handleDocClick = (): void => {
+        // 点击编辑器其他区域时，取消专注模式下图片块的点亮
+        if (this._activeImageBlock) {
+            this._muya.editor.scrollPage?.handleBlurFromContent(this._activeImageBlock);
+            this._activeImageBlock = null;
+        }
         this.selected = null;
     };
 
@@ -156,6 +164,11 @@ class ImageSelection {
             });
 
             this._selection.selectImage(Object.assign({}, imageInfo, { block: contentBlock }));
+
+            // 专注模式下图片选中不走文本光标，手动点亮图片所在的块，
+            // 否则图片会一直保持淡化状态（mu-active 不会被设置）
+            this._activeImageBlock = contentBlock;
+            this._muya.editor.scrollPage?.handleFocusFromContent(contentBlock);
 
             return;
         }

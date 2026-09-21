@@ -20,6 +20,7 @@ import {
 } from './config/index';
 
 import { Editor } from './editor/index';
+import { handleEditorShortcuts } from './editor/shortcuts';
 import EventCenter from './event/index';
 import I18n from './i18n/index';
 import {
@@ -163,6 +164,10 @@ export class Muya {
         });
         this.eventCenter.attachDOMEvent(this.domNode, 'blur', () => {
             this.eventCenter.emit('blur');
+        });
+        // Typora 风格快捷键：撤销 / 重做 / 非空段落块转换
+        this.eventCenter.attachDOMEvent(this.domNode, 'keydown', (event) => {
+            handleEditorShortcuts(this, event);
         });
     }
 

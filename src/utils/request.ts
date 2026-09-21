@@ -20,6 +20,9 @@ const handleUnauthorized = (messageText?: string) => {
     if (isHandling401Error) return;
     isHandling401Error = true;
 
+    // TEMP-REPRO: 本地复现编辑器崩溃用，复现完删除
+    if (localStorage.getItem('repro_bypass_401') === '1') { isHandling401Error = false; return; }
+
     if (messageText) {
         notification.error({
             message: '登录已失效',

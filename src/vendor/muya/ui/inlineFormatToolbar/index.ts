@@ -30,6 +30,7 @@ const FORMAT_SHORTCUTS = {
     d: 'del',
     e: 'inline_code',
     l: 'link',
+    k: 'link',
 } as const;
 
 /** Format keyboard shortcuts with shift modifier */

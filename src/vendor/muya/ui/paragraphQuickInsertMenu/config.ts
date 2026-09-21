@@ -335,6 +335,25 @@ export const MENU_CONFIG: IQuickInsertMenuItem[] = [
     },
 ];
 
+/**
+ * Typora 风格的快捷键别名（marktext 原生快捷键之外的补充绑定），
+ * 与 MENU_CONFIG 的 label 对应，命中行为完全一致。
+ */
+export const SHORTCUT_ALIASES: {
+    code: string;
+    metaKey: boolean;
+    shiftKey: boolean;
+    altKey: boolean;
+    label: string;
+}[] = [
+    { code: 'KeyQ', metaKey: true, shiftKey: true, altKey: false, label: 'block-quote' },
+    { code: 'KeyK', metaKey: true, shiftKey: true, altKey: false, label: 'code-block' },
+    { code: 'KeyX', metaKey: true, shiftKey: true, altKey: false, label: 'task-list' },
+    { code: 'Minus', metaKey: true, shiftKey: true, altKey: false, label: 'thematic-break' },
+    { code: 'BracketLeft', metaKey: true, shiftKey: true, altKey: false, label: 'order-list' },
+    { code: 'BracketRight', metaKey: true, shiftKey: true, altKey: false, label: 'bullet-list' },
+];
+
 export function getLabelFromEvent(event: Event) {
     if (!isKeyboardEvent(event))
         return null;
@@ -343,8 +362,8 @@ export function getLabelFromEvent(event: Event) {
         [] as IQuickInsertMenuItem['children'],
     );
 
+    const { code, metaKey, shiftKey, altKey } = event;
     const result = ALL_MENU_CONFIG.find((menu) => {
-        const { code, metaKey, shiftKey, altKey } = event;
         const { shortKeyMap = {} as IQuickInsertMenuItem['children'][number]['shortKeyMap'] } = menu;
 
         return (
@@ -357,4 +376,13 @@ export function getLabelFromEvent(event: Event) {
 
     if (result)
         return result.label;
+
+    const alias = SHORTCUT_ALIASES.find(
+        a => code === a.code
+            && metaKey === a.metaKey
+            && shiftKey === a.shiftKey
+            && altKey === a.altKey,
+    );
+
+    return alias?.label;
 }
