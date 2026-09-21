@@ -5,8 +5,8 @@ import type { Muya } from '../muya';
 import type { Nullable } from '../types';
 import type Selection from './index';
 import type { IAnchorFocusInfo, INodeOffset, ISelection } from './types';
-import { BLOCK_DOM_PROPERTY } from '../config';
 import { isHTMLElement, isMouseEvent } from '../utils';
+import { getBlock } from '../utils/dom';
 import {
     buildSelectionAffiliation,
     endpointBlockInfo,
@@ -169,8 +169,8 @@ class TextSelection {
         if (!anchorDomNode || !focusDomNode)
             return null;
 
-        const anchorBlock = anchorDomNode[BLOCK_DOM_PROPERTY] as Content | undefined;
-        const focusBlock = focusDomNode[BLOCK_DOM_PROPERTY] as Content | undefined;
+        const anchorBlock = getBlock(anchorDomNode) as Content | undefined;
+        const focusBlock = getBlock(focusDomNode) as Content | undefined;
         // An `mu-content` span cloned by the browser's native edit
         // behavior is not linked back to a block. Bail out instead of
         // crashing — the caller treats null the same as "no selection".
@@ -376,22 +376,47 @@ class TextSelection {
 
         const anchorParagraph = anchorBlock
             ? anchorBlock.domNode
-            : scrollPage?.queryBlock(anchorPath);
+            : scrollPage?.queryBlock([...anchorPath]);
         const focusParagraph = focusBlock
             ? focusBlock.domNode
-            : scrollPage?.queryBlock(focusPath);
+            : scrollPage?.queryBlock([...focusPath]);
 
         // getNodeAndOffset expects a DOM Node. The fallback branch can hand
         // back a Parent/Content block (from scrollPage.queryBlock); narrow to
         // an actual Node here, preserving the existing not-found behavior.
         if (!(anchorParagraph instanceof Node) || !(focusParagraph instanceof Node))
             return;
+
+        // 缓存的块引用在整树重建后会指向已脱离文档的旧节点，直接对其
+        // addRange 会抛 "The given range isn't in document" 并中断编辑管线。
+        // 对脱离文档的节点按 path 重新解析，仍失效则清空原生选区兜底。
+        const resolveAttached = (paragraph: Node, path: TBlockPath): Node | null => {
+            if (this._doc.contains(paragraph))
+                return paragraph;
+
+            const node = scrollPage?.queryBlock([...path])?.domNode;
+
+            return node instanceof Node && this._doc.contains(node) ? node : null;
+        };
+
+        const anchorAttached = resolveAttached(anchorParagraph, anchorPath);
+        const focusAttached = resolveAttached(focusParagraph, focusPath);
+
+        if (!anchorAttached || !focusAttached) {
+            const selection = this._doc.getSelection();
+
+            if (selection)
+                selection.removeAllRanges();
+
+            return;
+        }
+
         const { node: anchorNode, offset: anchorOffset } = getNodeAndOffset(
-            anchorParagraph,
+            anchorAttached,
             anchor.offset,
         );
         const { node: focusNode, offset: focusOffset } = getNodeAndOffset(
-            focusParagraph,
+            focusAttached,
             focus.offset,
         );
 

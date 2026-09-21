@@ -366,7 +366,7 @@ export class Editor {
             anchorBlock
             && anchor
             && focus
-            && scrollPage?.queryBlock(anchorPath) === anchorBlock
+            && scrollPage?.queryBlock([...anchorPath]) === anchorBlock
         ) {
             anchorBlock.setCursor(anchor.offset, focus.offset, true);
             return;

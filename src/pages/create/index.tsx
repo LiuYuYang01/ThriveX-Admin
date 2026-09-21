@@ -289,7 +289,7 @@ export default function CreatePage() {
                 <FiImage size={14} />
               </button>
             </Tooltip>
-            <Tooltip title={focusMode ? '退出专注模式' : '专注模式（淡化非当前段落）'}>
+            <Tooltip title={focusMode ? '退出专注模式' : '专注模式'}>
               <button
                 type="button"
                 onClick={toggleFocusMode}
