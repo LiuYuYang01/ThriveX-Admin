@@ -103,19 +103,6 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
       use(ImagePathPicker);
       use(ImageEditTool, {
         imageAction,
-        // Web 环境：用隐藏的 <input type="file"> 充当 marktext 的系统文件选择框，
-        // 返回 blob URL，后续统一走 imageAction 上传。
-        imagePathPicker: () =>
-          new Promise<string>((resolve) => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = () => {
-              const file = input.files?.[0];
-              resolve(file ? URL.createObjectURL(file) : '');
-            };
-            input.click();
-          }),
       });
       use(ImageResizeBar);
       use(ImageToolBar);

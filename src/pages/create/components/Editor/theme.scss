@@ -166,3 +166,16 @@ body.dark .create-muya-editor {
         color: #d19a66;
     }
 }
+
+// ---------------------------------------------------------------- 沉浸写作模式
+// 编辑卡片 fixed 铺满视口，直接盖住侧边栏 / 顶栏 / 页面标题，布局 DOM 不动。
+// theme.scss 未加入 @layer，未分层样式优先级高于 Tailwind utilities 层，
+// 因此可覆盖卡片上的 rounded-2xl / border 等工具类。
+body.immersive-writing .immersive-editor {
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+
+    border: none;
+    border-radius: 0;
+}

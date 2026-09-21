@@ -11,6 +11,8 @@ import {
   FiCommand,
   FiImage,
   FiEye,
+  FiMaximize2,
+  FiMinimize2,
 } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi2';
 
@@ -38,6 +40,45 @@ export default function CreatePage() {
     setFocusMode(next);
     editorRef.current?.setFocusMode(next);
   };
+
+  // 沉浸写作：编辑卡片铺满视口盖住侧边栏/顶栏，进入时自动开启专注模式，
+  // 退出时恢复进入前的专注状态；Esc 退出（浮层打开时先让 muya 关闭浮层）
+  const [immersive, setImmersive] = useState(false);
+  const prevFocusRef = useRef(false);
+
+  const exitImmersive = () => {
+    if (!prevFocusRef.current && focusMode) toggleFocusMode();
+    setImmersive(false);
+  };
+
+  const toggleImmersive = () => {
+    if (immersive) {
+      exitImmersive();
+      return;
+    }
+    prevFocusRef.current = focusMode;
+    if (!focusMode) toggleFocusMode();
+    setImmersive(true);
+  };
+
+  useEffect(() => {
+    document.body.classList.toggle('immersive-writing', immersive);
+    return () => document.body.classList.remove('immersive-writing');
+  }, [immersive]);
+
+  useEffect(() => {
+    if (!immersive) return;
+    const onKeydown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      const floatOpen = Array.from(document.querySelectorAll<HTMLElement>('.mu-float-wrapper')).some((f) => {
+        const rect = f.getBoundingClientRect();
+        return getComputedStyle(f).opacity === '1' && rect.y > -100;
+      });
+      if (!floatOpen) exitImmersive();
+    };
+    window.addEventListener('keydown', onKeydown);
+    return () => window.removeEventListener('keydown', onKeydown);
+  }, [immersive]);
 
   const [params] = useSearchParams();
   const id = +params.get('id')!;
@@ -250,7 +291,9 @@ export default function CreatePage() {
       </Title>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-clip rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        <section
+          className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-clip rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark ${immersive ? 'immersive-editor' : ''}`}
+        >
           <header className="flex shrink-0 flex-col gap-2 border-b border-slate-100 px-4 py-3 dark:border-strokedark sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span
@@ -288,6 +331,19 @@ export default function CreatePage() {
                   }`}
                 >
                   <FiEye size={14} />
+                </button>
+              </Tooltip>
+              <Tooltip title={immersive ? '退出沉浸写作（Esc）' : '沉浸写作'}>
+                <button
+                  type="button"
+                  onClick={toggleImmersive}
+                  className={`inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-boxdark-2 ${
+                    immersive
+                      ? 'text-primary'
+                      : 'text-slate-500 hover:text-primary dark:text-slate-400'
+                  }`}
+                >
+                  {immersive ? <FiMinimize2 size={14} /> : <FiMaximize2 size={14} />}
                 </button>
               </Tooltip>
               <span className="inline-flex items-center gap-1.5 tabular-nums">
