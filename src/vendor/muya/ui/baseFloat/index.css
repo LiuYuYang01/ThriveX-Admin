@@ -1,7 +1,9 @@
 .mu-float-wrapper {
     position: absolute;
     top: -9999px;
-    right: -9999px;
+    /* 必须用 left 而非 right 停靠屏外：右侧负偏移会撑出文档级横向滚动区，
+       浮层内 scrollIntoView 时会把整页滚出视口导致白屏 */
+    left: -9999px;
     z-index: 10000;
 
     box-sizing: border-box;
@@ -17,7 +19,8 @@
     transform-origin: top;
     opacity: 0;
 
-    transition: opacity 0.2s ease-in-out;
+    /* 不做 opacity 过渡：渲染节流的环境下过渡动画会冻结在中间帧，
+       浮层表现为忽隐忽现的闪烁；显隐必须立即生效 */
 }
 
 .mu-float-container::-webkit-scrollbar:vertical {

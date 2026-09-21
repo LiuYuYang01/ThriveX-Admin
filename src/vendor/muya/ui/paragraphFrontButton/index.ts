@@ -119,6 +119,11 @@ export class ParagraphFrontButton {
             if (!isMouseEvent(event))
                 return;
 
+            // 前置菜单锚定在按钮容器上，菜单打开期间必须冻结按钮（不隐藏、
+            // 也不重新锚定到其他块），否则按钮移动或停靠屏幕外时菜单会跟着闪跳
+            if (Array.from(this.muya.ui.shownFloat).some(f => f.name === 'mu-front-menu'))
+                return;
+
             const { x, y } = event;
             const els = [
                 ...document.elementsFromPoint(x, y),

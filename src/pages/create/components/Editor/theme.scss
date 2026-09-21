@@ -29,8 +29,24 @@
     background: var(--editor-bg-color);
 }
 
+// ---------------------------------------------------------------- 亮色主题
+// 引擎 :root 默认是 marktext 的绿色主题，这里对齐项目的蓝色主色。
+// 变量必须挂在 body 上：muya 的浮层 UI（前置菜单 / 快捷插入 / 格式工具栏等）
+// 直接挂在 body 下，不在 .create-muya-editor 子树内，子树作用域覆盖不到。
+// 图标是灰色 PNG，靠 drop-shadow + currentcolor 上色，颜色源即 --theme-color。
+body {
+    --theme-color: var(--color-primary);
+    --highlight-color: rgb(96 165 250 / 40%);
+    --selection-color: rgb(96 165 250 / 30%);
+    --link-color: #3b82f6;
+    --mu-font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+        'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
 // ---------------------------------------------------------------- 暗色主题
-body.dark .create-muya-editor {
+// 作用域用 body.dark 而非 body.dark .create-muya-editor：浮层 UI 挂在 body 下，
+// 只有 body 级变量才能同时作用到编辑器内容和所有浮层。
+body.dark {
     /* editor 基础 */
     --theme-color: var(--color-primary);
     --highlight-color: rgb(96 165 250 / 40%);

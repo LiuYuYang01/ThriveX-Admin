@@ -69,7 +69,6 @@ export class ParagraphFrontMenu extends BaseFloat {
     }
 
     override listen() {
-        const { container } = this;
         const { eventCenter } = this.muya;
         super.listen();
 
@@ -84,12 +83,9 @@ export class ParagraphFrontMenu extends BaseFloat {
             }
         });
 
-        const enterLeaveHandler = () => {
-            this.hide();
-            this._block = null;
-        };
-
-        eventCenter.attachDOMEvent(container!, 'mouseleave', enterLeaveHandler);
+        // 不再用 mouseleave 自动关闭菜单：菜单实际渲染尺寸超出浮动容器（overflow visible），
+        // 鼠标扫过视觉边界与容器命中区之间的空隙就会误触发 mouseleave，导致菜单闪跳。
+        // 关闭途径：点击空白处 / Escape / 滚动 / 选择菜单项（selectItem）/ 编辑器失焦。
     }
 
     private _renderSubMenu(subMenu: IQuickInsertMenuItem['children']) {

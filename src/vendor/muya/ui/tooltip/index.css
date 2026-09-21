@@ -14,7 +14,7 @@
     box-shadow: 0 4px 8px 0 var(--float-border-color);
     opacity: 0;
 
-    transition: opacity 0.2s ease-in;
+    /* 不做 opacity 过渡：渲染节流的环境下过渡动画会冻结在中间帧导致闪烁 */
 }
 
 .mu-tooltip.active {

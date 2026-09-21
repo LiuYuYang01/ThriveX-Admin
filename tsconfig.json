@@ -18,6 +18,9 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* src/vendor/muya 使用旧版装饰器语法，需要开启才能被 esbuild 转换 */
+    "experimentalDecorators": true,
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
