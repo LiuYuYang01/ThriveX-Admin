@@ -1,8 +1,17 @@
 .mu-front-menu {
+    box-sizing: border-box;
     width: 230px;
+    padding: 6px;
 
-    font-weight: 600;
-    font-size: 14px;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+/* 仅前置菜单的浮层外壳：大圆角 + 描边环（box-shadow 环不影响布局尺寸） */
+.mu-float-wrapper.mu-front-menu-wrapper {
+    overflow: visible;
+
+    border-radius: 10px;
 }
 
 .mu-front-menu ul,
@@ -16,37 +25,12 @@
 .mu-front-menu > ul {
     display: flex;
     flex-direction: column;
-    padding: 10px 0;
-}
-
-.mu-front-menu > ul li.item {
-    position: relative;
-
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    height: 32px;
-    padding: 0 15px;
-
-    cursor: pointer;
-
-    user-select: none;
 }
 
 .mu-front-menu li .icon-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
-
-    color: var(--icon-color);
-
-    border-radius: 4px;
-}
-
-.mu-front-menu li.item .text {
-    margin-left: 10px;
 }
 
 .mu-front-menu li .icon-wrapper i.icon {
@@ -60,6 +44,7 @@
     color: var(--icon-color);
 }
 
+/* 图标是灰色 PNG，靠 drop-shadow + currentcolor 上色，偏移量必须等于图标宽度 */
 .mu-front-menu li .icon-wrapper i.icon > i[class^='icon-'] {
     position: relative;
     left: -18px;
@@ -71,56 +56,92 @@
     filter: drop-shadow(18px 0 currentcolor);
 }
 
-.mu-front-menu > ul li.item > span {
-    display: inline-block;
-    flex: 1;
-
-    color: var(--editor-color);
-}
-
-.mu-front-menu > ul li > .short-cut {
-    color: var(--editor-color);
-    font-size: 13px;
-}
-
-.mu-front-menu > ul li.item:hover {
-    background: var(--float-hover-color);
-}
-
-.mu-front-menu > ul li.item.delete:hover span {
-    color: var(--delete-color);
-}
-
-.mu-front-menu > ul li.divider {
-    width: 200px;
-    height: 1px;
-    margin: 4px 15px;
-
-    background: var(--editor-color-10);
-}
-
+/* 块类型网格：固定 5 列方格，active 态用主题色淡底胶囊 */
 .mu-front-menu li.turn-into-menu {
-    padding: 0 15px;
+    display: grid;
+    grid-template-columns: repeat(5, 34px);
+    gap: 10px;
+    justify-content: center;
+
+    padding: 2px;
 }
 
 .mu-front-menu li.turn-into-menu .turn-into-item {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
 
+    border-radius: 6px;
     cursor: pointer;
+}
+
+.mu-front-menu li.turn-into-menu .turn-into-item:hover {
+    background: var(--float-hover-color);
+}
+
+.mu-front-menu li.turn-into-menu .turn-into-item.active {
+    background: color-mix(in srgb, var(--theme-color) 12%, transparent);
 }
 
 .mu-front-menu li.turn-into-menu .turn-into-item.active i.icon {
     color: var(--theme-color);
 }
 
-.mu-front-menu > ul li.item.delete:hover .icon-wrapper i.icon {
+/* 动作列表 */
+.mu-front-menu > ul li.item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 32px;
+    padding: 0 8px;
+
+    border-radius: 6px;
+    cursor: pointer;
+
+    user-select: none;
+}
+
+.mu-front-menu > ul li.item:hover {
+    background: var(--float-hover-color);
+}
+
+.mu-front-menu > ul li.item .icon-wrapper {
+    width: 24px;
+    height: 24px;
+}
+
+.mu-front-menu > ul li.item .text {
+    flex: 1;
+    margin-left: 8px;
+
+    color: var(--editor-color);
+}
+
+.mu-front-menu .mu-kbd {
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding: 0 5px;
+
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: 11px;
+    color: var(--editor-color-50);
+
+    background: var(--editor-color-04);
+    border-radius: 4px;
+}
+
+.mu-front-menu > ul li.item.delete:hover .text,
+.mu-front-menu > ul li.item.delete:hover .icon-wrapper i.icon,
+.mu-front-menu > ul li.item.delete:hover .mu-kbd {
     color: var(--delete-color);
 }
 
-.mu-front-menu li.turn-into-menu .turn-into-item .icon-wrapper:hover {
-    background: var(--float-hover-color);
+.mu-front-menu > ul li.divider {
+    height: 1px;
+    margin: 5px 8px;
+
+    background: var(--editor-color-10);
 }

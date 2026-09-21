@@ -21,11 +21,13 @@ import { getArticleDataAPI } from '@/api/article';
 
 import Editor, { type MuyaEditorHandle } from './components/Editor';
 import PublishForm from './components/PublishForm';
-import Title from '@/components/Title';
 
 function countChars(text: string) {
   return text.replace(/\s/g, '').length;
 }
+
+const iconBtnClass =
+  'inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-boxdark-2';
 
 export default function CreatePage() {
   const [loading, setLoading] = useState(false);
@@ -262,102 +264,97 @@ export default function CreatePage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Title value="创作">
-        <div className="flex w-full max-w-2xl flex-wrap items-center justify-end gap-2 sm:max-w-none">
-          <Dropdown menu={{ items: assistantMenuItems }} trigger={['click']} placement="bottomRight">
-            <Button
-              className="inline-flex! h-10! items-center! gap-2! rounded-xl! border-slate-200/80! px-4! shadow-none! dark:border-strokedark!"
-              icon={<HiOutlineSparkles className="text-lg text-primary" />}
-              onClick={handleAssistantMainClick}
-            >
-              <span className="max-w-32 truncate sm:max-w-40">{assistantName}</span>
-            </Button>
-          </Dropdown>
-
-          <Tooltip title="保存到本地草稿（Ctrl / ⌘ + S）">
-            <Button
-              className="inline-flex! h-10! items-center! gap-2! rounded-xl! border-slate-200/80! px-4! shadow-none! dark:border-strokedark!"
-              icon={<FiSave className="text-base" />}
-              onClick={saveBtn}
-            >
-              保存
-            </Button>
-          </Tooltip>
-
-          <Button
-            type="primary"
-            className="inline-flex! h-10! items-center! gap-2! rounded-xl! px-5! shadow-none!"
-            icon={<FiSend className="text-base" />}
-            onClick={nextBtn}
-          >
-            发布
-          </Button>
-        </div>
-      </Title>
-
-      <div className="flex min-h-0 flex-1 flex-col">
-        <section
-          ref={sectionRef}
-          className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-clip rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark ${immersive ? 'immersive-editor' : ''}`}
+      <section
+        ref={sectionRef}
+        className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-clip rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark ${immersive ? 'immersive-editor' : ''}`}
+      >
+        {/* 单行工具栏：左侧标题/字数，右侧编辑工具与主操作，沉浸写作时随输入自动淡出 */}
+        <header
+          className={`flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-100 px-4 py-2.5 transition-opacity duration-300 dark:border-strokedark sm:px-5 ${
+            chromeVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
+          }`}
         >
-          <header
-            className={`flex shrink-0 items-center justify-end gap-3 border-b border-slate-100 px-4 py-3 transition-opacity duration-300 dark:border-strokedark sm:px-5 ${
-              chromeVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
-            }`}
-          >
-            <Tooltip title="从素材库插入图片">
-                <button
-                  type="button"
-                  onClick={() => editorRef.current?.openMaterial()}
-                  className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-primary dark:text-slate-400 dark:hover:bg-boxdark-2"
-                >
-                  <FiImage size={14} />
-                </button>
-              </Tooltip>
-              <Tooltip title={focusMode ? '退出专注模式' : '专注模式（淡化非当前段落）'}>
-                <button
-                  type="button"
-                  onClick={toggleFocusMode}
-                  className={`inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-boxdark-2 ${
-                    focusMode
-                      ? 'text-primary'
-                      : 'text-slate-500 hover:text-primary dark:text-slate-400'
-                  }`}
-                >
-                  <FiEye size={14} />
-                </button>
-              </Tooltip>
-              <Tooltip title={immersive ? '退出沉浸写作（Esc）' : '沉浸写作'}>
-                <button
-                  type="button"
-                  onClick={toggleImmersive}
-                  className={`inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-boxdark-2 ${
-                    immersive
-                      ? 'text-primary'
-                      : 'text-slate-500 hover:text-primary dark:text-slate-400'
-                  }`}
-                >
-                  {immersive ? <FiMinimize2 size={14} /> : <FiMaximize2 size={14} />}
-                </button>
-              </Tooltip>
-              <span className="hidden h-3 w-px bg-slate-200 sm:inline dark:bg-strokedark" aria-hidden />
-              <span className="inline-flex items-center gap-1.5 tabular-nums">
-                <span className="font-medium text-slate-700 dark:text-slate-200">{charCount}</span>
-                字
-              </span>
-          </header>
-
-          <div className="create-editor-shell min-h-0 flex-1">
-            <Spin spinning={loading} className="h-full [&_.ant-spin-container]:h-full">
-              <Editor
-                ref={editorRef}
-                value={content}
-                onChange={(value) => setContent(value)}
-              />
-            </Spin>
+          <div className="flex items-baseline gap-2.5">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">创作</h2>
+            <span className="text-xs tabular-nums text-slate-400 dark:text-slate-500">{charCount} 字</span>
           </div>
-        </section>
-      </div>
+
+          <div className="flex items-center gap-1.5">
+            <Tooltip title="从素材库插入图片">
+              <button
+                type="button"
+                onClick={() => editorRef.current?.openMaterial()}
+                className={`${iconBtnClass} text-slate-500 hover:text-primary dark:text-slate-400`}
+              >
+                <FiImage size={14} />
+              </button>
+            </Tooltip>
+            <Tooltip title={focusMode ? '退出专注模式' : '专注模式（淡化非当前段落）'}>
+              <button
+                type="button"
+                onClick={toggleFocusMode}
+                className={`${iconBtnClass} ${
+                  focusMode ? 'text-primary' : 'text-slate-500 hover:text-primary dark:text-slate-400'
+                }`}
+              >
+                <FiEye size={14} />
+              </button>
+            </Tooltip>
+            <Tooltip title={immersive ? '退出沉浸写作（Esc）' : '沉浸写作'}>
+              <button
+                type="button"
+                onClick={toggleImmersive}
+                className={`${iconBtnClass} ${
+                  immersive ? 'text-primary' : 'text-slate-500 hover:text-primary dark:text-slate-400'
+                }`}
+              >
+                {immersive ? <FiMinimize2 size={14} /> : <FiMaximize2 size={14} />}
+              </button>
+            </Tooltip>
+
+            <span className="mx-1.5 h-4 w-px bg-slate-200 dark:bg-strokedark" aria-hidden />
+
+            <Dropdown menu={{ items: assistantMenuItems }} trigger={['click']} placement="bottomRight">
+              <Button
+                className="inline-flex! h-10! items-center! gap-2! rounded-xl! border-slate-200/80! px-4! shadow-none! dark:border-strokedark!"
+                icon={<HiOutlineSparkles className="text-lg text-primary" />}
+                onClick={handleAssistantMainClick}
+              >
+                <span className="max-w-32 truncate sm:max-w-40">{assistantName}</span>
+              </Button>
+            </Dropdown>
+
+            <Tooltip title="保存到本地草稿（Ctrl / ⌘ + S）">
+              <Button
+                className="inline-flex! h-10! items-center! gap-2! rounded-xl! border-slate-200/80! px-4! shadow-none! dark:border-strokedark!"
+                icon={<FiSave className="text-base" />}
+                onClick={saveBtn}
+              >
+                保存
+              </Button>
+            </Tooltip>
+
+            <Button
+              type="primary"
+              className="inline-flex! h-10! items-center! gap-2! rounded-xl! px-5! shadow-none!"
+              icon={<FiSend className="text-base" />}
+              onClick={nextBtn}
+            >
+              发布
+            </Button>
+          </div>
+        </header>
+
+        <div className="create-editor-shell min-h-0 flex-1">
+          <Spin spinning={loading} className="h-full [&_.ant-spin-container]:h-full">
+            <Editor
+              ref={editorRef}
+              value={content}
+              onChange={(value) => setContent(value)}
+            />
+          </Spin>
+        </div>
+      </section>
 
       <Drawer
         title={id && !isDraftParams ? '编辑文章' : '发布文章'}

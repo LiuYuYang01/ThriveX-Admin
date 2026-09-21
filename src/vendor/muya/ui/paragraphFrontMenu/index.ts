@@ -38,9 +38,10 @@ function renderIcon({ label, icon }: { label: string; icon: string }) {
 }
 
 const defaultOptions = {
-    placement: 'bottom' as const,
+    // bottom-start：以拖拽把手为左缘向右展开，窄视口下不会向左溢出屏幕
+    placement: 'bottom-start' as const,
     offsetOptions: {
-        mainAxis: 0,
+        mainAxis: 6,
         crossAxis: 0,
         alignmentAxis: 0,
     },
@@ -60,6 +61,7 @@ export class ParagraphFrontMenu extends BaseFloat {
         super(muya, name, opts);
         const parent = this.container!.parentNode;
         if (isHTMLElement(parent)) {
+            parent.classList.add('mu-front-menu-wrapper');
             Object.assign(parent.style, {
                 overflow: 'visible',
             });
@@ -92,13 +94,13 @@ export class ParagraphFrontMenu extends BaseFloat {
         const { _block: block } = this;
         const { i18n } = this.muya;
         const children = subMenu.map((menuItem) => {
-            const { title, label, subTitle } = menuItem;
+            const { title, label, subTitle, shortCut } = menuItem;
             const iconWrapperSelector = 'div.icon-wrapper';
             const iconWrapper = h(
                 iconWrapperSelector,
                 {
                     props: {
-                        title: `${i18n.t(title)}\n${subTitle}`,
+                        title: `${i18n.t(title)}\n${subTitle}${shortCut ? `\n${shortCut}` : ''}`,
                     },
                 },
                 renderIcon(menuItem),
@@ -142,7 +144,7 @@ export class ParagraphFrontMenu extends BaseFloat {
             const iconWrapperSelector = 'div.icon-wrapper';
             const iconWrapper = h(iconWrapperSelector, renderIcon({ icon, label }));
             const textWrapper = h('span.text', i18n.t(text));
-            const shortCutWrapper = h('div.short-cut', [h('span', shortCut)]);
+            const shortCutWrapper = h('kbd.mu-kbd', shortCut);
             const itemSelector = `li.item.${label}`;
             const itemChildren = [iconWrapper, textWrapper, shortCutWrapper];
 
