@@ -18,7 +18,7 @@
     max-width: var(--editor-area-width, 800px);
     min-height: 100%;
     margin: 0 auto;
-    padding: 0 50px 100px;
+    padding: 20px 50px 100px;
 
     color: var(--editor-color);
 }

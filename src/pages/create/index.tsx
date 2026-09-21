@@ -6,9 +6,6 @@ import {
   FiSend,
   FiPenTool,
   FiZap,
-  FiFileText,
-  FiEdit3,
-  FiCommand,
   FiImage,
   FiEye,
   FiMaximize2,
@@ -33,6 +30,7 @@ function countChars(text: string) {
 export default function CreatePage() {
   const [loading, setLoading] = useState(false);
   const editorRef = useRef<MuyaEditorHandle>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const [focusMode, setFocusMode] = useState(false);
 
   const toggleFocusMode = () => {
@@ -58,8 +56,29 @@ export default function CreatePage() {
     }
     prevFocusRef.current = focusMode;
     if (!focusMode) toggleFocusMode();
+    setChromeVisible(true);
     setImmersive(true);
   };
+
+  // 沉浸工具条：编辑器内打字时自动淡出，鼠标移动 / 点按 / 键盘聚焦时恢复
+  const [chromeVisible, setChromeVisible] = useState(true);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const hide = () => setChromeVisible(false);
+    const show = () => setChromeVisible(true);
+    section.addEventListener('keydown', hide, true);
+    section.addEventListener('mousemove', show);
+    section.addEventListener('pointerdown', show);
+    section.addEventListener('focusin', show);
+    return () => {
+      section.removeEventListener('keydown', hide, true);
+      section.removeEventListener('mousemove', show);
+      section.removeEventListener('pointerdown', show);
+      section.removeEventListener('focusin', show);
+    };
+  }, []);
 
   useEffect(() => {
     document.body.classList.toggle('immersive-writing', immersive);
@@ -87,7 +106,6 @@ export default function CreatePage() {
   const [data, setData] = useState<Article>({} as Article);
   const [content, setContent] = useState('');
   const [publishOpen, setPublishOpen] = useState(false);
-  const [restoredLocalDraft, setRestoredLocalDraft] = useState(false);
 
   const { list, assistant, callAssistant } = useAssistant();
 
@@ -98,16 +116,6 @@ export default function CreatePage() {
   }, [assistant, list]);
 
   const charCount = useMemo(() => countChars(content), [content]);
-
-  const modeMeta = useMemo(() => {
-    if (id && !isDraftParams) {
-      return { label: '编辑文章', hint: '修改后将通过发布面板更新', tone: 'text-primary bg-primary/10' };
-    }
-    if (id && isDraftParams) {
-      return { label: '编辑草稿', hint: '草稿内容可随时保存到本地', tone: 'text-amber-600 bg-amber-500/10 dark:text-amber-400' };
-    }
-    return { label: '新建创作', hint: '所见即所得编辑 · 段落左侧按钮快速插入 · Ctrl / ⌘ + S 保存', tone: 'text-slate-600 bg-slate-100 dark:text-slate-300 dark:bg-boxdark-2' };
-  }, [id, isDraftParams]);
 
   const nextBtn = () => {
     if (content.trim().length >= 1) {
@@ -133,8 +141,6 @@ export default function CreatePage() {
   useEffect(() => {
     setPublishOpen(false);
 
-    setRestoredLocalDraft(false);
-
     if (id) {
       getArticleData();
       return;
@@ -144,7 +150,6 @@ export default function CreatePage() {
     if (saved) {
       setData((prev) => ({ ...prev, content: saved }));
       setContent(saved);
-      setRestoredLocalDraft(true);
     }
   }, [id]);
 
@@ -292,26 +297,15 @@ export default function CreatePage() {
 
       <div className="flex min-h-0 flex-1 flex-col">
         <section
+          ref={sectionRef}
           className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-clip rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark ${immersive ? 'immersive-editor' : ''}`}
         >
-          <header className="flex shrink-0 flex-col gap-2 border-b border-slate-100 px-4 py-3 dark:border-strokedark sm:flex-row sm:items-center sm:justify-between sm:px-5">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${modeMeta.tone}`}
-              >
-                {id ? <FiEdit3 size={12} /> : <FiFileText size={12} />}
-                {modeMeta.label}
-              </span>
-              {restoredLocalDraft && !id && (
-                <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                  已恢复本地草稿
-                </span>
-              )}
-              <p className="hidden text-xs text-slate-400 sm:inline dark:text-slate-500">{modeMeta.hint}</p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-              <Tooltip title="从素材库插入图片">
+          <header
+            className={`flex shrink-0 items-center justify-end gap-3 border-b border-slate-100 px-4 py-3 transition-opacity duration-300 dark:border-strokedark sm:px-5 ${
+              chromeVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
+            }`}
+          >
+            <Tooltip title="从素材库插入图片">
                 <button
                   type="button"
                   onClick={() => editorRef.current?.openMaterial()}
@@ -346,16 +340,11 @@ export default function CreatePage() {
                   {immersive ? <FiMinimize2 size={14} /> : <FiMaximize2 size={14} />}
                 </button>
               </Tooltip>
+              <span className="hidden h-3 w-px bg-slate-200 sm:inline dark:bg-strokedark" aria-hidden />
               <span className="inline-flex items-center gap-1.5 tabular-nums">
                 <span className="font-medium text-slate-700 dark:text-slate-200">{charCount}</span>
                 字
               </span>
-              <span className="hidden h-3 w-px bg-slate-200 sm:inline dark:bg-strokedark" aria-hidden />
-              <span className="hidden items-center gap-1 sm:inline-flex">
-                <FiCommand size={12} className="opacity-70" />
-                + S 保存
-              </span>
-            </div>
           </header>
 
           <div className="create-editor-shell min-h-0 flex-1">
