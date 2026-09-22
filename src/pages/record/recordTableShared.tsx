@@ -1,5 +1,6 @@
 import { Image, Popover } from 'antd';
 import { FiImage, FiVideo } from 'react-icons/fi';
+import { getDouyinEmbedUrl } from '@/utils';
 
 export function parseRecordImages(raw: string | string[] | undefined): string[] {
   if (Array.isArray(raw)) {
@@ -28,15 +29,26 @@ export function RecordVideoCell({ video }: { video?: string | null }) {
     );
   }
 
+  // 抖音视频没有本地缩略帧，用图标占位 + 弹层内嵌播放器
+  const douyinEmbedUrl = getDouyinEmbedUrl(video);
+
   return (
     <Popover
       trigger="hover"
       placement="bottomLeft"
       overlayClassName="[&_.ant-popover-inner]:rounded-xl! [&_.ant-popover-inner]:p-2.5! [&_.ant-popover-inner]:shadow-sm!"
-      content={<video src={video} controls className="h-56 w-96 rounded-lg bg-black" />}
+      content={douyinEmbedUrl
+        ? <iframe src={douyinEmbedUrl} title="抖音视频" allow="fullscreen" className="h-56 w-96 rounded-lg border-0 bg-black" />
+        : <video src={video} controls className="h-56 w-96 rounded-lg bg-black" />}
     >
       <div className="group/vid relative size-14 shrink-0 overflow-hidden rounded-xl border border-slate-200/80 bg-black dark:border-strokedark cursor-pointer">
-        <video src={video} muted className="h-full w-full object-cover transition-transform duration-200 group-hover/vid:scale-105" />
+        {douyinEmbedUrl ? (
+          <span className="flex h-full w-full items-center justify-center text-white/80 transition-transform duration-200 group-hover/vid:scale-105">
+            <FiVideo size={16} />
+          </span>
+        ) : (
+          <video src={video} muted className="h-full w-full object-cover transition-transform duration-200 group-hover/vid:scale-105" />
+        )}
         <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/25 text-white opacity-0 transition-opacity group-hover/vid:opacity-100">
           <FiVideo size={16} />
         </span>

@@ -5,10 +5,11 @@ import type { MenuProps } from 'antd';
 import { BiLogoTelegram, BiLink } from 'react-icons/bi';
 import { FiNavigation } from 'react-icons/fi';
 import { LuImagePlus, LuVideo } from 'react-icons/lu';
-import { RiDeleteBinLine, RiLoader4Line } from 'react-icons/ri';
+import { RiDeleteBinLine, RiLoader4Line, RiTiktokLine } from 'react-icons/ri';
 import Material from '@/components/Material';
 import { addRecordDataAPI, editRecordDataAPI, getRecordDataAPI } from '@/api/record';
 import { MOOD_OPTIONS } from '@/constants/mood';
+import { getDouyinEmbedUrl } from '@/utils';
 import { loadGaodeWebKey, resolveLocationAddress } from '@/utils/location';
 import './index.scss';
 
@@ -28,6 +29,8 @@ export default () => {
   const [gaodeApKey, setGaodeApKey] = useState('');
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+
+  const douyinEmbedUrl = getDouyinEmbedUrl(video);
 
   // 删除图片
   const handleDelImage = (data: string) => {
@@ -196,6 +199,37 @@ export default () => {
     });
   };
 
+  // 处理抖音视频链接输入
+  const handleDouyinInput = () => {
+    if (imageList.length) {
+      message.warning('图片与视频不能同时存在，请先移除图片');
+      return;
+    }
+    let inputValue = '';
+    Modal.confirm({
+      title: '添加抖音视频',
+      content: (
+        <Input
+          className="mt-4"
+          placeholder="请输入抖音视频地址"
+          onChange={(e) => {
+            inputValue = e.target.value;
+          }}
+        />
+      ),
+      okText: '确定',
+      cancelText: '取消',
+      centered: true,
+      onOk: () => {
+        if (!inputValue.trim()) {
+          message.warning('请输入抖音视频地址');
+          return Promise.reject();
+        }
+        setVideo(inputValue.trim());
+      },
+    });
+  };
+
   // 视频下拉菜单配置
   const videoDropdownItems: MenuProps = {
     items: [
@@ -210,6 +244,12 @@ export default () => {
           }
           setIsVideoModalOpen(true);
         },
+      },
+      {
+        key: 'douyin',
+        label: <span>抖音视频链接</span>,
+        icon: <RiTiktokLine className="text-base!" />,
+        onClick: handleDouyinInput,
       },
       {
         key: 'input',
@@ -389,13 +429,17 @@ export default () => {
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
                     <div className="text-sm font-semibold text-gray-900 dark:text-white">视频素材</div>
-                    <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">最多添加1 个，可从素材库选择或输入链接</div>
+                    <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">最多添加1 个，可从素材库选择、输入链接或添加抖音视频</div>
                   </div>
                 </div>
 
                 {video ? (
                   <div className="group relative aspect-video overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-sm dark:border-strokedark dark:bg-boxdark-2">
-                    <video src={video} controls className="h-full w-full object-contain" />
+                    {douyinEmbedUrl ? (
+                      <iframe src={douyinEmbedUrl} title="抖音视频" allow="fullscreen" className="h-full w-full border-0" />
+                    ) : (
+                      <video src={video} controls className="h-full w-full object-contain" />
+                    )}
                     <div className="absolute inset-x-0 top-0 flex justify-end p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                       <Tooltip title="移除视频">
                         <button
