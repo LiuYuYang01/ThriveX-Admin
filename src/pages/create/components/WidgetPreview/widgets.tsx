@@ -173,9 +173,9 @@ export function TimelineWidget({ data }: { data: WidgetPayload }) {
           <div className="tx-widget__timeline-item" key={`${item.title}-${index}`}>
             <span className="tx-widget__dot" aria-hidden />
             <div className="tx-widget__timeline-body">
-              {item.time && <time>{item.time as string}</time>}
+              {item.time ? <time>{item.time as string}</time> : null}
               <strong>{item.title as string}</strong>
-              {item.content && <p className="whitespace-pre-wrap">{item.content as string}</p>}
+              {item.content ? <p className="whitespace-pre-wrap">{item.content as string}</p> : null}
             </div>
           </div>
         ))}
@@ -195,7 +195,7 @@ export function StepsWidget({ data }: { data: WidgetPayload }) {
             <span className="tx-widget__step-index">{index + 1}</span>
             <div className="tx-widget__step-body">
               <strong>{item.title as string}</strong>
-              {item.content && <p className="whitespace-pre-wrap">{item.content as string}</p>}
+              {item.content ? <p className="whitespace-pre-wrap">{item.content as string}</p> : null}
             </div>
           </div>
         ))}

@@ -215,6 +215,11 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
     muya.insertCodeBlock({ lang: 'tx-widget', text: payload ? JSON.stringify(payload, null, 2) : '' });
   };
 
+  // 从编辑器文档树中删除 tx-widget 代码块（走 json1 op，可撤销）
+  const removeWidgetBlock = (pre: HTMLElement) => {
+    muyaRef.current?.removeBlockByDom(pre);
+  };
+
   useImperativeHandle(ref, () => ({
     insertImages: insertImagesAtCursor,
     openMaterial: () => setMaterialOpen(true),
@@ -231,7 +236,7 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
         />
       </Spin>
 
-      {editorEl && <WidgetPreview container={editorEl} />}
+      {editorEl && <WidgetPreview container={editorEl} onDelete={removeWidgetBlock} />}
 
       <Material
         open={materialOpen}

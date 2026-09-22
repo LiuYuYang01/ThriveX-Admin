@@ -9,9 +9,27 @@
   pre.mu-code-block {
     position: relative;
 
-    // 预览态：隐藏语言输入、代码内容与行号，只留预览层
+    // 鼠标经过代码块时显示悬浮按钮组（预览切换 / 删除）
+    &:hover .tx-widget-preview__toggle,
+    &:hover .tx-widget-preview__delete {
+      opacity: 1;
+    }
+
+    // 预览态：隐藏语言输入、代码内容与行号，只留预览层；
+    // 同时重置代码块的灰底/边框/等宽字体，让组件像在文章里一样直接融入文档
     &.tx-widget-previewing {
-      padding: 0.9rem;
+      --code-block-bg-color: transparent;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding: 0;
+
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      color: inherit;
+      font-family: var(--mu-font-family);
+      font-size: 100%;
+      line-height: 1.6;
 
       > :not(.tx-widget-preview-layer) {
         display: none !important;
@@ -26,8 +44,15 @@
     z-index: 5;
     font-family: var(--mu-font-family);
 
-    // 源码态：只有右上角一个悬浮按钮
-    &__toggle {
+    // 右上角悬浮按钮组
+    &__actions {
+      display: inline-flex;
+      gap: 0.3rem;
+    }
+
+    // 按钮默认隐藏，鼠标经过代码块时显示
+    &__toggle,
+    &__delete {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -39,18 +64,24 @@
       color: var(--icon-color, #64748b);
       cursor: pointer;
       box-shadow: 0 1px 4px rgb(0 0 0 / 10%);
+      opacity: 0;
+      transition: opacity 0.15s;
 
       &:hover {
         color: var(--theme-color, #3b82f6);
       }
     }
 
-    // 预览态：转为普通流内元素撑开代码块，按钮悬浮在卡片右上角
+    &__delete:hover {
+      color: var(--delete-color, #ef4444);
+    }
+
+    // 预览态：转为普通流内元素撑开代码块，按钮组悬浮在卡片右上角
     &.is-previewing {
       position: static;
       display: block;
 
-      > .tx-widget-preview__toggle {
+      > .tx-widget-preview__actions {
         position: absolute;
         top: 0.5rem;
         right: 0.65rem;

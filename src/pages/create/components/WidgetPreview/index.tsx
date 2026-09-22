@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FiCode, FiEye } from 'react-icons/fi';
+import { FiCode, FiEye, FiTrash2 } from 'react-icons/fi';
 import WidgetRenderer, { type WidgetPayload } from './widgets';
 import './index.scss';
 
@@ -18,7 +18,7 @@ interface BlockInfo {
  * 扫描编辑器 DOM 中的 tx-widget 代码块，往块内挂一个 React 预览层（portal），
  * 右上角按钮可在「实时预览 / 编辑源码」之间切换，源码变更时预览即时刷新。
  */
-export default function WidgetPreview({ container }: { container: HTMLElement }) {
+export default function WidgetPreview({ container, onDelete }: { container: HTMLElement; onDelete?: (pre: HTMLElement) => void }) {
   const [blocks, setBlocks] = useState<BlockInfo[]>([]);
   // 各代码块的预览开关，按 DOM 元素弱引用存储，默认开启预览
   const previewModes = useRef(new WeakMap<HTMLElement, boolean>());
@@ -98,14 +98,26 @@ export default function WidgetPreview({ container }: { container: HTMLElement })
     const previewing = previewModes.current.get(pre) !== false;
     return createPortal(
       <div className={`tx-widget-preview ${previewing ? 'is-previewing' : ''}`}>
-        <button
-          type="button"
-          className="tx-widget-preview__toggle"
-          title={previewing ? '编辑源码' : '预览组件'}
-          onClick={() => toggle(pre)}
-        >
-          {previewing ? <FiCode size={12} /> : <FiEye size={12} />}
-        </button>
+        <div className="tx-widget-preview__actions">
+          <button
+            type="button"
+            className="tx-widget-preview__toggle"
+            title={previewing ? '编辑源码' : '预览组件'}
+            onClick={() => toggle(pre)}
+          >
+            {previewing ? <FiCode size={12} /> : <FiEye size={12} />}
+          </button>
+          {onDelete && (
+            <button
+              type="button"
+              className="tx-widget-preview__delete"
+              title="删除组件"
+              onClick={() => onDelete(pre)}
+            >
+              <FiTrash2 size={12} />
+            </button>
+          )}
+        </div>
         {previewing && (
           <div className="tx-widget-preview__body">
             {payload ? (

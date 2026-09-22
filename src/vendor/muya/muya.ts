@@ -13,6 +13,7 @@ import { canTurnInto, insertBlockBelowByLabel, insertFrontMatterAtStart, replace
 import { ScrollPage } from './block/scrollPage';
 import emptyStates from './config/emptyStates';
 import {
+    BLOCK_DOM_PROPERTY,
     CLASS_NAMES,
     DATA_URL_REG,
     MUYA_DEFAULT_OPTIONS,
@@ -900,6 +901,24 @@ export class Muya {
             block.parent!.insertAfter(newBlock, block);
 
         newBlock.lastContentInDescendant()?.setCursor(0, 0, true);
+    }
+
+    /**
+     * Remove the top-level block whose domNode is `domNode` (e.g. a
+     * `pre.mu-code-block`). Dispatches a JSON remove op (`source: 'user'`),
+     * so the change goes through json-change / history like a user edit.
+     * Returns `false` when the node does not belong to this editor's tree.
+     */
+    removeBlockByDom(domNode: HTMLElement): boolean {
+        if (!this.domNode.contains(domNode))
+            return false;
+
+        const block = (domNode as unknown as Record<string, unknown>)[BLOCK_DOM_PROPERTY] as Parent | undefined;
+        if (!block || !block.isParent())
+            return false;
+
+        block.remove('user');
+        return true;
     }
 
     /**
