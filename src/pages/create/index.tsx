@@ -21,6 +21,7 @@ import { getArticleDataAPI } from '@/api/article';
 
 import Editor, { type MuyaEditorHandle } from './components/Editor';
 import PublishForm from './components/PublishForm';
+import WidgetMenu from './components/WidgetMenu';
 
 function countChars(text: string) {
   return text.replace(/\s/g, '').length;
@@ -289,6 +290,7 @@ export default function CreatePage() {
                 <FiImage size={14} />
               </button>
             </Tooltip>
+            <WidgetMenu onSelect={(type) => editorRef.current?.insertWidget(type)} />
             <Tooltip title={focusMode ? '退出专注模式' : '专注模式'}>
               <button
                 type="button"
@@ -315,28 +317,30 @@ export default function CreatePage() {
             <span className="mx-1.5 h-4 w-px bg-slate-200 dark:bg-strokedark" aria-hidden />
 
             <Dropdown menu={{ items: assistantMenuItems }} trigger={['click']} placement="bottomRight">
-              <Button
-                className="inline-flex! h-10! items-center! gap-2! rounded-xl! border-slate-200/80! px-4! shadow-none! dark:border-strokedark!"
-                icon={<HiOutlineSparkles className="text-lg text-primary" />}
-                onClick={handleAssistantMainClick}
-              >
-                <span className="max-w-32 truncate sm:max-w-40">{assistantName}</span>
-              </Button>
+              <Tooltip title={assistantName}>
+                <button
+                  type="button"
+                  onClick={handleAssistantMainClick}
+                  className={`${iconBtnClass} text-slate-500 hover:text-primary dark:text-slate-400`}
+                >
+                  <HiOutlineSparkles size={16} />
+                </button>
+              </Tooltip>
             </Dropdown>
 
             <Tooltip title="保存到本地草稿（Ctrl / ⌘ + S）">
-              <Button
-                className="inline-flex! h-10! items-center! gap-2! rounded-xl! border-slate-200/80! px-4! shadow-none! dark:border-strokedark!"
-                icon={<FiSave className="text-base" />}
+              <button
+                type="button"
                 onClick={saveBtn}
+                className={`${iconBtnClass} text-slate-500 hover:text-primary dark:text-slate-400`}
               >
-                保存
-              </Button>
+                <FiSave size={14} />
+              </button>
             </Tooltip>
 
             <Button
               type="primary"
-              className="inline-flex! h-10! items-center! gap-2! rounded-xl! px-5! shadow-none!"
+              className="inline-flex! h-10! ml-8! items-center! gap-2! rounded-xl! px-5! shadow-none!"
               icon={<FiSend className="text-base" />}
               onClick={nextBtn}
             >

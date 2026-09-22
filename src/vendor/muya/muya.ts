@@ -967,6 +967,30 @@ export class Muya {
     }
 
     /**
+     * Insert a fenced code block at the cursor, e.g. the blog-side `tx-widget`
+     * widgets which are authored as ```lang fenced blocks carrying a JSON
+     * payload. An empty block is replaced in place; otherwise the code block
+     * lands directly below (same strategy as `createTable`).
+     */
+    insertCodeBlock({ lang = '', text = '' }: { lang?: string; text?: string }) {
+        const block = this._immediateBlockAtCursor();
+        if (!block)
+            return;
+
+        const state = deepClone(emptyStates['code-block']);
+        state.meta.lang = lang;
+        state.text = text;
+        const newBlock = ScrollPage.loadBlock('code-block').create(this, state);
+
+        if (this._blockLeadingText(block).trim() === '')
+            block.replaceWith(newBlock);
+        else
+            block.parent!.insertAfter(newBlock, block);
+
+        newBlock.lastContentInDescendant()?.setCursor(0, 0, true);
+    }
+
+    /**
      * Insert an inline image at the current cursor in the active formattable
      * block. The `![alt](src)` markdown is
      * written through the `Format` block's text setter so it dispatches a JSON

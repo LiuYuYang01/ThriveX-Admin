@@ -8,6 +8,9 @@ import { getApiUrl } from '@/utils/config';
 import { useUserStore, useFileStore } from '@/stores';
 import { compressImageFile } from '@/utils/imageCompress';
 import Material from '@/components/Material';
+import WidgetPreview from '../WidgetPreview';
+
+import { WIDGET_TEMPLATES, type WidgetType } from '../WidgetMenu';
 
 import 'katex/dist/katex.css';
 import './theme.scss';
@@ -19,6 +22,8 @@ export interface MuyaEditorHandle {
   openMaterial: () => void;
   /** 切换专注模式（打字机式高亮当前块） */
   setFocusMode: (enabled: boolean) => void;
+  /** 在光标处插入小组件（tx-widget 代码块，博客端渲染成组件） */
+  insertWidget: (type: WidgetType) => void;
 }
 
 interface Props {
@@ -44,6 +49,8 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
 
   const [uploading, setUploading] = useState(false);
   const [materialOpen, setMaterialOpen] = useState(false);
+  // Muya 初始化时会把传入容器替换成新的根节点，这里保存替换后的 domNode 供预览层挂载
+  const [editorEl, setEditorEl] = useState<HTMLElement | null>(null);
 
   const uploadImageFile = async (file: File): Promise<string> => {
     const compressed = await compressImageFile(file, uploadCompressMode);
@@ -148,6 +155,8 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
 
     muya.init();
     muyaRef.current = muya;
+    // getContainer 会替换掉原容器，domNode 才是真正挂在页面上的编辑器根节点
+    setEditorEl(muya.domNode);
 
     // 文档任何变更（打字、删除、粘贴）都会派发 json-change，
     // 与 marktext 桌面端一致，从引擎序列化回 markdown。
@@ -177,6 +186,7 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
       observer.disconnect();
       muya.destroy();
       muyaRef.current = null;
+      setEditorEl(null);
     };
   }, []);
 
@@ -196,17 +206,32 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
     urls.forEach((url) => muya.insertImage({ src: url, alt: '' }));
   };
 
+  // 小组件以 tx-widget 代码块形式写入 markdown，博客端解析渲染
+  const insertWidget = (type: WidgetType) => {
+    const muya = muyaRef.current;
+    if (!muya) return;
+    muya.focus();
+    const payload = WIDGET_TEMPLATES[type];
+    muya.insertCodeBlock({ lang: 'tx-widget', text: payload ? JSON.stringify(payload, null, 2) : '' });
+  };
+
   useImperativeHandle(ref, () => ({
     insertImages: insertImagesAtCursor,
     openMaterial: () => setMaterialOpen(true),
     setFocusMode: (enabled: boolean) => muyaRef.current?.setFocusMode(enabled),
+    insertWidget,
   }));
 
   return (
     <>
       <Spin spinning={uploading} className="h-full [&_.ant-spin-nested-loading]:h-full [&_.ant-spin-container]:h-full">
-        <div ref={containerRef} className="create-muya-editor" />
+        <div
+          ref={containerRef}
+          className="create-muya-editor"
+        />
       </Spin>
+
+      {editorEl && <WidgetPreview container={editorEl} />}
 
       <Material
         open={materialOpen}
