@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Form, Input, Button, Select, DatePicker, Cascader, message, Switch, Radio, Tooltip } from 'antd';
+import { Form, Input, Button, Select, DatePicker, Cascader, message, Switch, Radio, Space, Tooltip } from 'antd';
 
 const { SHOW_CHILD } = Cascader;
 import TextArea from 'antd/es/input/TextArea';
@@ -18,13 +18,13 @@ import {
   FiSave,
   FiLayers,
   FiType,
-  FiAlignLeft,
   FiTag,
   FiClock,
   FiShield,
   FiArrowUp,
   FiEdit3,
   FiFilePlus,
+  FiLink,
 } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi2';
 
@@ -114,7 +114,7 @@ function Panel({ title, description, icon, action, children, className = '' }: P
     >
       <header className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-strokedark">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-boxdark-2 dark:text-slate-400">
+          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/15">
             {icon}
           </span>
           <div className="min-w-0">
@@ -135,24 +135,17 @@ const formItemClass =
   '[&.ant-form-item]:mb-4! [&_.ant-form-item-label>label]:text-slate-500! [&_.ant-form-item-label>label]:text-xs! [&_.ant-form-item-label>label]:font-medium! dark:[&_.ant-form-item-label>label]:text-slate-400! [&_.ant-form-item-explain]:mt-1! [&_.ant-form-item-explain]:text-xs!';
 
 const inputBaseClass =
-  'rounded-xl! border-slate-200/80! bg-white! shadow-none! transition-colors! placeholder:text-slate-400! hover:border-slate-300! focus:border-primary! dark:border-strokedark! dark:bg-boxdark-2! dark:placeholder:text-slate-500! dark:hover:border-slate-600!';
+  'rounded-xl! border-slate-200/80! bg-white! shadow-none! placeholder:text-slate-400! hover:border-slate-300! focus:border-primary! dark:border-strokedark! dark:bg-boxdark-2! dark:placeholder:text-slate-500! dark:hover:border-slate-600!';
 
 const formControlClass =
   'w-full rounded-xl! border-slate-200/80! bg-white! shadow-none! hover:border-slate-300! dark:border-strokedark! dark:bg-boxdark-2! dark:hover:border-slate-600!';
 
 const tagChipClass =
-  '[&_.ant-select-selector]:py-2! [&_.ant-select-selection-placeholder]:text-slate-400! dark:[&_.ant-select-selection-placeholder]:text-slate-500! [&_.ant-select-selection-item]:mx-0.5! [&_.ant-select-selection-item]:my-0.5! [&_.ant-select-selection-item]:max-w-full! [&_.ant-select-selection-item]:truncate! [&_.ant-select-selection-item]:rounded-md! [&_.ant-select-selection-item]:border-0! [&_.ant-select-selection-item]:bg-primary/10! [&_.ant-select-selection-item]:px-2! [&_.ant-select-selection-item]:py-0.5! [&_.ant-select-selection-item]:text-xs! [&_.ant-select-selection-item]:font-medium! [&_.ant-select-selection-item]:text-primary! dark:[&_.ant-select-selection-item]:bg-primary/15! dark:[&_.ant-select-selection-item]:text-primary-400! [&_.ant-select-selection-item-remove]:text-primary/50! [&_.ant-select-selection-item-remove]:hover:text-primary! dark:[&_.ant-select-selection-item-remove]:text-primary-400/60! [&_.ant-select-selection-overflow-item]:rounded-md! [&_.ant-select-selection-overflow-item]:border-0! [&_.ant-select-selection-overflow-item]:bg-primary/10! [&_.ant-select-selection-overflow-item]:px-2! [&_.ant-select-selection-overflow-item]:py-0.5! [&_.ant-select-selection-overflow-item]:text-xs! [&_.ant-select-selection-overflow-item]:font-medium! [&_.ant-select-selection-overflow-item]:text-primary! dark:[&_.ant-select-selection-overflow-item]:bg-primary/15! dark:[&_.ant-select-selection-overflow-item]:text-primary-400!';
+  '[&_.ant-select-selector]:py-2! [&_.ant-select-selection-placeholder]:text-slate-400! dark:[&_.ant-select-selection-placeholder]:text-slate-500! [&_.ant-select-selection-item]:mx-0.5! [&_.ant-select-selection-item]:my-0.5! [&_.ant-select-selection-item]:max-w-full! [&_.ant-select-selection-item]:truncate! [&_.ant-select-selection-item]:rounded-md! [&_.ant-select-selection-item]:border-0! [&_.ant-select-selection-item]:bg-primary/10! [&_.ant-select-selection-item]:px-2! [&_.ant-select-selection-item]:py-0.5! [&_.ant-select-selection-item]:text-xs! [&_.ant-select-selection-item]:font-medium! [&_.ant-select-selection-item]:text-primary! dark:[&_.ant-select-selection-item]:bg-primary/15! dark:[&_.ant-select-selection-item]:text-primary! [&_.ant-select-selection-item-remove]:text-primary/50! [&_.ant-select-selection-item-remove]:hover:text-primary! dark:[&_.ant-select-selection-item-remove]:text-primary/60! [&_.ant-select-selection-overflow-item]:rounded-md! [&_.ant-select-selection-overflow-item]:border-0! [&_.ant-select-selection-overflow-item]:bg-primary/10! [&_.ant-select-selection-overflow-item]:px-2! [&_.ant-select-selection-overflow-item]:py-0.5! [&_.ant-select-selection-overflow-item]:text-xs! [&_.ant-select-selection-overflow-item]:font-medium! [&_.ant-select-selection-overflow-item]:text-primary! dark:[&_.ant-select-selection-overflow-item]:bg-primary/15! dark:[&_.ant-select-selection-overflow-item]:text-primary!';
 
 const multiSelectControlClass = `${formControlClass} ${tagChipClass}`;
 
 const selectControlClass = multiSelectControlClass;
-
-const STATUS_RADIO_GROUP_STYLE = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-  gap: 12,
-  width: '100%',
-} as const;
 
 const statusRadioClass =
   'relative! h-auto! w-full! rounded-xl! border! border-slate-200/80! bg-white! p-3! text-center! shadow-none! before:content-none! hover:border-slate-300! dark:border-strokedark! dark:bg-boxdark-2! dark:hover:border-slate-600! [&_.ant-radio-button]:hidden! [&.ant-radio-button-wrapper-checked]:z-auto! [&.ant-radio-button-wrapper-checked]:border-primary! [&.ant-radio-button-wrapper-checked]:bg-primary/5! [&.ant-radio-button-wrapper-checked]:text-primary! dark:[&.ant-radio-button-wrapper-checked]:bg-primary/10! [&.ant-radio-button-wrapper-checked_.status-icon]:bg-primary/10! [&.ant-radio-button-wrapper-checked_.status-icon]:text-primary! dark:[&.ant-radio-button-wrapper-checked_.status-icon]:bg-primary/20!';
@@ -376,28 +369,6 @@ const PublishForm = ({ data, closeModel }: Props) => {
       >
         <div className="min-h-0 flex-1 overflow-y-auto pb-28 pt-2">
           <div className="mx-auto max-w-5xl space-y-5">
-            {/* 上下文条 */}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 dark:border-strokedark dark:bg-boxdark-2/50">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${modeMeta.tone}`}>
-                  {modeMeta.icon}
-                  {modeMeta.label}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">{modeMeta.hint}</span>
-              </div>
-              <Tooltip title="基于正文内容自动提炼标题与摘要">
-                <Button
-                  type="text"
-                  loading={generating}
-                  onClick={generateTitleAndDescription}
-                  className="inline-flex! h-8! items-center! gap-1.5! rounded-lg! border! border-slate-200/80! bg-white! px-3! text-xs! font-medium! text-slate-600! shadow-none! hover:border-primary/40! hover:text-primary! dark:border-strokedark! dark:bg-boxdark! dark:text-slate-300! dark:hover:text-primary-400!"
-                  icon={<HiOutlineSparkles size={14} className="text-primary" />}
-                >
-                  AI 填充
-                </Button>
-              </Tooltip>
-            </div>
-
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)] lg:items-start">
               {/* 主内容区 */}
               <div className="space-y-5">
@@ -405,6 +376,19 @@ const PublishForm = ({ data, closeModel }: Props) => {
                   title="标题与摘要"
                   description="读者第一眼看到的信息，直接影响点击率与搜索收录"
                   icon={<FiType size={16} />}
+                  action={
+                    <Tooltip title="基于正文内容自动提炼标题与摘要">
+                      <Button
+                        type="text"
+                        loading={generating}
+                        onClick={generateTitleAndDescription}
+                        className="inline-flex! h-7! shrink-0! cursor-pointer! items-center! gap-1! rounded-lg! px-2! text-xs! font-medium! text-primary! shadow-none! hover:text-primary! dark:text-primary!"
+                        icon={<HiOutlineSparkles size={13} />}
+                      >
+                        AI 填充
+                      </Button>
+                    </Tooltip>
+                  }
                 >
                   <Form.Item
                     className={formItemClass}
@@ -415,7 +399,8 @@ const PublishForm = ({ data, closeModel }: Props) => {
                     <Input
                       placeholder="输入清晰、有吸引力的标题"
                       allowClear
-                      className={`${inputBaseClass} h-auto! px-3.5! py-2.5! text-base! leading-snug!`}
+                      variant="borderless"
+                      className="h-auto! min-h-0! w-full! rounded-lg! px-3! py-2! text-xl! font-bold! leading-snug! shadow-none! hover:bg-slate-50! focus:bg-slate-100! dark:hover:bg-boxdark-2/60! dark:focus:bg-boxdark-2!"
                     />
                   </Form.Item>
 
@@ -436,36 +421,33 @@ const PublishForm = ({ data, closeModel }: Props) => {
                   icon={<FiImage size={16} />}
                 >
                   <div className="flex flex-col gap-4">
-                    {/* 链接输入 */}
+                    {/* 链接输入 + 素材库按钮组合 */}
                     <div className="flex w-full flex-col gap-3">
-                      <Form.Item
-                        name="cover"
-                        noStyle
-                        rules={[{ validator: validateURL }]}
-                        className="mb-0! min-w-0! flex-1!"
-                      >
-                        <Input
-                          placeholder="请输入图片地址"
-                          allowClear
-                          prefix={<FiAlignLeft className="text-slate-400" size={15} />}
-                          className={`${inputBaseClass} h-10! text-sm!`}
-                        />
+                      <Form.Item name="cover" noStyle rules={[{ validator: validateURL }]} className="mb-0! min-w-0!">
+                        <Space.Compact block className="image-url-compact">
+                          <Input
+                            placeholder="请输入图片地址"
+                            allowClear
+                            prefix={<FiLink className="text-slate-400" size={15} />}
+                            className={`${inputBaseClass} h-10! rounded-r-none! text-sm!`}
+                          />
+                          <Button
+                            type="default"
+                            onClick={() => setIsMaterialModalOpen(true)}
+                            className="inline-flex! h-10! cursor-pointer! items-center! gap-2! rounded-l-none! border-slate-200/80! border-l-0! bg-white! px-4! text-sm! font-medium! text-slate-600! shadow-none! hover:border-primary/40! hover:text-primary! dark:border-strokedark! dark:bg-boxdark-2! dark:text-slate-300! dark:hover:text-primary!"
+                            icon={<FiUploadCloud size={16} />}
+                          >
+                            素材库
+                          </Button>
+                        </Space.Compact>
                       </Form.Item>
-                      <Button
-                        type="default"
-                        onClick={() => setIsMaterialModalOpen(true)}
-                        className="inline-flex! h-10! w-full! items-center! justify-center! gap-2! rounded-xl! border-slate-200/80! bg-white! text-sm! font-medium! text-slate-600! shadow-none! hover:border-primary/40! hover:text-primary! dark:border-strokedark! dark:bg-boxdark-2! dark:text-slate-300! dark:hover:text-primary-400!"
-                        icon={<FiUploadCloud size={16} />}
-                      >
-                        从素材库选择
-                      </Button>
                     </div>
 
                     {/* 缩略预览 */}
                     <button
                       type="button"
                       onClick={() => setIsMaterialModalOpen(true)}
-                      className={`group relative flex w-full shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-200 bg-slate-50 transition-colors hover:border-primary/50 dark:border-strokedark dark:bg-boxdark-2/60 dark:hover:border-primary/40 ${hasCoverPreview ? 'aspect-video' : 'h-28'
+                      className={`group relative flex w-full shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-200 bg-slate-50 hover:border-primary/50 dark:border-strokedark dark:bg-boxdark-2/60 dark:hover:border-primary/40 ${hasCoverPreview ? 'aspect-video' : 'h-28'
                         }`}
                     >
                       {hasCoverPreview ? (
@@ -566,10 +548,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
                   </Form.Item>
 
                   <Form.Item className={formItemClass} label="可见性" name={['config', 'status']}>
-                    <Radio.Group
-                      style={STATUS_RADIO_GROUP_STYLE}
-                      className="[&_.ant-radio-button-wrapper]:relative! [&_.ant-radio-button-wrapper]:m-0! [&_.ant-radio-button-wrapper:not(:last-child)]:me-0! [&_.ant-radio-button-wrapper]:h-auto! [&_.ant-radio-button-wrapper]:rounded-xl! [&_.ant-radio-button-wrapper]:transition-none! [&_.ant-radio-button-wrapper::before]:hidden!"
-                    >
+                    <Radio.Group className="grid! w-full! grid-cols-3! gap-2.5! [&_.ant-radio-button-wrapper]:relative! [&_.ant-radio-button-wrapper]:m-0! [&_.ant-radio-button-wrapper:not(:last-child)]:me-0! [&_.ant-radio-button-wrapper]:h-auto! [&_.ant-radio-button-wrapper]:rounded-xl! [&_.ant-radio-button-wrapper]:transition-none! [&_.ant-radio-button-wrapper::before]:hidden!">
                       {STATUS_OPTIONS.map((opt) => (
                         <Radio.Button key={opt.value} value={opt.value} className={statusRadioClass}>
                           <span className="flex flex-col items-center gap-1.5">
@@ -640,9 +619,15 @@ const PublishForm = ({ data, closeModel }: Props) => {
         {/* 底部操作栏 */}
         <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur-sm dark:border-strokedark dark:bg-boxdark/95 sm:px-6">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
-            <p className="hidden text-xs text-slate-500 sm:block dark:text-slate-400">
-              {isEditing ? '保存后将更新线上版本' : '确认信息无误后发布'}
-            </p>
+            <div className="hidden min-w-0 items-center gap-2 sm:flex">
+              <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${modeMeta.tone}`}>
+                {modeMeta.icon}
+                {modeMeta.label}
+              </span>
+              <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                {isEditing ? '保存后将更新线上版本' : '确认信息无误后发布'}
+              </p>
+            </div>
             <div className="ml-auto flex items-center gap-2.5">
               {showDraftActions && (
                 <Button

@@ -60,6 +60,15 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
+const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.m4v', '.avi', '.mkv'];
+
+function isVideoFile(file: File): boolean {
+  if (file.mimeType?.startsWith('video/')) return true;
+  const ext = (file.ext || '').replace(/^\./, '').toLowerCase();
+  if (ext && VIDEO_EXTENSIONS.includes(`.${ext}`)) return true;
+  return VIDEO_EXTENSIONS.some((e) => `${file.url || ''}`.toLowerCase().includes(e));
+}
+
 export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
   const [loading, setLoading] = useState(false);
   const [treeData, setTreeData] = useState<FileTreeData | null>(null);
@@ -369,7 +378,11 @@ export default ({ multiple, open, onClose, onSelect, maxCount }: Props) => {
                             }}
                           >
                             <div className="relative aspect-4/3 w-full overflow-hidden bg-linear-to-br from-[#f4f6f9] to-[#eceff4] dark:from-[#1f2937] dark:to-[#111827] [&_.ant-image]:block [&_.ant-image]:h-full [&_.ant-image]:w-full [&_.ant-image-img]:block [&_.ant-image-img]:h-full [&_.ant-image-img]:w-full [&_.ant-image-img]:object-cover">
-                              <Image src={file.url} fallback={errorImg} preview={false} loading="lazy" />
+                              {isVideoFile(file) ? (
+                                 <video src={file.url} muted preload="metadata" className="h-full w-full object-cover" />
+                               ) : (
+                                 <Image src={file.url} fallback={errorImg} preview={false} loading="lazy" />
+                              )}
                               {isSelected && (
                                 <span
                                   className="pointer-events-none absolute right-2 top-2 z-2 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-primary text-xs text-white shadow-[0_2px_8px_rgba(0,0,0,0.12)]"

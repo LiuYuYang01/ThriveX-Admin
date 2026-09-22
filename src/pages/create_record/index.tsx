@@ -4,7 +4,7 @@ import { Button, Dropdown, Image, Input, message, Modal, Spin, Tooltip } from 'a
 import type { MenuProps } from 'antd';
 import { BiLogoTelegram, BiLink } from 'react-icons/bi';
 import { FiNavigation } from 'react-icons/fi';
-import { LuImagePlus } from 'react-icons/lu';
+import { LuImagePlus, LuVideo } from 'react-icons/lu';
 import { RiDeleteBinLine, RiLoader4Line } from 'react-icons/ri';
 import Material from '@/components/Material';
 import { addRecordDataAPI, editRecordDataAPI, getRecordDataAPI } from '@/api/record';
@@ -21,11 +21,13 @@ export default () => {
   const navigate = useNavigate();
 
   const [imageList, setImageList] = useState<string[]>([]);
+  const [video, setVideo] = useState('');
   const [mood, setMood] = useState('');
   const [location, setLocation] = useState('');
   const [locating, setLocating] = useState(false);
   const [gaodeApKey, setGaodeApKey] = useState('');
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   // 删除图片
   const handleDelImage = (data: string) => {
@@ -42,14 +44,16 @@ export default () => {
 
       const data = {
         content: content,
-        images: JSON.stringify(imageList),
+        // 图片与视频互斥，优先保留视频
+        images: JSON.stringify(video.trim() ? [] : imageList),
+        video: video.trim() || undefined,
         mood: mood || undefined,
         location: location.trim() || undefined,
         createTime: new Date().getTime().toString(),
       };
 
       if (id) {
-        await editRecordDataAPI({ id, content: data.content, images: data.images, mood: data.mood, location: data.location });
+        await editRecordDataAPI({ id, content: data.content, images: data.images, video: data.video, mood: data.mood, location: data.location });
         message.success('想法已更新');
       } else {
         await addRecordDataAPI(data);
@@ -69,7 +73,13 @@ export default () => {
       setLoading(true);
       const { data } = await getRecordDataAPI(id);
       setContent(data.content);
-      setImageList(JSON.parse(data.images as string));
+      // 图片与视频互斥，编辑时只回填其中一种
+      if (data.video) {
+        setVideo(data.video);
+        setImageList([]);
+      } else {
+        setImageList(JSON.parse(data.images as string));
+      }
       setMood(data.mood || '');
       setLocation(data.location || '');
       setLoading(false);
@@ -158,6 +168,64 @@ export default () => {
     });
   };
 
+  // 处理视频链接输入
+  const handleVideoLinkInput = () => {
+    let inputUrl = '';
+    Modal.confirm({
+      title: '添加网络视频',
+      content: (
+        <Input
+          className="mt-4"
+          placeholder="https://example.com/video.mp4"
+          onChange={(e) => {
+            inputUrl = e.target.value;
+          }}
+        />
+      ),
+      okText: '添加',
+      cancelText: '取消',
+      centered: true,
+      onOk: () => {
+        if (!inputUrl.startsWith('http://') && !inputUrl.startsWith('https://')) {
+          message.error('请输入有效的 HTTP/HTTPS 链接');
+          return Promise.reject();
+        }
+        setVideo(inputUrl);
+        return Promise.resolve();
+      },
+    });
+  };
+
+  // 视频下拉菜单配置
+  const videoDropdownItems: MenuProps = {
+    items: [
+      {
+        key: 'upload',
+        label: <span>从素材库选择</span>,
+        icon: <LuVideo className="text-base!" />,
+        onClick: () => {
+          if (imageList.length) {
+            message.warning('图片与视频不能同时存在，请先移除图片');
+            return;
+          }
+          setIsVideoModalOpen(true);
+        },
+      },
+      {
+        key: 'input',
+        label: <span>输入视频链接</span>,
+        icon: <BiLink className="text-base!" />,
+        onClick: () => {
+          if (imageList.length) {
+            message.warning('图片与视频不能同时存在，请先移除图片');
+            return;
+          }
+          handleVideoLinkInput();
+        },
+      },
+    ],
+  };
+
   // 下拉菜单配置
   const dropdownItems: MenuProps = {
     items: [
@@ -167,6 +235,10 @@ export default () => {
         icon: <LuImagePlus className="text-base!" />,
         onClick: () => {
           if (imageList.length >= 4) return message.warning('最多只能上传4 张图片');
+          if (video) {
+            message.warning('图片与视频不能同时存在，请先移除视频');
+            return;
+          }
           setIsMaterialModalOpen(true);
         },
       },
@@ -174,13 +246,19 @@ export default () => {
         key: 'input',
         label: <span>输入图片链接</span>,
         icon: <BiLink className="text-base!" />,
-        onClick: handleLinkInput,
+        onClick: () => {
+          if (video) {
+            message.warning('图片与视频不能同时存在，请先移除视频');
+            return;
+          }
+          handleLinkInput();
+        },
       },
     ],
   };
 
   return (
-    <div className="create_record_page min-h-screen overflow-hidden py-6 transition-colors duration-300">
+    <div className="create_record_page min-h-screen shrink-0 py-6 transition-colors duration-300">
       <div className="pointer-events-none fixed inset-0 -z-10" />
 
       <div>
@@ -274,7 +352,7 @@ export default () => {
                         </div>
                       </div>
                     ))}
-                    {imageList.length < 4 && (
+                    {imageList.length < 4 && !video && (
                       <Dropdown menu={dropdownItems} placement="bottom" trigger={['click']}>
                         <button type="button" className="flex aspect-square w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 bg-slate-50 text-center transition-all hover:border-blue-300 hover:bg-blue-50 dark:border-strokedark dark:bg-boxdark-2 dark:hover:bg-blue-950/35 cursor-pointer">
                           <span className="mb-2 grid h-10 w-10 place-items-center text-blue-500">
@@ -286,6 +364,14 @@ export default () => {
                       </Dropdown>
                     )}
                   </div>
+                ) : video ? (
+                  <div className="flex min-h-44 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/60 bg-slate-50/60 px-6 text-center dark:border-strokedark dark:bg-boxdark-2/60">
+                    <span className="mb-3 grid h-12 w-12 place-items-center text-gray-400 dark:text-gray-500">
+                      <LuImagePlus size={23} />
+                    </span>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">已添加视频</span>
+                    <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">图片与视频不能同时存在，移除视频后可添加图片</span>
+                  </div>
                 ) : (
                   <Dropdown menu={dropdownItems} placement="bottom" trigger={['click']}>
                     <button type="button" className="flex min-h-44 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/80 bg-slate-50 px-6 text-center transition-all hover:border-blue-300 hover:bg-blue-50 dark:border-strokedark dark:bg-boxdark-2 dark:hover:bg-blue-950/35 cursor-pointer">
@@ -294,6 +380,49 @@ export default () => {
                       </span>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-200">为这条闪念添加图片</span>
                       <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">从素材库选择或输入图片链接</span>
+                    </button>
+                  </Dropdown>
+                )}
+              </section>
+
+              <section className="rounded-4xl border border-slate-200/80 bg-white p-5 shadow-xl shadow-slate-200/60 backdrop-blur-xl dark:border-strokedark dark:bg-boxdark dark:shadow-black/20">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white">视频素材</div>
+                    <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">最多添加1 个，可从素材库选择或输入链接</div>
+                  </div>
+                </div>
+
+                {video ? (
+                  <div className="group relative aspect-video overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-sm dark:border-strokedark dark:bg-boxdark-2">
+                    <video src={video} controls className="h-full w-full object-contain" />
+                    <div className="absolute inset-x-0 top-0 flex justify-end p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      <Tooltip title="移除视频">
+                        <button
+                          onClick={() => setVideo('')}
+                          className="rounded-full bg-black/45 p-2 text-white backdrop-blur-md transition-all duration-200 hover:rotate-90 hover:bg-red-500 cursor-pointer"
+                        >
+                          <RiDeleteBinLine size={18} />
+                        </button>
+                      </Tooltip>
+                    </div>
+                  </div>
+                ) : imageList.length ? (
+                  <div className="flex min-h-36 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/60 bg-slate-50/60 px-6 text-center dark:border-strokedark dark:bg-boxdark-2/60">
+                    <span className="mb-3 grid h-12 w-12 place-items-center text-gray-400 dark:text-gray-500">
+                      <LuVideo size={23} />
+                    </span>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">已添加图片</span>
+                    <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">图片与视频不能同时存在，移除图片后可添加视频</span>
+                  </div>
+                ) : (
+                  <Dropdown menu={videoDropdownItems} placement="bottom" trigger={['click']}>
+                    <button type="button" className="flex min-h-36 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/80 bg-slate-50 px-6 text-center transition-all hover:border-blue-300 hover:bg-blue-50 dark:border-strokedark dark:bg-boxdark-2 dark:hover:bg-blue-950/35 cursor-pointer">
+                      <span className="mb-3 grid h-12 w-12 place-items-center text-blue-500">
+                        <LuVideo size={23} />
+                      </span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">为这条闪念添加视频</span>
+                      <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">从素材库选择或输入视频链接</span>
                     </button>
                   </Dropdown>
                 )}
@@ -308,7 +437,18 @@ export default () => {
         open={isMaterialModalOpen}
         onClose={() => setIsMaterialModalOpen(false)}
         onSelect={(url) => {
+          if (video || !url.length) return;
           setImageList((prev) => [...prev, ...url].slice(0, 4));
+        }}
+      />
+
+      <Material
+        maxCount={1}
+        open={isVideoModalOpen}
+        onClose={() => setIsVideoModalOpen(false)}
+        onSelect={(url) => {
+          if (imageList.length || !url.length) return;
+          setVideo(url[0]);
         }}
       />
     </div>

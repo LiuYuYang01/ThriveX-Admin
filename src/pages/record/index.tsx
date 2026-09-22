@@ -32,7 +32,7 @@ import { delRecordDataAPI, getRecordListAPI } from '@/api/record';
 import type { Record, RecordFilterDataForm, RecordFilterQueryParams } from '@/types/app/record';
 
 import Skeleton from './Skeleton';
-import { RecordImagesCell } from './recordTableShared';
+import { RecordImagesCell, RecordVideoCell } from './recordTableShared';
 
 export default function RecordPage() {
   const [loading, setLoading] = useState(false);
@@ -149,6 +149,13 @@ export default function RecordPage() {
         key: 'images',
         width: 150,
         render: (_: unknown, row: Record) => <RecordImagesCell imagesRaw={row.images} />,
+      },
+      {
+        title: '视频',
+        dataIndex: 'video',
+        key: 'video',
+        width: 110,
+        render: (_: unknown, row: Record) => <RecordVideoCell video={row.video} />,
       },
       {
         title: '点赞',

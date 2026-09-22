@@ -6,7 +6,6 @@ import type { InitStepFormProps } from '../types';
 
 interface AccountFormValues {
   newUsername: string;
-  oldPassword: string;
   newPassword: string;
 }
 
@@ -21,7 +20,6 @@ export default function AccountConfigForm({ onSuccess }: InitStepFormProps) {
         const { data } = await getUserDataAPI(token);
         form.setFieldsValue({
           newUsername: data.username || user.username || '',
-          oldPassword: '',
           newPassword: '',
         });
       } catch (error) {
@@ -35,6 +33,7 @@ export default function AccountConfigForm({ onSuccess }: InitStepFormProps) {
   const handleSave = async (values: AccountFormValues) => {
     await editAdminPassAPI({
       oldUsername: user.username || values.newUsername,
+      oldPassword: '',
       ...values,
     });
     message.success('账号设置已保存');
@@ -47,20 +46,15 @@ export default function AccountConfigForm({ onSuccess }: InitStepFormProps) {
       form={form}
       layout="vertical"
       requiredMark={false}
-      initialValues={{ newUsername: 'admin', oldPassword: '', newPassword: '' }}
+      initialValues={{ newUsername: 'admin', newPassword: '' }}
       onFinish={handleSave}
     >
       <Form.Item label="管理员账号" name="newUsername" rules={[{ required: true, message: '请先填写管理员账号' }]}>
         <Input placeholder="请输入管理员账号" />
       </Form.Item>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Form.Item label="旧密码" name="oldPassword">
-          <Input.Password placeholder="请输入旧密码（首次可留空）" />
-        </Form.Item>
-        <Form.Item label="新密码" name="newPassword" rules={[{ required: true, message: '请先填写新密码' }]}>
-          <Input.Password placeholder="请输入新密码" />
-        </Form.Item>
-      </div>
+      <Form.Item label="新密码" name="newPassword" rules={[{ required: true, message: '请先填写新密码' }]}>
+        <Input.Password placeholder="请输入新密码" />
+      </Form.Item>
     </Form>
   );
 }

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Button, Card, Popconfirm, Progress, Steps, Tooltip, message } from 'antd';
-import { useNavigate } from 'react-router-dom';
 import AccountConfigForm from './components/AccountConfigForm';
 import EmailConfigForm from './components/EmailConfigForm';
 import Completed from './components/Completed';
@@ -62,8 +61,6 @@ export default function SetupInitializePage() {
   });
   const [completing, setCompleting] = useState(false);
   const [skipping, setSkipping] = useState(false);
-  const [shouldCompleteInit, setShouldCompleteInit] = useState(false);
-  const navigate = useNavigate();
   const store = useUserStore();
 
   const current = INIT_STEPS[currentStep];
@@ -91,16 +88,17 @@ export default function SetupInitializePage() {
   };
 
   const handleStepSuccess = async () => {
-    if (isLastStep && shouldCompleteInit) {
+    if (isLastStep) {
       setCompleting(true);
       try {
         await completeSystemInitAPI();
         localStorage.removeItem(INIT_STEP_STORAGE_KEY);
+        sessionStorage.setItem(INIT_CACHE_KEY, '1');
         message.success('初始化配置已完成');
-        navigate('/', { replace: true });
-      } finally {
+        // 整页刷新，让路由守卫重新读取初始化状态
+        window.location.href = '/';
+      } catch {
         setCompleting(false);
-        setShouldCompleteInit(false);
       }
       return;
     }
@@ -224,20 +222,19 @@ export default function SetupInitializePage() {
 
               <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
                 <Button onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))} disabled={currentStep === 0}>上一步</Button>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  form={currentFormId}
-                  loading={isLastStep && completing}
-                  onClick={() => {
-                    if (isLastStep) {
-                      setShouldCompleteInit(true);
-                      location.href = '/';
-                    }
-                  }}
-                >
-                  {isLastStep ? '进入系统' : '下一步'}
-                </Button>
+                <div className="flex items-center gap-3">
+                  {currentStep > 0 && !isLastStep && (
+                    <Button onClick={handleStepSuccess}>跳过</Button>
+                  )}
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    form={currentFormId}
+                    loading={isLastStep && completing}
+                  >
+                    {isLastStep ? '进入系统' : '下一步'}
+                  </Button>
+                </div>
               </div>
             </Card>
           </div>
