@@ -47,11 +47,20 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
     });
   }, [row, qiniuRow, form]);
 
+  // 后端缺少 storage 配置项（多为后端未升级/未重启）时无法保存，直接醒目提示
+  if (!row) {
+    return (
+      <Alert
+        className="w-full lg:max-w-[560px] md:ml-10"
+        type="warning"
+        showIcon
+        message="未找到存储配置项（storage）"
+        description="请确认后端服务已更新为包含本地存储支持的版本并重启，启动时会自动补齐该配置项；在此之前无法切换或保存存储方式。"
+      />
+    );
+  }
+
   const onFinish = async (values: FormValues) => {
-    if (!row) {
-      message.error('未找到存储配置项，请检查后端 env_config 表');
-      return;
-    }
     if (storageType === 'qiniu' && !qiniuRow) {
       message.error('未找到七牛云配置项，请检查后端 env_config 表');
       return;
@@ -72,14 +81,16 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
       }
       const storageValue: StorageEnvValue = {
         type: storageType,
-        domain: values.domain,
-        root_dir: values.root_dir,
+        // 当前 tab 未渲染的字段保留已保存值，避免整包覆盖把另一侧参数清空
+        domain: values.domain ?? savedValue?.domain ?? '',
+        root_dir: values.root_dir ?? savedValue?.root_dir ?? '',
       };
       await updateEnvConfigDataAPI({ ...row, value: storageValue });
       message.success('保存成功，新上传的文件将按当前存储方式处理');
       onSaved();
     } catch (e) {
       console.error(e);
+      message.error('保存失败，请稍后重试');
     } finally {
       setSaving(false);
     }
