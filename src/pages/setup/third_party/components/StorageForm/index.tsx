@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Button, Form, Input, Radio, Tag, message } from 'antd';
+import { Alert, Button, Form, Input, Radio, message } from 'antd';
 
 import { updateEnvConfigDataAPI } from '@/api/config';
 import { Config, QiniuStorageEnvValue, StorageEnvValue, StorageType } from '@/types/app/config';
@@ -24,12 +24,6 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
 
   // 当前生效的存储方式来自已保存的配置（row），tab 上的切换保存后才生效
   const savedValue = row?.value as Partial<StorageEnvValue> | undefined;
-  const effectiveType: StorageType = savedValue?.type ?? 'qiniu';
-  // 生效配置是否已可用：本地需域名，七牛需 AK
-  const effectiveReady =
-    effectiveType === 'local'
-      ? !!savedValue?.domain?.trim()
-      : !!(qiniuRow?.value as Partial<QiniuStorageEnvValue> | undefined)?.access_key?.trim();
 
   useEffect(() => {
     const v = row?.value as Partial<StorageEnvValue> | undefined;
@@ -37,7 +31,7 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
     setStorageType(v?.type ?? 'qiniu');
     form.setFieldsValue({
       domain: v?.domain ?? '',
-      root_dir: v?.root_dir ?? '',
+      root_dir: v?.root_dir ?? 'static',
       access_key: q?.access_key ?? '',
       secret_key: q?.secret_key ?? '',
       qiniu_domain: q?.domain ?? '',
@@ -106,10 +100,6 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
           <Radio.Button value="local">本地存储</Radio.Button>
           <Radio.Button value="qiniu">七牛云存储</Radio.Button>
         </Radio.Group>
-        <Tag color="processing" className="font-normal">
-          当前生效：{effectiveType === 'local' ? '本地存储' : '七牛云存储'}
-          {!effectiveReady && '（配置未完成）'}
-        </Tag>
       </div>
 
       {/* 本地存储与七牛共用「域名/根目录」概念，字段名区分开避免相互覆盖 */}
@@ -125,9 +115,9 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
             name="domain"
             label="访问域名"
             rules={[{ required: true, message: '请输入 server 后端的访问域名' }]}
-            extra="server 后端的公网地址，图片链接将以该地址开头，修改后已有链接不受影响"
+            extra="图片链接将以该地址开头，修改后已有链接不受影响"
           >
-            <Input placeholder="https://api.example.com（本机调试可用 http://localhost:9003）" />
+            <Input placeholder="https://liuyuyang.net" />
           </Form.Item>
           <Form.Item name="root_dir" label="根目录" extra="存放文件的目录前缀，留空则直接放在上传根目录">
             <Input placeholder="static" />
@@ -137,12 +127,6 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
 
       {storageType === 'qiniu' && (
         <>
-          <Alert
-            className="mb-5!"
-            type="info"
-            showIcon
-            message="仅当存储方式为七牛云时，上传才会走七牛，图片瘦身也仅在七牛云存储下可用"
-          />
           <Form.Item name="access_key" label="Access Key" rules={[{ required: true, message: '请输入 Access Key' }]}>
             <Input.Password placeholder="xLzpxTtN94h8Q9Z31885355" autoComplete="off" />
           </Form.Item>

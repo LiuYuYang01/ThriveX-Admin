@@ -925,7 +925,9 @@ export default () => {
   const onCreateDir = async () => {
     try {
       const { name } = await createForm.validateFields();
-      const dir = `${trimSlash(currentPath)}/${name.trim()}`;
+      // 空根目录（尚无任何目录）时允许直接创建顶层目录，打破"无目录可选"的死锁
+      const base = trimSlash(currentPath);
+      const dir = base ? `${base}/${name.trim()}` : name.trim();
       await createDirAPI({ dir });
       message.success('🎉 新建目录成功');
       setCreateOpen(false);
@@ -1074,7 +1076,7 @@ export default () => {
           <Button icon={<FiRotateCcw />} onClick={() => void refreshCurrentDir(currentPath)}>
             刷新
           </Button>
-          <Button icon={<FiFolderPlus />} disabled={atMultiRootHome} onClick={() => setCreateOpen(true)}>
+          <Button icon={<FiFolderPlus />} onClick={() => setCreateOpen(true)}>
             新建目录
           </Button>
           <Button
