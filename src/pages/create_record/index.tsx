@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Dropdown, Image, Input, message, Modal, Spin, Tooltip } from 'antd';
+import { Button, Dropdown, Image, Input, message, Modal, Spin, Tabs, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import { BiLogoTelegram, BiLink } from 'react-icons/bi';
 import { FiNavigation } from 'react-icons/fi';
@@ -29,6 +29,7 @@ export default () => {
   const [gaodeApKey, setGaodeApKey] = useState('');
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [materialTab, setMaterialTab] = useState('image');
 
   const douyinEmbedUrl = getDouyinEmbedUrl(video);
 
@@ -80,6 +81,7 @@ export default () => {
       if (data.video) {
         setVideo(data.video);
         setImageList([]);
+        setMaterialTab('video');
       } else {
         setImageList(JSON.parse(data.images as string));
       }
@@ -298,13 +300,13 @@ export default () => {
   };
 
   return (
-    <div className="create_record_page min-h-screen shrink-0 py-6 transition-colors duration-300">
+    <div className="create_record_page shrink-0 pt-6 transition-colors duration-300">
       <div className="pointer-events-none fixed inset-0 -z-10" />
 
       <div>
         <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between ml-4">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-white md:text-4xl">此刻你在想什么？</h1>
-          <Button type="primary" size="large" onClick={onSubmit} loading={loading} icon={!loading && <BiLogoTelegram size={18} />} className="h-12 rounded-2xl border-none bg-blue-500 px-7 font-medium shadow-xl shadow-blue-500/25 hover:bg-blue-600">
+          <Button type="primary" size="large" onClick={onSubmit} loading={loading} icon={!loading && <BiLogoTelegram size={18} />} className="rounded-2xl border-none bg-blue-500 px-6! font-medium shadow-xl shadow-blue-500/25 hover:bg-blue-600">
             {id ? '更新' : '发布'}
           </Button>
         </div>
@@ -365,111 +367,129 @@ export default () => {
               </section>
 
               <section className="rounded-4xl border border-slate-200/80 bg-white p-5 shadow-xl shadow-slate-200/60 backdrop-blur-xl dark:border-strokedark dark:bg-boxdark dark:shadow-black/20">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-white">图片素材</div>
-                    <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">最多添加4 张，建议保持统一风格</div>
-                  </div>
-                </div>
-
-                {imageList.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    {imageList.map((item, index) => (
-                      <div key={`${item}-${index}`} className="group relative aspect-square overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-sm image-container dark:border-strokedark dark:bg-boxdark-2">
-                        <Image src={item} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" classNames={{ root: '!w-full !h-full' }} preview={true} />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 backdrop-blur-[2px] transition-opacity duration-300 group-hover:opacity-100">
-                          <Tooltip title="移除图片">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelImage(item);
-                              }}
-                              className="rounded-full bg-white/20 p-2.5 text-white backdrop-blur-md transition-all duration-200 hover:rotate-90 hover:bg-red-500 cursor-pointer"
-                            >
-                              <RiDeleteBinLine size={20} />
-                            </button>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    ))}
-                    {imageList.length < 4 && !video && (
-                      <Dropdown menu={dropdownItems} placement="bottom" trigger={['click']}>
-                        <button type="button" className="flex aspect-square w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 bg-slate-50 text-center transition-all hover:border-blue-300 hover:bg-blue-50 dark:border-strokedark dark:bg-boxdark-2 dark:hover:bg-blue-950/35 cursor-pointer">
-                          <span className="mb-2 grid h-10 w-10 place-items-center text-blue-500">
-                            <LuImagePlus size={22} />
-                          </span>
-                          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">继续添加</span>
-                          <span className="mt-0.5 text-[11px] text-gray-400 dark:text-gray-500">还可加 {4 - imageList.length} 张</span>
-                        </button>
-                      </Dropdown>
-                    )}
-                  </div>
-                ) : video ? (
-                  <div className="flex min-h-44 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/60 bg-slate-50/60 px-6 text-center dark:border-strokedark dark:bg-boxdark-2/60">
-                    <span className="mb-3 grid h-12 w-12 place-items-center text-gray-400 dark:text-gray-500">
-                      <LuImagePlus size={23} />
-                    </span>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">已添加视频</span>
-                    <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">图片与视频不能同时存在，移除视频后可添加图片</span>
-                  </div>
-                ) : (
-                  <Dropdown menu={dropdownItems} placement="bottom" trigger={['click']}>
-                    <button type="button" className="flex min-h-44 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/80 bg-slate-50 px-6 text-center transition-all hover:border-blue-300 hover:bg-blue-50 dark:border-strokedark dark:bg-boxdark-2 dark:hover:bg-blue-950/35 cursor-pointer">
-                      <span className="mb-3 grid h-12 w-12 place-items-center text-blue-500">
-                        <LuImagePlus size={23} />
-                      </span>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">为这条闪念添加图片</span>
-                      <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">从素材库选择或输入图片链接</span>
-                    </button>
-                  </Dropdown>
-                )}
-              </section>
-
-              <section className="rounded-4xl border border-slate-200/80 bg-white p-5 shadow-xl shadow-slate-200/60 backdrop-blur-xl dark:border-strokedark dark:bg-boxdark dark:shadow-black/20">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-white">视频素材</div>
-                    <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">最多添加1 个，可从素材库选择、输入链接或添加抖音视频</div>
-                  </div>
-                </div>
-
-                {video ? (
-                  <div className="group relative aspect-video overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-sm dark:border-strokedark dark:bg-boxdark-2">
-                    {douyinEmbedUrl ? (
-                      <iframe src={douyinEmbedUrl} title="抖音视频" allow="fullscreen" className="h-full w-full border-0" />
-                    ) : (
-                      <video src={video} controls className="h-full w-full object-contain" />
-                    )}
-                    <div className="absolute inset-x-0 top-0 flex justify-end p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                      <Tooltip title="移除视频">
-                        <button
-                          onClick={() => setVideo('')}
-                          className="rounded-full bg-black/45 p-2 text-white backdrop-blur-md transition-all duration-200 hover:rotate-90 hover:bg-red-500 cursor-pointer"
-                        >
-                          <RiDeleteBinLine size={18} />
-                        </button>
-                      </Tooltip>
-                    </div>
-                  </div>
-                ) : imageList.length ? (
-                  <div className="flex min-h-36 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/60 bg-slate-50/60 px-6 text-center dark:border-strokedark dark:bg-boxdark-2/60">
-                    <span className="mb-3 grid h-12 w-12 place-items-center text-gray-400 dark:text-gray-500">
-                      <LuVideo size={23} />
-                    </span>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">已添加图片</span>
-                    <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">图片与视频不能同时存在，移除图片后可添加视频</span>
-                  </div>
-                ) : (
-                  <Dropdown menu={videoDropdownItems} placement="bottom" trigger={['click']}>
-                    <button type="button" className="flex min-h-36 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/80 bg-slate-50 px-6 text-center transition-all hover:border-blue-300 hover:bg-blue-50 dark:border-strokedark dark:bg-boxdark-2 dark:hover:bg-blue-950/35 cursor-pointer">
-                      <span className="mb-3 grid h-12 w-12 place-items-center text-blue-500">
-                        <LuVideo size={23} />
-                      </span>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">为这条闪念添加视频</span>
-                      <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">从素材库选择或输入视频链接</span>
-                    </button>
-                  </Dropdown>
-                )}
+                <Tabs
+                  activeKey={materialTab}
+                  onChange={setMaterialTab}
+                  className="material-tabs"
+                  items={[
+                    {
+                      key: 'image',
+                      label: (
+                        <span className="inline-flex items-center gap-1.5">
+                          <LuImagePlus size={16} />
+                          图片素材
+                        </span>
+                      ),
+                      children: (
+                        <>
+                          <div className="mb-4 text-xs text-gray-400 dark:text-gray-500">最多添加4 张，建议保持统一风格</div>
+                          {imageList.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-3">
+                              {imageList.map((item, index) => (
+                                <div key={`${item}-${index}`} className="group relative aspect-square overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-sm image-container dark:border-strokedark dark:bg-boxdark-2">
+                                  <Image src={item} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" classNames={{ root: '!w-full !h-full' }} preview={true} />
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 backdrop-blur-[2px] transition-opacity duration-300 group-hover:opacity-100">
+                                    <Tooltip title="移除图片">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDelImage(item);
+                                        }}
+                                        className="rounded-full bg-white/20 p-2.5 text-white backdrop-blur-md transition-all duration-200 hover:rotate-90 hover:bg-red-500 cursor-pointer"
+                                      >
+                                        <RiDeleteBinLine size={20} />
+                                      </button>
+                                    </Tooltip>
+                                  </div>
+                                </div>
+                              ))}
+                              {imageList.length < 4 && !video && (
+                                <Dropdown menu={dropdownItems} placement="bottom" trigger={['click']}>
+                                  <button type="button" className="flex aspect-square w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 bg-slate-50 text-center transition-all hover:border-blue-300 hover:bg-blue-50 dark:border-strokedark dark:bg-boxdark-2 dark:hover:bg-blue-950/35 cursor-pointer">
+                                    <span className="mb-2 grid h-10 w-10 place-items-center text-blue-500">
+                                      <LuImagePlus size={22} />
+                                    </span>
+                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300">继续添加</span>
+                                    <span className="mt-0.5 text-[11px] text-gray-400 dark:text-gray-500">还可加 {4 - imageList.length} 张</span>
+                                  </button>
+                                </Dropdown>
+                              )}
+                            </div>
+                          ) : video ? (
+                            <div className="flex min-h-36 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/60 bg-slate-50/60 px-6 text-center dark:border-strokedark dark:bg-boxdark-2/60">
+                              <span className="mb-3 grid h-12 w-12 place-items-center text-gray-400 dark:text-gray-500">
+                                <LuImagePlus size={23} />
+                              </span>
+                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">已添加视频</span>
+                              <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">图片与视频不能同时存在，移除视频后可添加图片</span>
+                            </div>
+                          ) : (
+                            <Dropdown menu={dropdownItems} placement="bottom" trigger={['click']}>
+                              <button type="button" className="flex min-h-36 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/80 bg-slate-50 px-6 text-center transition-all hover:border-blue-300 hover:bg-blue-50 dark:border-strokedark dark:bg-boxdark-2 dark:hover:bg-blue-950/35 cursor-pointer">
+                                <span className="mb-3 grid h-12 w-12 place-items-center text-blue-500">
+                                  <LuImagePlus size={23} />
+                                </span>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">为这条闪念添加图片</span>
+                                <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">从素材库选择或输入图片链接</span>
+                              </button>
+                            </Dropdown>
+                          )}
+                        </>
+                      ),
+                    },
+                    {
+                      key: 'video',
+                      label: (
+                        <span className="inline-flex items-center gap-1.5">
+                          <LuVideo size={16} />
+                          视频素材
+                        </span>
+                      ),
+                      children: (
+                        <>
+                          <div className="mb-4 text-xs text-gray-400 dark:text-gray-500">最多添加1 个，可从素材库选择、输入链接或添加抖音视频</div>
+                          {video ? (
+                            <div className="group relative aspect-video overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-sm dark:border-strokedark dark:bg-boxdark-2">
+                              {douyinEmbedUrl ? (
+                                <iframe src={douyinEmbedUrl} title="抖音视频" allow="fullscreen" className="h-full w-full border-0" />
+                              ) : (
+                                <video src={video} controls className="h-full w-full object-contain" />
+                              )}
+                              <div className="absolute inset-x-0 top-0 flex justify-end p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                                <Tooltip title="移除视频">
+                                  <button
+                                    onClick={() => setVideo('')}
+                                    className="rounded-full bg-black/45 p-2 text-white backdrop-blur-md transition-all duration-200 hover:rotate-90 hover:bg-red-500 cursor-pointer"
+                                  >
+                                    <RiDeleteBinLine size={18} />
+                                  </button>
+                                </Tooltip>
+                              </div>
+                            </div>
+                          ) : imageList.length ? (
+                            <div className="flex min-h-36 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/60 bg-slate-50/60 px-6 text-center dark:border-strokedark dark:bg-boxdark-2/60">
+                              <span className="mb-3 grid h-12 w-12 place-items-center text-gray-400 dark:text-gray-500">
+                                <LuVideo size={23} />
+                              </span>
+                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">已添加图片</span>
+                              <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">图片与视频不能同时存在，移除图片后可添加视频</span>
+                            </div>
+                          ) : (
+                            <Dropdown menu={videoDropdownItems} placement="bottom" trigger={['click']}>
+                              <button type="button" className="flex min-h-36 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/80 bg-slate-50 px-6 text-center transition-all hover:border-blue-300 hover:bg-blue-50 dark:border-strokedark dark:bg-boxdark-2 dark:hover:bg-blue-950/35 cursor-pointer">
+                                <span className="mb-3 grid h-12 w-12 place-items-center text-blue-500">
+                                  <LuVideo size={23} />
+                                </span>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">为这条闪念添加视频</span>
+                                <span className="mt-1 text-xs text-gray-400 dark:text-gray-500">从素材库选择或输入视频链接</span>
+                              </button>
+                            </Dropdown>
+                          )}
+                        </>
+                      ),
+                    },
+                  ]}
+                />
               </section>
             </aside>
           </div>
