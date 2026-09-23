@@ -44,9 +44,10 @@ import Skeleton from './Skeleton';
 import errorImg from './image/error.png';
 import fileSvg from './image/file.svg';
 
-/** 从整棵树推断根目录前缀（如 static/）；多根目录时返回空串，由虚拟根列表展示全部 result */
-function inferRootPathFromTree(data: FileTreeData | null): string {
-  if (!data) return '';
+/** 从整棵树推断根目录前缀（如 static/）；多根目录时返回空串，由虚拟根列表展示全部 result。
+ * 本地存储没有前缀概念，upload 根目录本身就是虚拟根，始终返回空串 */
+function inferRootPathFromTree(data: FileTreeData | null, isLocalStorage: boolean): string {
+  if (!data || isLocalStorage) return '';
   if (data.dir) {
     const d = String(data.dir).trim().replace(/\/+$/, '');
     if (d) return `${d}/`;
@@ -696,7 +697,7 @@ export default () => {
     return Math.round(((compressResult.items.length - pending) / compressResult.items.length) * 100);
   }, [compressResult]);
 
-  const rootPath = useMemo(() => inferRootPathFromTree(treeData), [treeData]);
+  const rootPath = useMemo(() => inferRootPathFromTree(treeData, isLocalStorage), [treeData, isLocalStorage]);
 
   const normalizePath = (path: string) => normalizePathForRoot(path, rootPath);
   const trimSlash = (path: string) => normalizePathForRoot(path, rootPath).replace(/\/$/, '');
@@ -755,7 +756,7 @@ export default () => {
       const { data } = await getFileTreeAPI();
       setTreeData(data);
 
-      const rp = inferRootPathFromTree(data);
+      const rp = inferRootPathFromTree(data, isLocalStorage);
       const targetPath = keepPath !== undefined ? normalizePathForRoot(keepPath, rp) : rp;
       const exists =
         rp === ''
@@ -790,7 +791,8 @@ export default () => {
 
   useEffect(() => {
     fetchTree();
-  }, []);
+    // isLocalStorage 加载完成后需要以正确的根路径规则重新拉取树
+  }, [isLocalStorage]);
 
   useEffect(() => {
     if (!treeData) return;
