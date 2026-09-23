@@ -35,9 +35,11 @@ import {
 } from 'react-icons/fi';
 import dayjs from 'dayjs';
 import { batchDelFileDataAPI, compressFileDataAPI, createDirAPI, deleteDirAPI, delFileDataAPI, getFileDataAPI, getFileListAPI, getFileTreeAPI, queryCompressTasksAPI, renameDirAPI } from '@/api/file';
+import { getEnvConfigDataAPI } from '@/api/config';
 import FileUpload from '@/components/FileUpload';
 import Title from '@/components/Title';
 import { File as AppFile, FileCompressItem, FileCompressResult, FileInfo, FileTreeData, FileTreeNode } from '@/types/app/file';
+import { StorageEnvValue } from '@/types/app/config';
 import Skeleton from './Skeleton';
 import errorImg from './image/error.png';
 import fileSvg from './image/file.svg';
@@ -679,6 +681,14 @@ export default () => {
   const [filePageNum, setFilePageNum] = useState(1);
   const [filePageSize, setFilePageSize] = useState(DEFAULT_FILE_PAGE_SIZE);
   const [filesLoading, setFilesLoading] = useState(false);
+  // 当前存储方式：本地存储暂不支持图片瘦身，需要禁用入口
+  const [isLocalStorage, setIsLocalStorage] = useState(false);
+
+  useEffect(() => {
+    getEnvConfigDataAPI('storage')
+      .then(({ data }) => setIsLocalStorage(((data.value as Partial<StorageEnvValue>)?.type ?? 'qiniu') === 'local'))
+      .catch((e) => console.error(e));
+  }, []);
 
   const compressProgress = useMemo(() => {
     if (!compressResult?.items.length) return 0;
@@ -1151,13 +1161,15 @@ export default () => {
 
                   {selectedFilePaths.length > 0 && (
                     <>
-                      <Button
-                        icon={<FiMinimize2 />}
-                        disabled={compressProcessing}
-                        onClick={() => confirmCompressFiles(selectedFilePaths)}
-                      >
-                        批量瘦身 ({selectedFilePaths.length})
-                      </Button>
+                      <Tooltip title={isLocalStorage ? '本地存储暂不支持图片瘦身' : undefined}>
+                        <Button
+                          icon={<FiMinimize2 />}
+                          disabled={compressProcessing || isLocalStorage}
+                          onClick={() => confirmCompressFiles(selectedFilePaths)}
+                        >
+                          批量瘦身 ({selectedFilePaths.length})
+                        </Button>
+                      </Tooltip>
                       <Popconfirm
                         title={`确定删除选中的 ${selectedFilePaths.length} 个文件吗？`}
                         okText="确定"
@@ -1454,8 +1466,8 @@ export default () => {
                                         <FiEye size={16} />
                                       </TableIconButton>
                                       <TableIconButton
-                                        label="图片瘦身"
-                                        disabled={compressProcessing}
+                                        label={isLocalStorage ? '本地存储暂不支持图片瘦身' : '图片瘦身'}
+                                        disabled={compressProcessing || isLocalStorage}
                                         onClick={() => confirmCompressFiles([file.path])}
                                       >
                                         <FiMinimize2 size={16} />
@@ -1533,8 +1545,8 @@ export default () => {
                                       <FiEye size={14} />
                                     </TableIconButton>
                                     <TableIconButton
-                                      label="图片瘦身"
-                                      disabled={compressProcessing}
+                                      label={isLocalStorage ? '本地存储暂不支持图片瘦身' : '图片瘦身'}
+                                      disabled={compressProcessing || isLocalStorage}
                                       onClick={() => confirmCompressFiles([file.path])}
                                     >
                                       <FiMinimize2 size={14} />

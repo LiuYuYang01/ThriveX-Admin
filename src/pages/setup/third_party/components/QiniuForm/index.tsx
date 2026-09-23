@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Form, Input, message } from 'antd';
+import { Alert, Button, Form, Input, message } from 'antd';
 
 import { updateEnvConfigDataAPI } from '@/api/config';
 import { QiniuStorageEnvValue } from '@/types/app/config';
@@ -41,6 +41,12 @@ export function QiniuForm({ row, onSaved }: ThirdPartyFormProps) {
 
   return (
     <Form form={form} layout="vertical" size="large" onFinish={onFinish} className="w-full lg:max-w-[560px] md:ml-10">
+      <Alert
+        className="mb-5!"
+        type="info"
+        showIcon
+        message="仅在「文件存储」中切换为七牛云存储后，上传才会走七牛；此处为七牛的连接参数"
+      />
       <Form.Item name="access_key" label="Access Key" rules={[{ required: true, message: '请输入 Access Key' }]}>
         <Input.Password placeholder="xLzpxTtN94h8Q9Z31885355" autoComplete="off" />
       </Form.Item>

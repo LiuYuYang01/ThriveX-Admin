@@ -87,6 +87,7 @@ export type EnvConfigName =
   | 'gaode_map_key'
   | 'gaode_coordinate'
   | 'qiniu_storage'
+  | 'storage'
   | 'hcaptcha_key';
 
 /** 在项目配置「环境配置」表格中隐藏、改由「第三方配置」页表单维护的 name */
@@ -97,6 +98,7 @@ export const THIRD_PARTY_ENV_NAMES = [
   'gaode_map_key',
   'gaode_coordinate',
   'qiniu_storage',
+  'storage',
   'hcaptcha_key',
 ] as const;
 export type ThirdPartyEnvName = (typeof THIRD_PARTY_ENV_NAMES)[number];
@@ -140,6 +142,23 @@ export interface QiniuStorageEnvValue {
   secret_key: string;
   bucket_name: string;
 }
+
+/** 文件存储方式：本地磁盘 / 七牛云 */
+export type StorageType = 'local' | 'qiniu';
+
+export interface StorageEnvValue {
+  type: StorageType;
+  /** 本地存储的访问域名（server 后端地址），用于拼接 /static/upload/ 资源链接 */
+  domain: string;
+  /** 本地存储根目录前缀，留空则直接放在上传根目录 */
+  root_dir: string;
+}
+
+export const DEFAULT_STORAGE_ENV_VALUE: StorageEnvValue = {
+  type: 'local',
+  domain: '',
+  root_dir: '',
+};
 
 export interface Config {
   id: string;
