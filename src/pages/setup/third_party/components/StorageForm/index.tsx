@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Button, Form, Input, Radio, message } from 'antd';
+import { Alert, Button, Form, Input, Radio, Tag, message } from 'antd';
 
 import { updateEnvConfigDataAPI } from '@/api/config';
 import { Config, QiniuStorageEnvValue, StorageEnvValue, StorageType } from '@/types/app/config';
@@ -15,6 +15,15 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
   const [form] = Form.useForm<StorageEnvValue & QiniuStorageEnvValue & { qiniu_domain: string; qiniu_root_dir: string }>();
   const [saving, setSaving] = useState(false);
   const storageType = Form.useWatch('type', form) as StorageType | undefined;
+
+  // 当前生效的存储方式来自已保存的配置（row），而非表单中未保存的选择
+  const savedValue = row?.value as Partial<StorageEnvValue> | undefined;
+  const effectiveType: StorageType = savedValue?.type ?? 'qiniu';
+  // 生效配置是否已可用：本地需域名，七牛需 AK
+  const effectiveReady =
+    effectiveType === 'local'
+      ? !!savedValue?.domain?.trim()
+      : !!(qiniuRow?.value as Partial<QiniuStorageEnvValue> | undefined)?.access_key?.trim();
 
   useEffect(() => {
     const v = row?.value as Partial<StorageEnvValue> | undefined;
@@ -72,7 +81,19 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
 
   return (
     <Form form={form} layout="vertical" size="large" onFinish={onFinish} className="w-full lg:max-w-[560px] md:ml-10">
-      <Form.Item name="type" label="存储方式" initialValue="qiniu">
+      <Form.Item
+        name="type"
+        initialValue="qiniu"
+        label={
+          <div className="w-full flex items-center gap-2">
+            <span>存储方式</span>
+            <Tag color="processing" className="m-0! font-normal">
+              当前生效：{effectiveType === 'local' ? '本地存储' : '七牛云存储'}
+              {!effectiveReady && '（配置未完成）'}
+            </Tag>
+          </div>
+        }
+      >
         <Radio.Group>
           <Radio.Button value="local">本地存储</Radio.Button>
           <Radio.Button value="qiniu">七牛云存储</Radio.Button>
