@@ -112,7 +112,7 @@ export default function SidebarSkeleton({ sidebarOpen = false }: SidebarSkeleton
 
       {/* 底部用户卡片 */}
       <div className="p-2">
-        <div className="flex cursor-default items-center gap-3 rounded-xl border border-gray-200/50 bg-white/60 p-3 backdrop-blur-sm dark:border-gray-700/50 dark:bg-[#313D4A]">
+        <div className="flex cursor-default items-center gap-3 rounded-xl border border-gray-200/50 bg-white/60 p-3 backdrop-blur-sm dark:border-gray-700/50 dark:bg-[#1f2838]">
           <div className="skeleton h-10 w-10 shrink-0 rounded-full" />
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="skeleton h-3.5 w-10 rounded-sm" />

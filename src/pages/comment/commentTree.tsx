@@ -77,4 +77,4 @@ export function commentTableExpandable<T extends TreeItem>(): ExpandableConfig<T
 }
 
 export const commentTableTreeClassName =
-  'min-h-0 flex-1 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! dark:[&_.ant-table-thead>tr>th]:text-slate-400! [&_.comment-tree-expand-col]:px-0! [&_.comment-tree-expand-col]:text-center!';
+  'min-h-0 flex-1 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-[#1f2838]! dark:[&_.ant-table-thead>tr>th]:text-slate-400! [&_.comment-tree-expand-col]:px-0! [&_.comment-tree-expand-col]:text-center!';

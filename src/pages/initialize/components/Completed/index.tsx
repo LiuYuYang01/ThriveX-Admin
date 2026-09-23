@@ -29,7 +29,7 @@ export default function NextActionsGuide({ onSuccess }: InitStepFormProps) {
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-stroke bg-white/90 px-5 py-5 shadow-[0_8px_24px_rgba(2,132,199,0.06)] dark:border-strokedark dark:bg-[#2f3d4d] dark:shadow-none">
+      <div className="mt-4 rounded-xl border border-stroke bg-white/90 px-5 py-5 shadow-[0_8px_24px_rgba(2,132,199,0.06)] dark:border-strokedark dark:bg-[#1e2738] dark:shadow-none">
         <Title level={5} className="mb-1! text-slate-800! dark:text-slate-100!">
           建议你接下来这样做
         </Title>

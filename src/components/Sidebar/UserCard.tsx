@@ -47,7 +47,7 @@ export default ({ isSideBarTheme }: UserCardProps) => {
   return (
     <div className="p-2">
       <Dropdown menu={{ items: dropdownItems }} placement="topRight" trigger={['click']}>
-        <div className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${isSideBarTheme === 'dark' ? 'bg-[#313D4A] hover:bg-[#3d4b5c]' : 'bg-white/60 dark:bg-[#313D4A] backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-[#3d4b5c]'}`}>
+        <div className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${isSideBarTheme === 'dark' ? 'bg-[#1f2838] hover:bg-[#252f42]' : 'bg-white/60 dark:bg-[#1f2838] backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-[#252f42]'}`}>
           {user?.avatar ? (
             <img
               src={user.avatar}

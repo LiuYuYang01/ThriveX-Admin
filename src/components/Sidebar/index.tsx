@@ -69,12 +69,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   // 导航项样式：默认色与激活色不能叠在同一条上（均带 ! 时编译顺序会导致 dark 下激活色被盖住）
   const sidebarItemBaseDark =
-    'group relative flex items-center gap-1 py-2 px-4 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-[#313D4A] rounded-xs font-medium hover:text-primary! dark:hover:text-primary!';
+    'group relative flex items-center gap-1 py-2 px-4 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-[#1f2838] rounded-xs font-medium hover:text-primary! dark:hover:text-primary!';
   const sidebarItemBaseLight =
-    'group relative flex items-center gap-1 py-2 px-4 duration-300 ease-in-out hover:bg-[rgba(241,241,244,0.9)] dark:hover:bg-[#313D4A] rounded-md hover:backdrop-blur-[15px] hover:text-primary! dark:hover:text-primary!';
+    'group relative flex items-center gap-1 py-2 px-4 duration-300 ease-in-out hover:bg-[rgba(241,241,244,0.9)] dark:hover:bg-[#1f2838] rounded-md hover:backdrop-blur-[15px] hover:text-primary! dark:hover:text-primary!';
   const sidebarTextIdleDark = 'text-[#DEE4EE]!';
   const sidebarTextIdleLight = 'text-[#444]! dark:text-slate-200!';
-  const sidebarTextActive = 'text-primary! dark:text-primary! dark:bg-[#313D4A]';
+  const sidebarTextActive = 'text-primary! dark:text-primary! dark:bg-[#1f2838]';
   const sidebarItemClass = (active: boolean) =>
     (isSideBarTheme === 'dark' ? sidebarItemBaseDark : sidebarItemBaseLight) +
     ' ' +
@@ -191,9 +191,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                         const base =
                                           'group relative flex items-center gap-1.5 rounded-md px-4 duration-300 ease-in-out dark:hover:text-primary!';
                                         if (isSideBarTheme === 'dark') {
-                                          return `${base} ${isActive ? 'text-primary! dark:text-primary! dark:bg-[#313D4A]' : 'text-[#8A99AF] font-medium hover:text-white'}`;
+                                          return `${base} ${isActive ? 'text-primary! dark:text-primary! dark:bg-[#1f2838]' : 'text-[#8A99AF] font-medium hover:text-white'}`;
                                         }
-                                        return `${base} ${isActive ? 'text-primary! dark:text-primary! dark:bg-[#313D4A]' : 'text-[#666]! dark:text-slate-400! hover:text-primary!'}`;
+                                        return `${base} ${isActive ? 'text-primary! dark:text-primary! dark:bg-[#1f2838]' : 'text-[#666]! dark:text-slate-400! hover:text-primary!'}`;
                                       }}
                                     >
                                       {subItem.icon}

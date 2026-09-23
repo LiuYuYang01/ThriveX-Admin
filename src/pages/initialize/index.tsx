@@ -125,7 +125,7 @@ export default function SetupInitializePage() {
   };
 
   return (
-    <div className="relative overflow-hidden min-h-screen flex items-center justify-center px-4 py-6 md:px-6 md:py-8 bg-[#f5f7fb] dark:bg-[#1A222C]">
+    <div className="relative overflow-hidden min-h-screen flex items-center justify-center px-4 py-6 md:px-6 md:py-8 bg-[#f5f7fb] dark:bg-[#0b0f14]">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 dark:hidden bg-[radial-gradient(circle_at_18%_12%,rgba(59,130,246,0.22),transparent_48%),radial-gradient(circle_at_82%_18%,rgba(168,85,247,0.18),transparent_52%),radial-gradient(circle_at_50%_92%,rgba(34,197,94,0.14),transparent_50%)]" />
         <div className="absolute inset-0 hidden dark:block bg-[radial-gradient(circle_at_20%_12%,rgba(96,165,250,0.18),transparent_55%),radial-gradient(circle_at_85%_20%,rgba(147,51,234,0.18),transparent_58%),radial-gradient(circle_at_50%_92%,rgba(34,197,94,0.12),transparent_58%)]" />
@@ -135,7 +135,7 @@ export default function SetupInitializePage() {
         <div className="absolute -bottom-28 -left-36 h-[420px] w-[420px] rounded-full blur-3xl opacity-35 bg-linear-to-tr from-violet-300 via-fuchsia-200 to-transparent dark:from-violet-500/25 dark:via-fuchsia-500/15 dark:to-transparent" />
       </div>
 
-      <div className="relative w-full lg:max-w-6xl mx-auto rounded-xl bg-white/75 dark:bg-[#243244]/45 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-black/5 dark:ring-white/5 shadow-[0_10px_38px_rgba(15,23,42,0.12)]">
+      <div className="relative w-full lg:max-w-6xl mx-auto rounded-xl bg-white/75 dark:bg-[#151b26]/45 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-black/5 dark:ring-white/5 shadow-[0_10px_38px_rgba(15,23,42,0.12)]">
         <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
           <Popconfirm
             title="警告"
@@ -216,7 +216,7 @@ export default function SetupInitializePage() {
                 </div>
               </div>
 
-              <div className="mt-5 rounded-md border border-stroke dark:border-strokedark bg-white/80 dark:bg-[#2f3d4d] px-4 py-4">
+              <div className="mt-5 rounded-md border border-stroke dark:border-strokedark bg-white/80 dark:bg-[#1e2738] px-4 py-4">
                 {renderFormPanel()}
               </div>
 

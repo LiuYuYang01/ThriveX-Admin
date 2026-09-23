@@ -256,15 +256,15 @@ export default () => {
         <h3 className="text-xl font-bold text-slate-800 dark:text-white">访客统计</h3>
 
         <div className="inline-flex items-center rounded-md bg-whiter p-1.5 space-x-1">
-          <button className={`rounded-sm py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark ${scope === 'day' ? 'bg-white dark:bg-[#4e5969]! shadow-card' : ''}`} onClick={() => handleScopeChange('day')}>
+          <button className={`rounded-sm py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark ${scope === 'day' ? 'bg-white dark:bg-[#252f42]! shadow-card' : ''}`} onClick={() => handleScopeChange('day')}>
             天
           </button>
 
-          <button className={`rounded-sm py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark ${scope === 'month' ? 'bg-white dark:bg-[#4e5969]! shadow-card' : ''}`} onClick={() => handleScopeChange('month')}>
+          <button className={`rounded-sm py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark ${scope === 'month' ? 'bg-white dark:bg-[#252f42]! shadow-card' : ''}`} onClick={() => handleScopeChange('month')}>
             月
           </button>
 
-          <button className={`rounded-sm py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark ${scope === 'year' ? 'bg-white dark:bg-[#4e5969]! shadow-card' : ''}`} onClick={() => handleScopeChange('year')}>
+          <button className={`rounded-sm py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark ${scope === 'year' ? 'bg-white dark:bg-[#252f42]! shadow-card' : ''}`} onClick={() => handleScopeChange('year')}>
             年
           </button>
         </div>
@@ -276,8 +276,8 @@ export default () => {
             option={{
               tooltip: {
                 trigger: 'axis',
-                backgroundColor: colorMode === 'dark' ? '#334459' : '#fff',
-                borderColor: colorMode === 'dark' ? '#475f7d' : '#e5eaf3',
+                backgroundColor: colorMode === 'dark' ? '#1e2738' : '#fff',
+                borderColor: colorMode === 'dark' ? 'rgba(255,255,255,0.12)' : '#e5eaf3',
                 borderWidth: 1,
                 textStyle: {
                   color: colorMode === 'dark' ? '#e0e0e0' : '#1a2757',
@@ -329,7 +329,7 @@ export default () => {
                 axisTick: { show: false }, // 隐藏x轴刻度线
                 axisLabel: {
                   fontSize: 12,
-                  color: colorMode === 'dark' ? '#475f7d' : '#1a2757',
+                  color: colorMode === 'dark' ? '#8a99b8' : '#1a2757',
                 },
               },
               yAxis: {
@@ -339,12 +339,12 @@ export default () => {
                 axisLine: { show: false },
                 axisLabel: {
                   fontSize: 12,
-                  color: colorMode === 'dark' ? '#475f7d' : '#1a2757',
+                  color: colorMode === 'dark' ? '#8a99b8' : '#1a2757',
                 },
                 splitLine: {
                   lineStyle: {
                     type: 'dashed',
-                    color: colorMode === 'dark' ? '#475f7d' : '#f0f4fa',
+                    color: colorMode === 'dark' ? 'rgba(255,255,255,0.12)' : '#f0f4fa',
                   },
                 },
               },

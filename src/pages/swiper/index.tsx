@@ -680,7 +680,7 @@ export default function SwiperPage() {
                       setPagination({ current: page, pageSize: pageSize ?? 8 }),
                   }
               }
-              className={`min-h-0 flex-1 [&_.ant-table-tbody>tr]:transition-[opacity,box-shadow] [&_.ant-table-tbody>tr]:duration-150 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-boxdark-2! dark:[&_.ant-table-thead>tr>th]:text-slate-400! ${sortSaving ? '[&_.ant-table-tbody]:pointer-events-none [&_.ant-table-tbody]:opacity-60' : ''
+              className={`min-h-0 flex-1 [&_.ant-table-tbody>tr]:transition-[opacity,box-shadow] [&_.ant-table-tbody>tr]:duration-150 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-[#1f2838]! dark:[&_.ant-table-thead>tr>th]:text-slate-400! ${sortSaving ? '[&_.ant-table-tbody]:pointer-events-none [&_.ant-table-tbody]:opacity-60' : ''
                 }`}
               locale={{
                 emptyText: (

@@ -27,6 +27,14 @@ function countChars(text: string) {
   return text.replace(/\s/g, '').length;
 }
 
+// 存量/外部内容里 HTML 标签可能被转义成 &lt;br/&gt; 等实体导致渲染端只显示文字，
+// 载入时还原为原始标签（单独的 &lt; 如 "a < b" 不会被误伤）
+const restoreHtmlTags = (text: string) =>
+  text.replace(
+    /&lt;(\/?)([a-zA-Z][a-zA-Z0-9-]*)((?:(?!&lt;|&gt;)[\s\S])*?)(\/?)&gt;/g,
+    '<$1$2$3$4>',
+  );
+
 const iconBtnClass =
   'inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-boxdark-2';
 
@@ -133,7 +141,7 @@ export default function CreatePage() {
       setLoading(true);
       const { data } = await getArticleDataAPI(id);
       setData(data);
-      setContent(data.content);
+      setContent(restoreHtmlTags(data.content));
     } catch (error) {
       console.error(error);
     } finally {
@@ -151,8 +159,9 @@ export default function CreatePage() {
 
     const saved = localStorage.getItem('article_content');
     if (saved) {
-      setData((prev) => ({ ...prev, content: saved }));
-      setContent(saved);
+      const restored = restoreHtmlTags(saved);
+      setData((prev) => ({ ...prev, content: restored }));
+      setContent(restored);
     }
   }, [id]);
 

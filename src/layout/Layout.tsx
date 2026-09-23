@@ -33,7 +33,7 @@ export default ({ children }: { children: React.ReactNode }) => {
   }, [colorMode]);
 
   return (
-    <div className="dark:bg-[#1A222C] dark:text-[#AEB7C0]">
+    <div className="dark:bg-[#0b0f14] dark:text-[#b0bdd4]">
       <div className="flex h-screen overflow-hidden">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 

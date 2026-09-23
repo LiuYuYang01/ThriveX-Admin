@@ -14,7 +14,7 @@ export default ({ title, total, children }: Props) => {
       <div className="flex items-center justify-between">
         <h4 className="font-bold text-2xl my-2 text-black dark:text-white">{total}</h4>
 
-        <div className="flex h-11 w-11 items-center justify-center rounded-md bg-[#e7f2fe] dark:bg-[#4e5969]">
+        <div className="flex h-11 w-11 items-center justify-center rounded-md bg-[#e7f2fe] dark:bg-[#252f42]">
           {children}
         </div>
       </div>
