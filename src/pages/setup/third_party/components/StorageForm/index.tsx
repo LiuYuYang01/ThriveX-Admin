@@ -2,33 +2,65 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, Form, Input, Radio, message } from 'antd';
 
 import { updateEnvConfigDataAPI } from '@/api/config';
-import { StorageEnvValue, StorageType } from '@/types/app/config';
+import { Config, QiniuStorageEnvValue, StorageEnvValue, StorageType } from '@/types/app/config';
 
-import type { ThirdPartyFormProps } from '../types';
+interface StorageFormProps {
+  row: Config | undefined;
+  qiniuRow: Config | undefined;
+  onSaved: () => void;
+}
 
-/** 文件存储方式：切换本地 / 七牛云，只影响新上传，已发布内容中的 URL 不受影响 */
-export function StorageForm({ row, onSaved }: ThirdPartyFormProps) {
-  const [form] = Form.useForm<StorageEnvValue>();
+/** 文件存储方式：切换本地 / 七牛云，七牛的连接参数也在本表单内维护，保存时一并写入 */
+export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
+  const [form] = Form.useForm<StorageEnvValue & QiniuStorageEnvValue & { qiniu_domain: string; qiniu_root_dir: string }>();
   const [saving, setSaving] = useState(false);
   const storageType = Form.useWatch('type', form) as StorageType | undefined;
 
   useEffect(() => {
     const v = row?.value as Partial<StorageEnvValue> | undefined;
+    const q = qiniuRow?.value as Partial<QiniuStorageEnvValue> | undefined;
     form.setFieldsValue({
       type: v?.type ?? 'qiniu',
       domain: v?.domain ?? '',
       root_dir: v?.root_dir ?? '',
+      access_key: q?.access_key ?? '',
+      secret_key: q?.secret_key ?? '',
+      qiniu_domain: q?.domain ?? '',
+      bucket_name: q?.bucket_name ?? '',
+      end_point: q?.end_point ?? '',
+      qiniu_root_dir: q?.root_dir ?? 'static',
     });
-  }, [row, form]);
+  }, [row, qiniuRow, form]);
 
-  const onFinish = async (values: StorageEnvValue) => {
+  const onFinish = async (values: StorageEnvValue & QiniuStorageEnvValue & { qiniu_domain: string; qiniu_root_dir: string }) => {
     if (!row) {
       message.error('未找到存储配置项，请检查后端 env_config 表');
       return;
     }
+    if (values.type === 'qiniu' && !qiniuRow) {
+      message.error('未找到七牛云配置项，请检查后端 env_config 表');
+      return;
+    }
     setSaving(true);
     try {
-      await updateEnvConfigDataAPI({ ...row, value: values });
+      if (values.type === 'qiniu') {
+        // 脱敏字段（******）提交后由后端还原为库中原值
+        const qiniuValue: QiniuStorageEnvValue = {
+          domain: values.qiniu_domain,
+          root_dir: values.qiniu_root_dir,
+          end_point: values.end_point,
+          access_key: values.access_key,
+          secret_key: values.secret_key,
+          bucket_name: values.bucket_name,
+        };
+        await updateEnvConfigDataAPI({ ...qiniuRow!, value: qiniuValue });
+      }
+      const storageValue: StorageEnvValue = {
+        type: values.type,
+        domain: values.domain,
+        root_dir: values.root_dir,
+      };
+      await updateEnvConfigDataAPI({ ...row, value: storageValue });
       message.success('保存成功，新上传的文件将按当前存储方式处理');
       onSaved();
     } catch (e) {
@@ -47,6 +79,7 @@ export function StorageForm({ row, onSaved }: ThirdPartyFormProps) {
         </Radio.Group>
       </Form.Item>
 
+      {/* 本地存储与七牛共用「域名/根目录」概念，字段名区分开避免相互覆盖 */}
       {storageType === 'local' && (
         <>
           <Alert
@@ -70,12 +103,32 @@ export function StorageForm({ row, onSaved }: ThirdPartyFormProps) {
       )}
 
       {storageType === 'qiniu' && (
-        <Alert
-          className="mb-5!"
-          type="info"
-          showIcon
-          message="选择七牛云存储后，请在「七牛云存储」标签页完成 Access Key 等配置"
-        />
+        <>
+          <Alert
+            className="mb-5!"
+            type="info"
+            showIcon
+            message="仅当存储方式为七牛云时，上传才会走七牛，图片瘦身也仅在七牛云存储下可用"
+          />
+          <Form.Item name="access_key" label="Access Key" rules={[{ required: true, message: '请输入 Access Key' }]}>
+            <Input.Password placeholder="xLzpxTtN94h8Q9Z31885355" autoComplete="off" />
+          </Form.Item>
+          <Form.Item name="secret_key" label="Secret Key" rules={[{ required: true, message: '请输入 Secret Key' }]}>
+            <Input.Password placeholder="nQw7qx3g6fQkYnL096M1gfwegw" autoComplete="new-password" />
+          </Form.Item>
+          <Form.Item name="qiniu_domain" label="访问域名" rules={[{ required: true, message: '请输入访问域名' }]}>
+            <Input placeholder="https://thrive.s3.cn-east-1.qiniucs.com" />
+          </Form.Item>
+          <Form.Item name="bucket_name" label="存储桶" rules={[{ required: true, message: '请输入存储桶名称' }]}>
+            <Input placeholder="thrive" />
+          </Form.Item>
+          <Form.Item name="end_point" label="地域" rules={[{ required: true, message: '请输入地域' }]}>
+            <Input placeholder="thrive.s3.cn-east-1.qiniucs.com" />
+          </Form.Item>
+          <Form.Item name="qiniu_root_dir" label="根目录" rules={[{ required: true, message: '请输入存放文件的根目录' }]}>
+            <Input placeholder="static" />
+          </Form.Item>
+        </>
       )}
 
       <Form.Item>
