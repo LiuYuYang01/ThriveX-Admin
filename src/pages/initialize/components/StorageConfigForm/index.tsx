@@ -38,7 +38,6 @@ export default function StorageConfigForm({ onSuccess }: InitStepFormProps) {
         form.setFieldsValue({
           type: sv?.type ?? 'local',
           domain: sv?.domain ?? '',
-          root_dir: sv?.root_dir ?? '',
           access_key: qv?.access_key ?? '',
           secret_key: qv?.secret_key ?? '',
           qiniu_domain: qv?.domain ?? '',
@@ -83,7 +82,6 @@ export default function StorageConfigForm({ onSuccess }: InitStepFormProps) {
       const storageValue: StorageEnvValue = {
         type: values.type,
         domain: values.domain,
-        root_dir: values.root_dir,
       };
       await updateEnvConfigDataAPI({ ...storageRow, value: storageValue });
       setStorageRow((prev) => (prev ? { ...prev, value: storageValue } : prev));
@@ -108,7 +106,6 @@ export default function StorageConfigForm({ onSuccess }: InitStepFormProps) {
       initialValues={{
         type: 'local',
         domain: '',
-        root_dir: '',
         access_key: '',
         secret_key: '',
         qiniu_domain: '',
@@ -128,7 +125,7 @@ export default function StorageConfigForm({ onSuccess }: InitStepFormProps) {
         </Radio.Group>
       </Form.Item>
 
-      {/* 本地存储与七牛共用访问域名概念，字段名区分开避免相互覆盖 */}
+      {/* 七牛的域名/根目录字段以 qiniu_ 前缀命名，与本地存储的同名字段区分开 */}
       {storageType === 'local' && (
         <>
           <Alert
@@ -144,9 +141,6 @@ export default function StorageConfigForm({ onSuccess }: InitStepFormProps) {
             extra="server 后端的公网地址，图片链接将以该地址开头"
           >
             <Input placeholder="https://api.example.com（本机调试可用 http://localhost:9003）" />
-          </Form.Item>
-          <Form.Item label="根目录" name="root_dir" extra="存放文件的目录前缀，留空则直接放在上传根目录">
-            <Input placeholder="static" />
           </Form.Item>
         </>
       )}

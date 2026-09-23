@@ -13,7 +13,7 @@ interface StorageFormProps {
 type FormValues = StorageEnvValue & QiniuStorageEnvValue & { qiniu_domain: string; qiniu_root_dir: string };
 
 /** 文件存储方式：切换按钮即存储方式，选中项回显已保存的配置，保存后刷新页面仍保持；
- * 本地与七牛共用「域名/根目录」概念，字段名区分开避免相互覆盖 */
+ * 本地仅配置访问域名，七牛参数字段以 qiniu_ 前缀区分避免相互覆盖 */
 export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
   const [form] = Form.useForm<FormValues>();
   const [saving, setSaving] = useState(false);
@@ -31,7 +31,6 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
     setStorageType(v?.type ?? 'qiniu');
     form.setFieldsValue({
       domain: v?.domain ?? '',
-      root_dir: v?.root_dir ?? 'static',
       access_key: q?.access_key ?? '',
       secret_key: q?.secret_key ?? '',
       qiniu_domain: q?.domain ?? '',
@@ -77,7 +76,6 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
         type: storageType,
         // 当前 tab 未渲染的字段保留已保存值，避免整包覆盖把另一侧参数清空
         domain: values.domain ?? savedValue?.domain ?? '',
-        root_dir: values.root_dir ?? savedValue?.root_dir ?? '',
       };
       await updateEnvConfigDataAPI({ ...row, value: storageValue });
       message.success('保存成功，新上传的文件将按当前存储方式处理');
@@ -102,7 +100,7 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
         </Radio.Group>
       </div>
 
-      {/* 本地存储与七牛共用「域名/根目录」概念，字段名区分开避免相互覆盖 */}
+      {/* 七牛的域名/根目录字段以 qiniu_ 前缀命名，与本地存储的同名字段区分开 */}
       {storageType === 'local' && (
         <>
           <Alert
@@ -118,9 +116,6 @@ export function StorageForm({ row, qiniuRow, onSaved }: StorageFormProps) {
             extra="图片链接将以该地址开头，修改后已有链接不受影响"
           >
             <Input placeholder="https://liuyuyang.net" />
-          </Form.Item>
-          <Form.Item name="root_dir" label="根目录" extra="存放文件的目录前缀，留空则直接放在上传根目录">
-            <Input placeholder="static" />
           </Form.Item>
         </>
       )}

@@ -150,14 +150,11 @@ export interface StorageEnvValue {
   type: StorageType;
   /** 本地存储的访问域名（server 后端地址），用于拼接 /static/upload/ 资源链接 */
   domain: string;
-  /** 本地存储根目录前缀，留空则直接放在上传根目录 */
-  root_dir: string;
 }
 
 export const DEFAULT_STORAGE_ENV_VALUE: StorageEnvValue = {
   type: 'local',
   domain: '',
-  root_dir: '',
 };
 
 export interface Config {
