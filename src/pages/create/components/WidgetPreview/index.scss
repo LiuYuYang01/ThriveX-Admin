@@ -85,6 +85,15 @@
         position: absolute;
         top: 0.5rem;
         right: 0.65rem;
+        // B站/YouTube 的 iframe 是绝对定位元素，与按钮同层级按 DOM 顺序
+        // 绘制会盖住按钮（按钮在 DOM 中靠前），这里显式提层
+        z-index: 5;
+      }
+
+      // iframe 类组件（B站/YouTube 等）会吞掉父级 hover，按钮改为常显
+      .tx-widget-preview__toggle,
+      .tx-widget-preview__delete {
+        opacity: 1;
       }
     }
   }
@@ -138,8 +147,10 @@
       }
 
       &--portrait {
-        padding-top: 70%;
-        max-width: 420px;
+        // 抖音视频是 9:16 竖屏，容器比例一致才不会被播放器 letterbox 出黑边
+        padding-top: 0;
+        aspect-ratio: 9 / 16;
+        max-width: 360px;
         margin: 0 auto;
       }
     }
@@ -407,6 +418,420 @@
       object-fit: cover;
       border-radius: 12px;
       background: #e2e8f0;
+    }
+
+    // ------------------------------------------------ 提示块（callout）
+    &--callout {
+      --callout-color: #539dfd;
+
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.95rem 1.05rem;
+      border-radius: 12px;
+      border-left: 3px solid var(--callout-color);
+      background: color-mix(in srgb, var(--callout-color) 9%, transparent);
+
+      &.is-tip {
+        --callout-color: #16a34a;
+      }
+
+      &.is-info {
+        --callout-color: #0891b2;
+      }
+
+      &.is-warning {
+        --callout-color: #d97706;
+      }
+
+      &.is-danger {
+        --callout-color: #dc2626;
+      }
+
+      > svg {
+        flex-shrink: 0;
+        margin-top: 0.15rem;
+        color: var(--callout-color);
+      }
+
+      strong {
+        display: block;
+        margin-bottom: 0.2rem;
+        color: #1f2937;
+
+        .dark & {
+          color: #e2e8f0;
+        }
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.7;
+        color: #475569;
+
+        .dark & {
+          color: #94a3b8;
+        }
+      }
+    }
+
+    // ------------------------------------------------ 网址卡片（link-card）：整卡可点击
+    // 注意：此处不能使用 #{&} 插值，嵌套在 .create-muya-editor 内会拼出错误选择器
+    a.tx-widget__info {
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+
+      &:hover .tx-widget__info-body strong {
+        color: #539dfd;
+      }
+    }
+
+    &__info {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 1rem;
+      padding: 1rem;
+
+      @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    &__info-cover {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #e2e8f0;
+    }
+
+    &__info-cover--empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: #94a3b8;
+      background: #f1f5f9;
+
+      .dark & {
+        background: #1e293b;
+      }
+    }
+
+    &__info-body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.35rem;
+
+      strong {
+        font-size: 1.05rem;
+      }
+
+      p {
+        margin: 0;
+        color: #64748b;
+        line-height: 1.6;
+      }
+    }
+
+    &__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-top: 0.35rem;
+      color: #539dfd;
+      font-size: 0.875rem;
+    }
+
+    // 折叠面板触发按钮的悬停反馈与配色
+    &__collapse-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.95rem 1.1rem;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #1f2937;
+      cursor: pointer;
+
+      .dark & {
+        color: #e2e8f0;
+      }
+
+      &:hover {
+        background: rgba(83, 157, 253, 0.06);
+      }
+
+      svg {
+        color: #94a3b8;
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+      }
+
+      &.is-open svg {
+        transform: rotate(180deg);
+      }
+    }
+
+    &__collapse-body {
+      padding: 0 1.1rem 1.1rem;
+      color: #475569;
+      line-height: 1.7;
+      border-top: 1px dashed #e2e8f0;
+
+      .dark & {
+        color: #94a3b8;
+        border-top-color: #3d4654;
+      }
+    }
+
+    // ------------------------------------------------ 代码对比（diff）
+    &__diff {
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f8fafc;
+
+      .dark & {
+        background: rgba(15, 23, 42, 0.6);
+      }
+    }
+
+    &__diff-head {
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid #e8eef6;
+      font-size: 0.8125rem;
+      color: #64748b;
+
+      .dark & {
+        border-bottom-color: #3d4654;
+      }
+    }
+
+    &__diff pre {
+      margin: 0;
+      padding: 0.5rem 0;
+      overflow: auto;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      background: transparent;
+    }
+
+    &__diff-line {
+      display: grid;
+      grid-template-columns: 1.5rem 1fr;
+      padding: 0 1rem;
+      gap: 0.35rem;
+
+      &.is-add {
+        background: rgba(34, 197, 94, 0.12);
+        color: #15803d;
+      }
+
+      &.is-del {
+        background: rgba(239, 68, 68, 0.12);
+        color: #b91c1c;
+      }
+
+      code {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    }
+
+    // ------------------------------------------------ 评分卡（rating）
+    &__rating {
+      display: grid;
+      gap: 0.65rem;
+      padding: 1rem 1.1rem 1.1rem;
+
+      > strong {
+        font-size: 1.05rem;
+        margin-bottom: 0.15rem;
+      }
+    }
+
+    &__rating-row {
+      display: grid;
+      grid-template-columns: minmax(64px, 96px) 1fr auto;
+      align-items: center;
+      gap: 0.75rem;
+
+      > span:first-child {
+        color: #64748b;
+        font-size: 0.875rem;
+      }
+    }
+
+    &__rating-stars {
+      display: inline-flex;
+      gap: 0.15rem;
+
+      svg {
+        color: #d3dce8;
+
+        .dark & {
+          color: #3d4654;
+        }
+
+        &.is-on {
+          color: #f59e0b;
+        }
+      }
+    }
+
+    &__rating-score {
+      font-size: 0.8125rem;
+      color: #64748b;
+      font-variant-numeric: tabular-nums;
+    }
+
+    &__rating-summary {
+      margin: 0;
+      padding-top: 0.55rem;
+      border-top: 1px dashed #e2e8f0;
+      color: #64748b;
+      font-size: 0.875rem;
+      line-height: 1.6;
+
+      .dark & {
+        border-top-color: #3d4654;
+        color: #94a3b8;
+      }
+    }
+
+    // ------------------------------------------------ 双栏对比（comparison）
+    &__versus {
+      display: grid;
+      padding: 1rem 1.1rem 1.1rem;
+      font-size: 0.9rem;
+    }
+
+    &__versus-head,
+    &__versus-row {
+      display: grid;
+      grid-template-columns: minmax(56px, 88px) 1fr 1fr;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    &__versus-head {
+      padding-bottom: 0.7rem;
+
+      em {
+        font-style: normal;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2rem;
+        height: 1.5rem;
+        border-radius: 999px;
+        background: rgba(83, 157, 253, 0.12);
+        color: #539dfd;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      > span {
+        font-weight: 700;
+        color: #1f2937;
+
+        .dark & {
+          color: #e2e8f0;
+        }
+      }
+    }
+
+    &__versus-row {
+      padding: 0.6rem 0;
+      border-top: 1px dashed #e2e8f0;
+
+      .dark & {
+        border-top-color: #3d4654;
+      }
+
+      > span:first-child {
+        color: #94a3b8;
+        font-size: 0.8125rem;
+      }
+
+      > span:not(:first-child) {
+        color: #475569;
+
+        .dark & {
+          color: #cbd5e1;
+        }
+      }
+    }
+
+    // ------------------------------------------------ 文章引用（article-ref）
+    &__section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.9rem 1.1rem 0;
+      font-weight: 600;
+      color: #334155;
+
+      .dark & {
+        color: #e2e8f0;
+      }
+    }
+
+    &__related {
+      list-style: none;
+      margin: 0;
+      padding: 0.65rem;
+
+      li div,
+      li a {
+        display: block;
+        padding: 0.85rem;
+        border-radius: 12px;
+        color: inherit;
+
+        &:hover {
+          background: rgba(83, 157, 253, 0.08);
+        }
+
+        strong {
+          display: block;
+          margin-bottom: 0.25rem;
+        }
+
+        p {
+          margin: 0;
+          color: #64748b;
+          font-size: 0.875rem;
+          line-height: 1.5;
+        }
+
+        &.is-cover {
+          display: grid;
+          grid-template-columns: 72px minmax(0, 1fr);
+          gap: 0.75rem;
+          align-items: center;
+        }
+      }
+    }
+
+    &__related-cover {
+      width: 72px;
+      height: 54px;
+      object-fit: cover;
+      border-radius: 8px;
+      background: #e2e8f0;
+    }
+
+    &__related-empty {
+      padding: 1rem 1.1rem;
+      color: #64748b;
+      font-size: 0.875rem;
     }
   }
 }

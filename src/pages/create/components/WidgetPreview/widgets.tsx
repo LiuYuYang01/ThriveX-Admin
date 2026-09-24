@@ -1,4 +1,17 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import axios from 'axios';
+import {
+  HiOutlineChevronDown,
+  HiOutlineExclamationTriangle,
+  HiOutlineFire,
+  HiOutlineInformationCircle,
+  HiOutlineLightBulb,
+  HiOutlineLink,
+  HiOutlinePencil,
+  HiStar,
+} from 'react-icons/hi2';
+import { FiExternalLink } from 'react-icons/fi';
+import { getApiUrl } from '@/utils/config';
 
 export type WidgetPayload = Record<string, unknown>;
 
@@ -21,6 +34,17 @@ interface StepItem {
 interface GalleryItem {
   src?: unknown;
   alt?: unknown;
+}
+
+interface RatingItem {
+  label?: unknown;
+  score?: unknown;
+}
+
+interface ComparisonItem {
+  label?: unknown;
+  left?: unknown;
+  right?: unknown;
 }
 
 function asString(value: unknown, fallback = ''): string {
@@ -252,6 +276,266 @@ export function GalleryWidget({ data }: { data: WidgetPayload }) {
   );
 }
 
+const CALLOUT_META: Record<string, { icon: typeof HiOutlineInformationCircle; label: string }> = {
+  note: { icon: HiOutlinePencil, label: '笔记' },
+  tip: { icon: HiOutlineLightBulb, label: '小贴士' },
+  info: { icon: HiOutlineInformationCircle, label: '信息' },
+  warning: { icon: HiOutlineExclamationTriangle, label: '注意' },
+  danger: { icon: HiOutlineFire, label: '警告' },
+};
+
+export function CalloutWidget({ data }: { data: WidgetPayload }) {
+  const variant = asString(data.variant, 'note');
+  const meta = CALLOUT_META[variant] ?? CALLOUT_META['note'];
+  const title = asString(data.title, meta.label);
+  const content = asString(data.content);
+  const Icon = meta.icon;
+
+  return (
+    <WidgetShell className={`tx-widget--callout is-${variant}`}>
+      <Icon aria-hidden />
+      <div>
+        <strong>{title}</strong>
+        {content && <p className="whitespace-pre-wrap">{content}</p>}
+      </div>
+    </WidgetShell>
+  );
+}
+
+export function LinkCardWidget({ data }: { data: WidgetPayload }) {
+  const url = asString(data.url || data.href);
+  const title = asString(data.title, url);
+  const cover = asString(data.cover);
+  if (!url && !title) return null;
+  let host = '';
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    host = '';
+  }
+
+  const body = (
+    <>
+      {cover ? (
+        <img className="tx-widget__info-cover" src={cover} alt={title} loading="lazy" />
+      ) : (
+        <span className="tx-widget__info-cover tx-widget__info-cover--empty" aria-hidden>
+          <HiOutlineLink />
+        </span>
+      )}
+      <div className="tx-widget__info-body">
+        <strong>{title}</strong>
+        {asString(data.description) && <p>{asString(data.description)}</p>}
+        <span className="tx-widget__link">
+          {host || url}
+          <FiExternalLink aria-hidden />
+        </span>
+      </div>
+    </>
+  );
+
+  return (
+    <WidgetShell className="tx-widget--card">
+      {url ? (
+        <a className="tx-widget__info" href={url} target="_blank" rel="noopener noreferrer">
+          {body}
+        </a>
+      ) : (
+        <div className="tx-widget__info">{body}</div>
+      )}
+    </WidgetShell>
+  );
+}
+
+export function CollapseWidget({ data }: { data: WidgetPayload }) {
+  const [open, setOpen] = useState(data.open === true);
+  const title = asString(data.title, '展开查看');
+  const content = asString(data.content);
+  if (!title && !content) return null;
+
+  return (
+    <WidgetShell className="tx-widget--card">
+      <button
+        type="button"
+        className={cx('tx-widget__collapse-trigger', open && 'is-open')}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {title}
+        <HiOutlineChevronDown aria-hidden />
+      </button>
+      {open && <div className="tx-widget__collapse-body whitespace-pre-wrap">{content}</div>}
+    </WidgetShell>
+  );
+}
+
+export function DiffWidget({ data }: { data: WidgetPayload }) {
+  const code = asString(data.code || data.content);
+  if (!code) return null;
+
+  return (
+    <WidgetShell className="tx-widget--card">
+      <div className="tx-widget__diff">
+        <div className="tx-widget__diff-head">{asString(data.title, '差异对比')}</div>
+        <pre>
+          {code.split('\n').map((line, index) => {
+            const isAdd = line.startsWith('+');
+            const isDel = line.startsWith('-');
+            return (
+              <span
+                key={index}
+                className={cx('tx-widget__diff-line', isAdd && 'is-add', isDel && 'is-del')}
+              >
+                <code>{isAdd ? '+' : isDel ? '-' : ' '}</code>
+                <code>{isAdd || isDel ? line.slice(1) : line}</code>
+              </span>
+            );
+          })}
+        </pre>
+      </div>
+    </WidgetShell>
+  );
+}
+
+export function RatingWidget({ data }: { data: WidgetPayload }) {
+  const items = asArray<RatingItem>(data.items).filter(
+    (item) => item && typeof item.score === 'number'
+  );
+  const max = Number(data.max) > 0 ? Number(data.max) : 5;
+  const summary = asString(data.summary);
+  if (!items.length) return null;
+
+  return (
+    <WidgetShell className="tx-widget--card">
+      <div className="tx-widget__rating">
+        {asString(data.title) && <strong>{asString(data.title)}</strong>}
+        {items.map((item, index) => (
+          <div className="tx-widget__rating-row" key={`${String(item.label)}-${index}`}>
+            <span>{asString(item.label) || `维度 ${index + 1}`}</span>
+            <span
+              className="tx-widget__rating-stars"
+              aria-label={`${item.score as number} / ${max}`}
+            >
+              {Array.from({ length: max }, (_, i) => (
+                <HiStar key={i} className={cx(i < (item.score as number) && 'is-on')} aria-hidden />
+              ))}
+            </span>
+            <span className="tx-widget__rating-score">
+              {item.score as number} / {max}
+            </span>
+          </div>
+        ))}
+        {summary && <p className="tx-widget__rating-summary">{summary}</p>}
+      </div>
+    </WidgetShell>
+  );
+}
+
+export function ComparisonWidget({ data }: { data: WidgetPayload }) {
+  const items = asArray<ComparisonItem>(data.items);
+  const leftTitle = asString(data.leftTitle, '方案 A');
+  const rightTitle = asString(data.rightTitle, '方案 B');
+  if (!items.length) return null;
+
+  return (
+    <WidgetShell className="tx-widget--card">
+      <div className="tx-widget__versus">
+        <div className="tx-widget__versus-head">
+          <em>VS</em>
+          <span>{leftTitle}</span>
+          <span>{rightTitle}</span>
+        </div>
+        {items.map((item, index) => (
+          <div className="tx-widget__versus-row" key={`${String(item.label)}-${index}`}>
+            <span>{asString(item.label)}</span>
+            <span>{asString(item.left) || '-'}</span>
+            <span>{asString(item.right) || '-'}</span>
+          </div>
+        ))}
+      </div>
+    </WidgetShell>
+  );
+}
+
+// 预览端拉取文章标题/摘要做示意展示，模块级缓存避免编辑 JSON 时反复请求
+const refArticleCache = new Map<number, RefArticle | null>();
+
+interface RefArticle {
+  id?: number;
+  title?: string;
+  description?: string;
+  cover?: string;
+}
+
+async function fetchRefArticle(id: number): Promise<RefArticle | null> {
+  if (refArticleCache.has(id)) return refArticleCache.get(id) ?? null;
+  try {
+    const { data: res } = await axios.get(`${getApiUrl()}/article/${id}`);
+    const article = res?.data as RefArticle | undefined;
+    const value = article?.title ? article : null;
+    refArticleCache.set(id, value);
+    return value;
+  } catch {
+    refArticleCache.set(id, null);
+    return null;
+  }
+}
+
+export function ArticleRefWidget({ data }: { data: WidgetPayload }) {
+  const idsKey = JSON.stringify(data.ids ?? data.id);
+  const ids = useMemo(() => {
+    const list = Array.isArray(data.ids) ? data.ids : [data.id];
+    return list.map(Number).filter((id) => Number.isInteger(id) && id > 0);
+  }, [idsKey]);
+  const [articles, setArticles] = useState<RefArticle[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!ids.length) {
+      setArticles([]);
+      return;
+    }
+    setArticles(null);
+    Promise.all(ids.map((id) => fetchRefArticle(id))).then((list) => {
+      if (!cancelled) setArticles(list.filter(Boolean) as RefArticle[]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ids]);
+
+  return (
+    <WidgetShell className="tx-widget--card">
+      <div className="tx-widget__section-title">{asString(data.title, '相关文章')}</div>
+      {articles === null ? (
+        <div className="tx-widget__related-empty">加载中…</div>
+      ) : articles.length ? (
+        <ul className="tx-widget__related">
+          {articles.map((article) => (
+            <li key={article.id}>
+              <div className={cx(article.cover && 'is-cover')}>
+                {article.cover && (
+                  <img
+                    className="tx-widget__related-cover"
+                    src={article.cover}
+                    alt={article.title ?? ''}
+                    loading="lazy"
+                  />
+                )}
+                <span>
+                  <strong>{article.title}</strong>
+                  {article.description && <p>{article.description}</p>}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="tx-widget__related-empty">未找到文章，发布后博客端展示真实卡片</div>
+      )}
+    </WidgetShell>
+  );
+}
+
 export default function WidgetRenderer({ data }: { data: WidgetPayload }) {
   switch (data.type) {
     case 'bilibili':
@@ -274,6 +558,20 @@ export default function WidgetRenderer({ data }: { data: WidgetPayload }) {
       return <GalleryWidget data={data} />;
     case 'cta':
       return <CtaWidget data={data} />;
+    case 'callout':
+      return <CalloutWidget data={data} />;
+    case 'link-card':
+      return <LinkCardWidget data={data} />;
+    case 'collapse':
+      return <CollapseWidget data={data} />;
+    case 'diff':
+      return <DiffWidget data={data} />;
+    case 'rating':
+      return <RatingWidget data={data} />;
+    case 'comparison':
+      return <ComparisonWidget data={data} />;
+    case 'article-ref':
+      return <ArticleRefWidget data={data} />;
     default:
       return (
         <div className="tx-widget tx-widget--unknown">
