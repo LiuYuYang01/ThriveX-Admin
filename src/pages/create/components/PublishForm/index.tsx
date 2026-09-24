@@ -51,8 +51,8 @@ interface FieldType {
   tagIds: (number | string)[];
   cover: string;
   description: string;
+  isTop: boolean;
   config: {
-    top: boolean;
     status: 1 | 2 | 3;
     password: string;
     isEncrypt: boolean;
@@ -182,6 +182,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
       title: data.title,
       description: data.description,
       cover: data.cover,
+      isTop: data.isTop ?? false,
       config: data.config,
       status: data.config.status,
       password: data.config.password,
@@ -291,8 +292,8 @@ const PublishForm = ({ data, closeModel }: Props) => {
   };
 
   const initialValues = {
+    isTop: false,
     config: {
-      top: false,
       status: 1 as const,
       password: '',
       isEncrypt: false,
@@ -574,7 +575,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
                           <p className="text-[11px] text-slate-400 dark:text-slate-500">在列表顶部优先展示</p>
                         </div>
                       </div>
-                      <Form.Item name={['config', 'top']} valuePropName="checked" className="mb-0! shrink-0">
+                      <Form.Item name="isTop" valuePropName="checked" className="mb-0! shrink-0">
                         <Switch size="small" />
                       </Form.Item>
                     </div>

@@ -32,6 +32,7 @@ import {
   FiImage,
   FiHeart,
   FiShare2,
+  FiBookmark,
 } from 'react-icons/fi';
 import dayjs from 'dayjs';
 
@@ -42,7 +43,7 @@ import Skeleton from './Skeleton';
 
 import { getCateListAPI } from '@/api/cate';
 import { getTagListAPI } from '@/api/tag';
-import { delArticleDataAPI, getArticlePagingAPI, addArticleDataAPI, delBatchArticleDataAPI } from '@/api/article';
+import { delArticleDataAPI, getArticlePagingAPI, addArticleDataAPI, delBatchArticleDataAPI, topArticleDataAPI } from '@/api/article';
 
 import type { Tag as ArticleTag } from '@/types/app/tag';
 import type { Cate as ArticleCate } from '@/types/app/cate';
@@ -159,6 +160,19 @@ export default function ArticlePage() {
     [getArticleList],
   );
 
+  const topArticleData = useCallback(
+    async (record: Article) => {
+      try {
+        await topArticleDataAPI(record.id!, !record.isTop);
+        await getArticleList();
+        message.success(record.isTop ? '已取消置顶' : '置顶成功');
+      } catch (error) {
+        console.error('置顶操作失败：', error);
+      }
+    },
+    [getArticleList],
+  );
+
   const columns: ColumnsType<Article> = useMemo(
     () => [
       {
@@ -194,22 +208,32 @@ export default function ArticlePage() {
         width: 280,
         render: (text: string, record: Article) =>
           text ? (
-            <Tooltip title={text} placement="topLeft">
-              <a
-                href={`${web.url}/article/${record.id}`}
-                target="_blank"
-                rel="noreferrer"
-                className="group inline-flex max-w-[280px] items-center gap-2 truncate"
-              >
-                <span className="truncate font-medium text-slate-700 transition-colors group-hover:text-primary dark:text-slate-200">
-                  {text}
-                </span>
-                <FiExternalLink
-                  size={12}
-                  className="shrink-0 text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-slate-500"
-                />
-              </a>
-            </Tooltip>
+            <div className="flex max-w-[280px] items-center gap-1.5">
+              {record.isTop && (
+                <Tooltip title="置顶文章">
+                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                    <FiBookmark size={10} className="fill-current" />
+                    置顶
+                  </span>
+                </Tooltip>
+              )}
+              <Tooltip title={text} placement="topLeft">
+                <a
+                  href={`${web.url}/article/${record.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group inline-flex min-w-0 items-center gap-2 truncate"
+                >
+                  <span className="truncate font-medium text-slate-700 transition-colors group-hover:text-primary dark:text-slate-200">
+                    {text}
+                  </span>
+                  <FiExternalLink
+                    size={12}
+                    className="shrink-0 text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-slate-500"
+                  />
+                </a>
+              </Tooltip>
+            </div>
           ) : (
             <span className="text-xs italic text-slate-400 dark:text-slate-500">暂无标题</span>
           ),
@@ -326,11 +350,25 @@ export default function ArticlePage() {
         title: '操作',
         key: 'action',
         fixed: 'right',
-        width: 120,
+        width: 150,
         align: 'center',
         render: (_, record: Article) => (
           <div className="flex items-center justify-center gap-0.5">
             <ArticleExport.Single article={record} />
+            <Tooltip title={record.isTop ? '取消置顶' : '置顶'}>
+              <button
+                type="button"
+                onClick={() => topArticleData(record)}
+                className={`flex size-8 items-center justify-center rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer ${
+                  record.isTop
+                    ? 'text-amber-500 dark:text-amber-400'
+                    : 'text-slate-400 hover:text-amber-500 dark:hover:text-amber-400'
+                }`}
+                aria-label={record.isTop ? `取消置顶 ${record.title}` : `置顶 ${record.title}`}
+              >
+                <FiBookmark size={16} className={record.isTop ? 'fill-current' : ''} />
+              </button>
+            </Tooltip>
             <Tooltip title="编辑">
               <Link
                 to={`/create?id=${record.id}`}
@@ -363,7 +401,7 @@ export default function ArticlePage() {
         ),
       },
     ],
-    [web.url, btnLoading, delArticleData],
+    [web.url, btnLoading, delArticleData, topArticleData],
   );
 
   const { onValuesChange: onFilterChange } = useDebouncedChange<ArticleFilterDataForm>({
@@ -698,7 +736,7 @@ export default function ArticlePage() {
             dataSource={articleList}
             columns={columns}
             loading={loading}
-            scroll={{ x: 1528 }}
+            scroll={{ x: 1558 }}
             pagination={{
               position: ['bottomRight'],
               current: filter?.pageNum,

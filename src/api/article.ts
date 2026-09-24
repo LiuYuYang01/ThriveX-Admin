@@ -20,6 +20,10 @@ export const reductionArticleDataAPI = (id: number) =>
 export const editArticleDataAPI = (data: Article) =>
   Request('PATCH', '/article', { data });
 
+// 置顶/取消置顶文章
+export const topArticleDataAPI = (id: number, isTop: boolean) =>
+  Request('PATCH', `/article/top/${id}/${isTop}`);
+
 // 获取文章
 export const getArticleDataAPI = (id?: number) => Request<Article>('GET', `/article/${id}`)
 
