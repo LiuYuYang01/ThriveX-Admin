@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { Alert, Button, Checkbox, Divider, Form, Input, notification, Space } from 'antd';
 import { CloudUploadOutlined, PictureOutlined } from '@ant-design/icons';
-import { LuImage, LuNewspaper } from 'react-icons/lu';
+import { LuImage, LuNewspaper, LuPanelTop, LuPill } from 'react-icons/lu';
 
 import { Theme } from '@/types/app/config';
 import { editWebConfigDataAPI, getWebConfigDataAPI } from '@/api/config';
@@ -177,6 +177,27 @@ export default () => {
               <Checkbox value="study">装饰模块</Checkbox>
             </div>
           </Checkbox.Group>
+
+          <Divider>菜单栏布局</Divider>
+          <div className="flex flex-wrap gap-4">
+            {[
+              { value: 'classic', label: '经典布局', desc: '全宽通栏，首页沉浸式透明', icon: <LuPanelTop /> },
+              { value: 'capsule', label: '胶囊布局', desc: '悬浮胶囊，毛玻璃圆角导航', icon: <LuPill /> },
+            ].map((item) => {
+              const isActive = (theme.header_layout ?? 'classic') === item.value;
+              return (
+                <div
+                  key={item.value}
+                  onClick={() => setTheme({ ...theme, header_layout: item.value as Theme['header_layout'] })}
+                  className={`flex w-[220px] cursor-pointer flex-col items-center gap-2 rounded-md border-2 p-5 ${isActive ? 'border-primary' : 'border-stroke'}`}
+                >
+                  <span className={`text-3xl ${isActive ? 'text-primary' : 'text-gray-400'}`}>{item.icon}</span>
+                  <p className={`text-center font-medium ${isActive ? 'text-primary' : ''}`}>{item.label}</p>
+                  <p className="text-center text-xs text-gray-400">{item.desc}</p>
+                </div>
+              );
+            })}
+          </div>
 
           <Divider>文章布局</Divider>
           <div className="overflow-auto w-full">
