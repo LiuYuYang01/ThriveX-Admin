@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Skeleton from './Skeleton';
 import DarkModeSwitcher from './DarkModeSwitcher';
+import CommandEntry from './CommandEntry';
 import logo from '/logo.png';
 import PageTab from '../PageTab';
 
@@ -58,6 +59,7 @@ const Header = (props: { sidebarOpen: string | boolean | undefined; setSidebarOp
 
         <div className="flex items-center gap-3 2xsm:gap-7 shrink-0 ml-4">
           <ul className="flex items-center gap-2 2xsm:gap-4 sm:mr-4">
+            <CommandEntry />
             <DarkModeSwitcher />
           </ul>
         </div>
