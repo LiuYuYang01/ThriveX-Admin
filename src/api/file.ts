@@ -1,5 +1,5 @@
 import Request from '@/utils/request'
-import { File, FileCompressItem, FileCompressResult, FileInfo, FileTreeData } from '@/types/app/file'
+import { File, FileCleanupScanResult, FileCompressItem, FileCompressResult, FileInfo, FileTreeData } from '@/types/app/file'
 
 export interface CreateDirBody {
   dir: string;
@@ -15,6 +15,10 @@ export const delFileDataAPI = (filePath: string) => Request<null>('DELETE', `/fi
 
 // 批量删除文件
 export const batchDelFileDataAPI = (filePaths: string[]) => Request<null>('DELETE', '/file/batch', { data: { paths: filePaths } })
+
+// 扫描未被引用的文件
+export const scanUnreferencedFilesAPI = () =>
+  Request<FileCleanupScanResult>('GET', '/file/cleanup/scan', { timeout: 60000 })
 
 // 图片瘦身（七牛 pfop 异步提交）
 export const compressFileDataAPI = (paths: string[], mode = 'auto') =>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { ColumnsType } from 'antd/es/table';
 import {
+  Alert,
   Button,
   Checkbox,
   Empty,
@@ -21,6 +22,7 @@ import {
   FiArrowLeft,
   FiChevronRight,
   FiEdit2,
+  FiFilter,
   FiEye,
   FiFolderPlus,
   FiGrid,
@@ -34,11 +36,11 @@ import {
   FiX,
 } from 'react-icons/fi';
 import dayjs from 'dayjs';
-import { batchDelFileDataAPI, compressFileDataAPI, createDirAPI, deleteDirAPI, delFileDataAPI, getFileDataAPI, getFileListAPI, getFileTreeAPI, queryCompressTasksAPI, renameDirAPI } from '@/api/file';
+import { batchDelFileDataAPI, compressFileDataAPI, createDirAPI, deleteDirAPI, delFileDataAPI, getFileDataAPI, getFileListAPI, getFileTreeAPI, queryCompressTasksAPI, renameDirAPI, scanUnreferencedFilesAPI } from '@/api/file';
 import { getEnvConfigDataAPI } from '@/api/config';
 import FileUpload from '@/components/FileUpload';
 import Title from '@/components/Title';
-import { File as AppFile, FileCompressItem, FileCompressResult, FileInfo, FileTreeData, FileTreeNode } from '@/types/app/file';
+import { File as AppFile, FileCleanupItem, FileCleanupScanResult, FileCompressItem, FileCompressResult, FileInfo, FileTreeData, FileTreeNode } from '@/types/app/file';
 import { StorageEnvValue } from '@/types/app/config';
 import Skeleton from './Skeleton';
 import errorImg from './image/error.png';
@@ -684,6 +686,12 @@ export default () => {
   const [filesLoading, setFilesLoading] = useState(false);
   // 当前存储方式：本地存储暂不支持图片瘦身，需要禁用入口
   const [isLocalStorage, setIsLocalStorage] = useState(false);
+  // 未引用文件清理
+  const [cleanupOpen, setCleanupOpen] = useState(false);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<FileCleanupScanResult | null>(null);
+  const [cleanupSelectedPaths, setCleanupSelectedPaths] = useState<string[]>([]);
+  const [cleanupDeleting, setCleanupDeleting] = useState(false);
 
   useEffect(() => {
     getEnvConfigDataAPI('storage')
@@ -1046,6 +1054,41 @@ export default () => {
     void onCompressFiles(paths);
   };
 
+  const onOpenCleanup = async () => {
+    setCleanupOpen(true);
+    setCleanupLoading(true);
+    setCleanupResult(null);
+    setCleanupSelectedPaths([]);
+    try {
+      const { data } = await scanUnreferencedFilesAPI();
+      setCleanupResult(data);
+      // 默认全选候选文件，用户可逐个取消勾选
+      setCleanupSelectedPaths(data.candidates.map((item) => item.url));
+    } catch (error) {
+      console.error(error);
+      setCleanupOpen(false);
+    } finally {
+      setCleanupLoading(false);
+    }
+  };
+
+  const onCleanupDelete = async () => {
+    if (cleanupSelectedPaths.length === 0) return;
+    try {
+      setCleanupDeleting(true);
+      await batchDelFileDataAPI(cleanupSelectedPaths);
+      message.success(`🎉 清理成功，共删除 ${cleanupSelectedPaths.length} 个文件`);
+      setCleanupOpen(false);
+      setCleanupResult(null);
+      setCleanupSelectedPaths([]);
+      await refreshCurrentDir(currentPath);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setCleanupDeleting(false);
+    }
+  };
+
   const onOpenFileDetail = async (filePath: string) => {
     try {
       setDetailLoading(true);
@@ -1080,6 +1123,9 @@ export default () => {
           </Button>
           <Button icon={<FiFolderPlus />} onClick={() => setCreateOpen(true)}>
             新建目录
+          </Button>
+          <Button icon={<FiFilter />} onClick={() => void onOpenCleanup()}>
+            清理未引用
           </Button>
           <Button
             type="primary"
@@ -1686,6 +1732,107 @@ export default () => {
                 </div>
               </dl>
             </div>
+          )}
+        </Spin>
+      </Modal>
+
+      <Modal
+        title="清理未引用文件"
+        open={cleanupOpen}
+        onCancel={() => setCleanupOpen(false)}
+        width={760}
+        footer={
+          cleanupResult && cleanupResult.count > 0 ? (
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                已选 {cleanupSelectedPaths.length} / {cleanupResult.count} 个
+              </span>
+              <div className="flex gap-2">
+                <Button onClick={() => setCleanupOpen(false)}>取消</Button>
+                <Popconfirm
+                  title={`确定删除选中的 ${cleanupSelectedPaths.length} 个文件吗？删除后不可恢复！`}
+                  okText="确定删除"
+                  cancelText="取消"
+                  okButtonProps={{ danger: true }}
+                  onConfirm={onCleanupDelete}
+                >
+                  <Button type="primary" danger icon={<FiTrash2 />} loading={cleanupDeleting}>
+                    删除选中文件
+                  </Button>
+                </Popconfirm>
+              </div>
+            </div>
+          ) : null
+        }
+        destroyOnHidden
+      >
+        <Spin spinning={cleanupLoading} tip="正在扫描全部业务数据与文件，请稍候…">
+          {cleanupResult && (
+            <>
+              <Alert
+                type={cleanupResult.count > 0 ? 'warning' : 'success'}
+                showIcon
+                className="mb-3!"
+                title={
+                  cleanupResult.count > 0
+                    ? `发现 ${cleanupResult.count} 个未被文章、轮播图、配置等引用的文件，共 ${formatFileSize(cleanupResult.totalSize)}`
+                    : '太干净了！没有发现未被引用的文件'
+                }
+              />
+              {cleanupResult.count > 0 && (
+                <Table<FileCleanupItem>
+                  size="small"
+                  rowKey="url"
+                  dataSource={cleanupResult.candidates}
+                  pagination={{ pageSize: 10, showSizeChanger: false }}
+                  scroll={{ y: 360 }}
+                  rowSelection={{
+                    selectedRowKeys: cleanupSelectedPaths,
+                    onChange: (keys) => setCleanupSelectedPaths(keys as string[]),
+                  }}
+                  columns={[
+                    {
+                      title: '预览',
+                      width: 64,
+                      render: (_, item) => {
+                        const ext = item.name.split('.').pop()?.toLowerCase() ?? '';
+                        const isImage = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+                        return isImage ? (
+                          <Image src={item.url} width={40} height={40} className="rounded object-cover" preview={{ mask: null }} />
+                        ) : (
+                          <span className="flex size-10 items-center justify-center rounded bg-slate-100 text-slate-400 dark:bg-boxdark-2 dark:text-slate-500">
+                            <FiEye size={16} />
+                          </span>
+                        );
+                      },
+                    },
+                    {
+                      title: '文件名',
+                      ellipsis: true,
+                      render: (_, item) => (
+                        <Tooltip title={item.path}>
+                          <span className="block max-w-52 truncate text-sm">{item.name}</span>
+                        </Tooltip>
+                      ),
+                    },
+                    { title: '目录', dataIndex: 'dir', width: 110, ellipsis: true },
+                    {
+                      title: '大小',
+                      dataIndex: 'size',
+                      width: 90,
+                      render: (size?: number) => <span className="tabular-nums">{formatFileSize(size ?? 0)}</span>,
+                    },
+                    {
+                      title: '上传时间',
+                      dataIndex: 'date',
+                      width: 110,
+                      render: (date?: number) =>
+                        date ? <span className="tabular-nums text-xs">{dayjs(date).format('YYYY-MM-DD')}</span> : '—',
+                    },
+                  ]}
+                />
+              )}
+            </>
           )}
         </Spin>
       </Modal>

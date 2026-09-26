@@ -70,3 +70,19 @@ export interface FileCompressResult {
   failedCount: number;
   totalSavedBytes: number;
 }
+
+export interface FileCleanupItem {
+  name: string;
+  dir?: string;
+  path: string;
+  url: string;
+  size?: number;
+  date?: number;
+}
+
+export interface FileCleanupScanResult {
+  candidates: FileCleanupItem[];
+  count: number;
+  totalSize: number;
+  scanTime: number;
+}

@@ -487,7 +487,11 @@ a {
     border-color: #3b82f6 !important;
 }
 
-.ant-btn-dangerous.ant-btn-primary:not(:disabled):hover {
+.ant-btn-dangerous.ant-btn-primary:not(:disabled):hover,
+.ant-btn-dangerous.ant-btn-primary:not(:disabled):active {
+    background-color: var(--antd-danger) !important;
+    border-color: var(--antd-danger) !important;
+    color: #ffffff !important;
     filter: brightness(1.06);
 }
 
