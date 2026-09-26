@@ -15,7 +15,3 @@ export interface BackupRecord {
   error: string | null;
   createTime: number;
 }
-
-export interface BackupFilterQueryParams extends QueryParams {
-  format?: string;
-}

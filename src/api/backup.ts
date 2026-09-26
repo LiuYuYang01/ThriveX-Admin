@@ -1,14 +1,13 @@
 import Request from '@/utils/request'
-import { BackupRecord, BackupFilterQueryParams } from '@/types/app/backup'
+import { BackupRecord } from '@/types/app/backup'
 
-// 导出数据库备份（全量 JSON，数据量大时耗时较长，放宽超时到 5 分钟）
-export const exportBackupDataAPI = (data?: { format?: string }) => Request<BackupRecord>('POST', '/backup/export', {
-    data,
+// 导出数据库备份（全量 SQL，数据量大时耗时较长，放宽超时到 5 分钟）
+export const exportBackupDataAPI = () => Request<BackupRecord>('POST', '/backup/export', {
     timeout: 300000,
 })
 
 // 获取备份记录列表
-export const getBackupListAPI = (params?: BackupFilterQueryParams) => Request<Paginate<BackupRecord[]>>('GET', '/backup/list', {
+export const getBackupListAPI = (params?: QueryParams) => Request<Paginate<BackupRecord[]>>('GET', '/backup/list', {
     params,
 })
 
