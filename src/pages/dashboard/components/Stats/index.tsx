@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Spin } from 'antd';
 import VisitorsStatisChat from './components/VisitorsStatisChat';
 import NewOldVisitors from './components/NewOldVisitors';
+import HotArticles from './components/HotArticles';
+import HotKeywords from './components/HotKeywords';
+import VisitorProfile from './components/VisitorProfile';
 import CardDataStats from '@/components/CardDataStats';
 
 import { AiOutlineEye, AiOutlineMeh, AiOutlineStock, AiOutlineFieldTime } from 'react-icons/ai';
@@ -121,6 +124,12 @@ export default () => {
       <div className="rounded-xl mt-2 grid grid-cols-12 gap-2 mb-[15px]">
         <VisitorsStatisChat />
         <NewOldVisitors />
+      </div>
+
+      <div className="grid grid-cols-12 gap-2 mb-[15px]">
+        <HotArticles />
+        <HotKeywords />
+        <VisitorProfile />
       </div>
     </Spin>
   );
