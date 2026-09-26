@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, notification, Popconfirm, Table, Tag, Tooltip } from 'antd';
+import { Button, notification, Popconfirm, Select, Space, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { saveAs } from 'file-saver';
@@ -9,7 +9,7 @@ import { delBackupDataAPI, exportBackupDataAPI, getBackupListAPI } from '@/api/b
 import Title from '@/components/Title';
 import { useUserStore } from '@/stores';
 import { getApiUrl } from '@/utils/config';
-import type { BackupRecord } from '@/types/app/backup';
+import type { BackupRecord, BackupFilterQueryParams } from '@/types/app/backup';
 
 import Skeleton from './Skeleton';
 
@@ -29,6 +29,7 @@ export default function BackupPage() {
   const [loading, setLoading] = useState(false);
   const [skeletonLoading, setSkeletonLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [format, setFormat] = useState<'json' | 'sql'>('sql');
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [list, setList] = useState<BackupRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -58,8 +59,11 @@ export default function BackupPage() {
   const onExport = async () => {
     try {
       setExporting(true);
-      await exportBackupDataAPI();
-      notification.success({ message: '备份成功', description: '数据库已全量导出，请及时下载保管备份文件' });
+      await exportBackupDataAPI({ format });
+      notification.success({
+        message: '备份成功',
+        description: `数据库已全量导出为 ${format.toUpperCase()} 文件，请及时下载保管备份文件`,
+      });
       await getBackupList();
     } catch (error) {
       console.error('备份失败：', error);
@@ -105,7 +109,8 @@ export default function BackupPage() {
             <div className="flex flex-col leading-tight">
               <span className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">{fileName}</span>
               <span className="text-xs text-slate-400">
-                {record.tableCount ?? '-'} 张表 / {(record.rowTotal ?? 0).toLocaleString()} 行 · {record.storage}
+                {record.tableCount ?? '-'} 张表 / {(record.rowTotal ?? 0).toLocaleString()} 行 ·{' '}
+                {record.format.toUpperCase()} · {record.storage}
               </span>
             </div>
           </Tooltip>
@@ -191,7 +196,6 @@ export default function BackupPage() {
         ),
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [downloadingId],
   );
 
@@ -206,22 +210,34 @@ export default function BackupPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <Title value="数据库备份">
-        <Popconfirm
-          title="立即备份"
-          description="将导出包含用户数据在内的全部数据库内容，请妥善保管备份文件。"
-          okText="开始备份"
-          cancelText="取消"
-          onConfirm={onExport}
-        >
-          <Button
-            type="primary"
-            icon={<FiUploadCloud />}
-            loading={exporting}
-            className="inline-flex items-center gap-1"
+        <Space.Compact>
+          <Select
+            value={format}
+            onChange={setFormat}
+            disabled={exporting}
+            options={[
+              { value: 'sql', label: 'SQL' },
+              { value: 'json', label: 'JSON' },
+            ]}
+            className="w-24"
+          />
+          <Popconfirm
+            title="立即备份"
+            description={`将导出包含用户数据在内的全部数据库内容（${format.toUpperCase()} 格式），请妥善保管备份文件。`}
+            okText="开始备份"
+            cancelText="取消"
+            onConfirm={onExport}
           >
-            立即备份
-          </Button>
-        </Popconfirm>
+            <Button
+              type="primary"
+              icon={<FiUploadCloud />}
+              loading={exporting}
+              className="inline-flex items-center gap-1"
+            >
+              立即备份
+            </Button>
+          </Popconfirm>
+        </Space.Compact>
       </Title>
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">

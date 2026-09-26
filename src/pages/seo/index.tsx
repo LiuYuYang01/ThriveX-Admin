@@ -1,5 +1,5 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Badge, Button, Empty, Segmented, Spin, Table, Tag, Tooltip } from 'antd';
+import { Button, Progress, Segmented, Skeleton, Spin, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -20,40 +20,94 @@ import Title from '@/components/Title';
 import { getSeoArticleCheckAPI, getSeoLinkCheckAPI, getSeoSitemapCheckAPI } from '@/api/seo';
 import type { SeoArticleCheck, SeoArticleIssue, SeoLinkCheck, SeoLinkResult, SeoSitemapCheck } from '@/types/app/seo';
 
-// 概览统计块
-const StatTile = ({ icon, label, value, danger, loading }: { icon: ReactNode; label: string; value: ReactNode; danger?: boolean; loading?: boolean }) => (
-  <div className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-strokedark dark:bg-boxdark">
-    <div
-      className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
-        danger ? 'bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300'
-      }`}
-    >
-      {icon}
-    </div>
+type CheckState = 'idle' | 'loading' | 'ok' | 'issue';
+
+// 彩色图标芯片，Tailwind 需要静态类名所以用映射表
+const HUE: Record<string, string> = {
+  sky: 'bg-sky-50 text-sky-500 dark:bg-sky-500/10 dark:text-sky-400',
+  blue: 'bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400',
+  amber: 'bg-amber-50 text-amber-500 dark:bg-amber-500/10 dark:text-amber-400',
+  violet: 'bg-violet-50 text-violet-500 dark:bg-violet-500/10 dark:text-violet-400',
+  rose: 'bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400',
+  emerald: 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400',
+};
+
+const STATUS: Record<CheckState, { dot: string; text: string }> = {
+  idle: { dot: 'bg-slate-300 dark:bg-slate-600', text: 'text-slate-400' },
+  loading: { dot: 'bg-blue-400 animate-pulse', text: 'text-blue-500' },
+  ok: { dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
+  issue: { dot: 'bg-red-500', text: 'text-red-500' },
+};
+
+const StatusPill = ({ state, label }: { state: CheckState; label?: string }) => (
+  <span
+    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium dark:bg-white/5 ${STATUS[state].text}`}
+  >
+    <span className={`inline-block size-1.5 rounded-full ${STATUS[state].dot}`} />
+    {label ?? { idle: '未检测', loading: '检测中', ok: '正常', issue: '待处理' }[state]}
+  </span>
+);
+
+const StatTile = ({ icon, hue, label, value, danger, loading }: { icon: ReactNode; hue: string; label: string; value: ReactNode; danger?: boolean; loading?: boolean }) => (
+  <div className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200/70 bg-white px-3.5 py-3 dark:border-strokedark dark:bg-boxdark">
+    <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${HUE[hue]}`}>{icon}</div>
     <div className="min-w-0">
-      <div className="text-xs text-slate-400">{label}</div>
-      <div className={`truncate text-lg font-semibold ${danger ? 'text-red-500' : 'text-slate-800 dark:text-slate-100'}`}>
+      <div className="truncate text-xs text-slate-400">{label}</div>
+      <div className={`truncate text-lg font-semibold leading-6 ${danger ? 'text-red-500' : 'text-slate-800 dark:text-slate-100'}`}>
         {loading ? <Spin size="small" /> : value}
       </div>
     </div>
   </div>
 );
 
-// 检查明细卡片容器
-const SectionCard = ({ icon, title, desc, extra, children }: { icon: ReactNode; title: string; desc: string; extra?: ReactNode; children: ReactNode }) => (
+const SectionCard = ({
+  icon,
+  hue,
+  title,
+  desc,
+  state,
+  issueLabel,
+  extra,
+  children,
+}: {
+  icon: ReactNode;
+  hue: string;
+  title: string;
+  desc: string;
+  state: CheckState;
+  issueLabel?: string;
+  extra?: ReactNode;
+  children: ReactNode;
+}) => (
   <section className="rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
-      <div className="flex items-center gap-2.5">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300">{icon}</div>
-        <div>
+    <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${HUE[hue]}`}>{icon}</div>
+        <div className="min-w-0">
           <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
-          <p className="text-xs text-slate-400">{desc}</p>
+          <p className="truncate text-xs text-slate-400">{desc}</p>
         </div>
       </div>
-      {extra}
+      <div className="flex items-center gap-2">
+        <StatusPill state={state} label={state === 'issue' ? issueLabel : undefined} />
+        {extra}
+      </div>
     </header>
     <div className="px-4 py-3">{children}</div>
   </section>
+);
+
+const IdleHint = ({ icon, text }: { icon: ReactNode; text: string }) => (
+  <div className="flex flex-col items-center gap-2.5 py-8">
+    <div className="flex size-11 items-center justify-center rounded-full bg-slate-100 text-slate-300 dark:bg-white/5 dark:text-slate-600">{icon}</div>
+    <p className="text-sm text-slate-400">{text}</p>
+  </div>
+);
+
+const SuccessLine = ({ text }: { text: string }) => (
+  <p className="flex items-center justify-center gap-1.5 py-3 text-sm text-emerald-600 dark:text-emerald-400">
+    <FiCheckCircle size={15} /> {text}
+  </p>
 );
 
 export default function SeoPage() {
@@ -118,11 +172,39 @@ export default function SeoPage() {
 
   const runAllLoading = metaLoading || sitemapLoading || linkLoading;
 
+  const hasSitemapIssue = (sitemap?.missingArticles?.length ?? 0) > 0 || (sitemap?.missingStaticPages?.length ?? 0) > 0;
+
+  // 健康分：满分 100，按三类问题扣分
+  const score = useMemo(() => {
+    if (!meta && !sitemap && !links) return null;
+    let value = 100;
+    if (meta) value -= Math.min(30, meta.missingDescriptionTotal + meta.missingCoverTotal);
+    if (sitemap) {
+      if (!sitemap.reachable) value -= 25;
+      else value -= Math.min(25, (sitemap.missingArticles.length + (sitemap.missingStaticPages?.length ?? 0)) * 2);
+    }
+    if (links) value -= Math.min(30, links.brokenTotal * 2);
+    return Math.max(0, value);
+  }, [meta, sitemap, links]);
+
+  const band = useMemo(() => {
+    if (score == null) return { label: '待体检', color: '#94a3b8' };
+    if (score >= 90) return { label: '优秀', color: '#10b981' };
+    if (score >= 75) return { label: '良好', color: '#60a5fa' };
+    if (score >= 60) return { label: '一般', color: '#f59e0b' };
+    return { label: '较差', color: '#ef4444' };
+  }, [score]);
+
   const metaColumns: ColumnsType<SeoArticleIssue> = [
     {
       title: '文章',
       dataIndex: 'title',
-      render: (title: string) => <span className="text-sm">{title || '无标题'}</span>,
+      render: (title: string, row: SeoArticleIssue) => (
+        <span className="text-sm">
+          <span className="mr-1.5 font-mono text-xs text-slate-400">#{row.id}</span>
+          {title || '无标题'}
+        </span>
+      ),
     },
     {
       title: '缺失项',
@@ -155,8 +237,12 @@ export default function SeoPage() {
         dataIndex: 'ok',
         key: 'status',
         width: 90,
-        render: (ok: boolean, row: SeoLinkResult) =>
-          ok ? <Badge status="success" text={row.status != null ? String(row.status) : '正常'} /> : <Badge status="error" text={row.status != null ? String(row.status) : '失败'} />,
+        render: (ok: boolean, row: SeoLinkResult) => (
+          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+            <span className={`inline-block size-1.5 rounded-full ${ok ? 'bg-emerald-500' : 'bg-red-500'}`} />
+            {row.status ?? '失败'}
+          </span>
+        ),
       },
       {
         title: '链接',
@@ -172,24 +258,33 @@ export default function SeoPage() {
         title: '说明',
         dataIndex: 'message',
         key: 'message',
-        width: 240,
+        width: 230,
         render: (message?: string) => <span className="text-xs text-slate-400">{message || '—'}</span>,
       },
       {
         title: '引用文章',
         key: 'articles',
-        width: 260,
-        render: (_: unknown, row: SeoLinkResult) => (
-          <div className="flex flex-wrap gap-1">
-            {row.articles.map((article) => (
-              <Tooltip key={article.id} title={article.title}>
-                <Tag className="cursor-pointer" onClick={() => navigate(`/create?id=${article.id}`)}>
-                  {article.title}
-                </Tag>
-              </Tooltip>
-            ))}
-          </div>
-        ),
+        width: 240,
+        render: (_: unknown, row: SeoLinkResult) => {
+          const shown = row.articles.slice(0, 2);
+          const rest = row.articles.length - shown.length;
+          return (
+            <div className="flex flex-wrap items-center gap-1">
+              {shown.map((article) => (
+                <Tooltip key={article.id} title={article.title}>
+                  <Tag className="cursor-pointer" onClick={() => navigate(`/create?id=${article.id}`)}>
+                    {article.title}
+                  </Tag>
+                </Tooltip>
+              ))}
+              {rest > 0 ? (
+                <Tooltip title={row.articles.slice(2).map((a) => a.title).join('、')}>
+                  <Tag>+{rest}</Tag>
+                </Tooltip>
+              ) : null}
+            </div>
+          );
+        },
       },
     ],
     [navigate],
@@ -200,7 +295,20 @@ export default function SeoPage() {
     return linkView === 'broken' ? links.links.filter((item) => !item.ok) : links.links;
   }, [links, linkView]);
 
-  const hasSitemapIssue = (sitemap?.missingArticles?.length ?? 0) > 0 || (sitemap?.missingStaticPages?.length ?? 0) > 0;
+  const tiles = [
+    { icon: <FiFileText size={16} />, hue: 'sky', label: '体检文章', value: meta ? meta.total : '—', danger: false, loading: metaLoading },
+    { icon: <FiAlignLeft size={16} />, hue: 'amber', label: '缺失描述', value: meta ? meta.missingDescriptionTotal : '—', danger: (meta?.missingDescriptionTotal ?? 0) > 0, loading: metaLoading },
+    { icon: <FiImage size={16} />, hue: 'violet', label: '缺失封面', value: meta ? meta.missingCoverTotal : '—', danger: (meta?.missingCoverTotal ?? 0) > 0, loading: metaLoading },
+    {
+      icon: <FiMap size={16} />,
+      hue: 'blue',
+      label: 'sitemap 收录',
+      value: sitemap?.reachable ? `${sitemap.sitemapArticleCount}/${sitemap.articleTotal}` : '—',
+      danger: hasSitemapIssue,
+      loading: sitemapLoading,
+    },
+    { icon: <FiLink2 size={16} />, hue: 'rose', label: '正文死链', value: links ? links.brokenTotal : '未检测', danger: (links?.brokenTotal ?? 0) > 0, loading: linkLoading },
+  ];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col text-slate-600 dark:text-slate-300">
@@ -210,75 +318,100 @@ export default function SeoPage() {
         </Button>
       </Title>
 
-      {/* 概览统计 */}
-      <section className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <StatTile icon={<FiFileText size={18} />} label="体检文章" value={meta?.total ?? '—'} loading={metaLoading} />
-        <StatTile icon={<FiAlignLeft size={18} />} label="缺失描述" value={meta ? meta.missingDescriptionTotal : '—'} danger={(meta?.missingDescriptionTotal ?? 0) > 0} loading={metaLoading} />
-        <StatTile icon={<FiImage size={18} />} label="缺失封面" value={meta ? meta.missingCoverTotal : '—'} danger={(meta?.missingCoverTotal ?? 0) > 0} loading={metaLoading} />
-        <StatTile
-          icon={<FiMap size={18} />}
-          label="sitemap 文章收录"
-          value={sitemap?.reachable ? `${sitemap.sitemapArticleCount}/${sitemap.articleTotal}` : '—'}
-          danger={hasSitemapIssue}
-          loading={sitemapLoading}
-        />
-        <StatTile
-          icon={<FiLink2 size={18} />}
-          label="正文死链"
-          value={links ? links.brokenTotal : '未检测'}
-          danger={(links?.brokenTotal ?? 0) > 0}
-          loading={linkLoading}
-        />
-      </section>
-
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-2">
+        {/* 报告头：健康分 + 概览统计 */}
+        <section className="rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+          <div className="flex flex-col items-center gap-5 p-4 lg:flex-row">
+            <div className="flex shrink-0 flex-col items-center gap-1">
+              <Progress
+                type="circle"
+                size={118}
+                percent={score ?? 0}
+                strokeColor={band.color}
+                trailColor="rgba(148, 163, 184, 0.18)"
+                format={() => (
+                  <div className="leading-tight">
+                    <div className={`text-2xl font-bold ${score == null ? 'text-slate-300 dark:text-slate-600' : 'text-slate-800 dark:text-slate-100'}`}>
+                      {score ?? '—'}
+                    </div>
+                    <div className="text-[11px]" style={{ color: score == null ? undefined : band.color }}>
+                      {band.label}
+                    </div>
+                  </div>
+                )}
+              />
+              <span className="text-[11px] text-slate-400">SEO 健康分（满分 100）</span>
+            </div>
+
+            <div className="grid min-w-0 flex-1 grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+              {tiles.map((tile) => (
+                <StatTile key={tile.label} {...tile} />
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* sitemap 体检 */}
         <SectionCard
-          icon={<FiMap size={16} />}
+          icon={<FiMap size={15} />}
+          hue="blue"
           title="Sitemap 生成情况"
           desc="检查 sitemap 可达性，以及文章与静态页面的收录情况"
+          state={!sitemap ? (sitemapLoading ? 'loading' : 'idle') : hasSitemapIssue ? 'issue' : 'ok'}
+          issueLabel={sitemap ? `${sitemap.missingArticles.length + (sitemap.missingStaticPages?.length ?? 0)} 项未收录` : undefined}
           extra={
             <Button size="small" icon={<FiRefreshCw />} loading={sitemapLoading} onClick={() => void loadSitemap()}>
               重新检查
             </Button>
           }
         >
-          {sitemapLoading && !sitemap ? (
-            <div className="py-6 text-center"><Spin /></div>
-          ) : !sitemap ? (
-            <Empty description="尚未检查" className="py-4" />
+          {!sitemap ? (
+            sitemapLoading ? (
+              <Skeleton active title={false} paragraph={{ rows: 2 }} />
+            ) : (
+              <IdleHint icon={<FiMap size={18} />} text="尚未检查，点击右上角「重新检查」或顶部「开始体检」" />
+            )
           ) : !sitemap.reachable ? (
-            <Alert type="error" showIcon message="sitemap 不可达" description={sitemap.message} />
+            <div className="flex flex-col items-center gap-2 py-6">
+              <div className="flex size-11 items-center justify-center rounded-full bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400">
+                <FiMap size={18} />
+              </div>
+              <p className="text-sm font-medium text-red-500">sitemap 不可达</p>
+              <p className="max-w-md text-center text-xs text-slate-400">{sitemap.message}</p>
+            </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 text-sm">
-                <span className="flex items-center gap-1">
-                  地址：
-                  <a href={sitemap.url} target="_blank" rel="noreferrer" className="break-all text-primary hover:underline">
-                    {sitemap.url}
-                  </a>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href={sitemap.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex max-w-xs items-center gap-1 truncate rounded-lg bg-slate-50 px-2.5 py-1.5 font-mono text-xs text-slate-500 hover:text-primary dark:bg-white/5 dark:text-slate-400"
+                  title={sitemap.url}
+                >
+                  <FiExternalLink size={11} className="shrink-0" /> {sitemap.url}
+                </a>
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs text-slate-500 dark:bg-white/5 dark:text-slate-400">
+                  URL 总数 <b className="text-slate-800 dark:text-slate-100">{sitemap.sitemapTotal}</b>
                 </span>
-                <span>URL 总数：{sitemap.sitemapTotal}</span>
-                <span>
-                  文章收录：
-                  <b className={hasSitemapIssue ? 'text-red-500' : 'text-green-500'}>
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs text-slate-500 dark:bg-white/5 dark:text-slate-400">
+                  文章收录
+                  <b className={hasSitemapIssue ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'}>
                     {sitemap.sitemapArticleCount}/{sitemap.articleTotal}
                   </b>
                 </span>
               </div>
 
               {!hasSitemapIssue ? (
-                <p className="flex items-center gap-1.5 text-sm text-green-500">
-                  <FiCheckCircle size={14} /> sitemap 收录完整
-                </p>
+                <SuccessLine text="sitemap 收录完整" />
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {sitemap.missingArticles.length > 0 ? (
                     <div>
-                      <p className="text-xs text-slate-400">未收录的文章（点击跳转编辑）</p>
-                      <div className="mt-1 flex flex-wrap gap-1.5">
+                      <p className="mb-1.5 text-xs text-slate-400">未收录的文章（点击跳转编辑）</p>
+                      <div className="flex max-h-32 flex-wrap gap-1.5 overflow-y-auto">
                         {sitemap.missingArticles.map((article) => (
-                          <Tag key={article.id} className="cursor-pointer" onClick={() => navigate(`/create?id=${article.id}`)}>
+                          <Tag key={article.id} className="cursor-pointer" title={`ID: ${article.id}`} onClick={() => navigate(`/create?id=${article.id}`)}>
                             {article.title}
                           </Tag>
                         ))}
@@ -287,8 +420,8 @@ export default function SeoPage() {
                   ) : null}
                   {sitemap.missingStaticPages && sitemap.missingStaticPages.length > 0 ? (
                     <div>
-                      <p className="text-xs text-slate-400">未收录的静态页面</p>
-                      <div className="mt-1 flex flex-wrap gap-1.5">
+                      <p className="mb-1.5 text-xs text-slate-400">未收录的静态页面</p>
+                      <div className="flex flex-wrap gap-1.5">
                         {sitemap.missingStaticPages.map((page) => (
                           <Tag key={page} color="warning">
                             {page}
@@ -305,23 +438,26 @@ export default function SeoPage() {
 
         {/* 文章元信息体检 */}
         <SectionCard
-          icon={<FiFileText size={16} />}
+          icon={<FiFileText size={15} />}
+          hue="violet"
           title="文章元信息"
           desc="检查已发布文章是否缺失描述或封面，两者是搜索摘要与缩略图的关键来源"
+          state={!meta ? (metaLoading ? 'loading' : 'idle') : meta.articles.length > 0 ? 'issue' : 'ok'}
+          issueLabel={`${meta?.articles.length ?? 0} 篇需完善`}
           extra={
             <Button size="small" icon={<FiRefreshCw />} loading={metaLoading} onClick={() => void loadMeta()}>
               重新检查
             </Button>
           }
         >
-          {metaLoading && !meta ? (
-            <div className="py-6 text-center"><Spin /></div>
-          ) : !meta ? (
-            <Empty description="尚未检查" className="py-4" />
+          {!meta ? (
+            metaLoading ? (
+              <Skeleton active title={false} paragraph={{ rows: 2 }} />
+            ) : (
+              <IdleHint icon={<FiFileText size={18} />} text="尚未检查，点击右上角「重新检查」或顶部「开始体检」" />
+            )
           ) : meta.articles.length === 0 ? (
-            <p className="flex items-center gap-1.5 py-2 text-sm text-green-500">
-              <FiCheckCircle size={14} /> 全部文章的描述与封面完整
-            </p>
+            <SuccessLine text="全部文章的描述与封面完整" />
           ) : (
             <Table
               rowKey="id"
@@ -329,16 +465,19 @@ export default function SeoPage() {
               columns={metaColumns}
               dataSource={meta.articles}
               pagination={false}
-              locale={{ emptyText: <Empty description="暂无数据" /> }}
+              locale={{ emptyText: <span className="block py-4 text-center text-xs text-slate-400">暂无数据</span> }}
             />
           )}
         </SectionCard>
 
         {/* 死链检测 */}
         <SectionCard
-          icon={<FiLink2 size={16} />}
+          icon={<FiLink2 size={15} />}
+          hue="rose"
           title="正文死链检测"
           desc="提取正文中的 http(s) 链接并逐一探测，同一链接只检测一次"
+          state={!links ? (linkLoading ? 'loading' : 'idle') : links.brokenTotal > 0 ? 'issue' : 'ok'}
+          issueLabel={`${links?.brokenTotal ?? 0} 个异常`}
           extra={
             <div className="flex items-center gap-2">
               {links ? (
@@ -358,39 +497,38 @@ export default function SeoPage() {
             </div>
           }
         >
-          {linkLoading ? (
-            <div className="py-8 text-center">
+          {linkLoading && !links ? (
+            <Skeleton active title={false} paragraph={{ rows: 3 }} />
+          ) : linkLoading ? (
+            <div className="py-6 text-center">
               <Spin />
               <p className="mt-3 text-xs text-slate-400">正在逐个探测链接，可能需要 1~2 分钟</p>
             </div>
           ) : !links ? (
-            <Empty description="尚未检测，点击「开始检测」" className="py-4" />
+            <IdleHint icon={<FiLink2 size={18} />} text="尚未检测，点击右上角「开始检测」" />
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
                 <span>
-                  扫描文章 <b className="text-slate-600 dark:text-slate-300">{links.articleTotal}</b> 篇，提取链接{' '}
-                  <b className="text-slate-600 dark:text-slate-300">{links.linkTotal}</b> 个，已检测{' '}
+                  扫描文章 <b className="text-slate-600 dark:text-slate-300">{links.articleTotal}</b> 篇 · 提取链接{' '}
+                  <b className="text-slate-600 dark:text-slate-300">{links.linkTotal}</b> 个 · 已检测{' '}
                   <b className="text-slate-600 dark:text-slate-300">{links.checkedTotal}</b> 个
                 </span>
-                {links.truncated ? <span className="text-orange-400">链接较多，本次仅检测前 {links.checkedTotal} 个</span> : null}
-                {links.brokenTotal === 0 ? (
-                  <span className="flex items-center gap-1 text-green-500">
-                    <FiCheckCircle size={13} /> 未发现死链
-                  </span>
-                ) : (
-                  <span className="text-red-500">发现 {links.brokenTotal} 个异常链接</span>
-                )}
+                {links.truncated ? <span className="rounded-md bg-amber-50 px-2 py-0.5 text-amber-500 dark:bg-amber-500/10">链接较多，本次仅检测前 {links.checkedTotal} 个</span> : null}
               </div>
 
-              <Table
-                rowKey="url"
-                size="small"
-                columns={linkColumns}
-                dataSource={visibleLinks}
-                pagination={{ pageSize: 10, hideOnSinglePage: true, showTotal: (total) => `共 ${total} 条` }}
-                locale={{ emptyText: <Empty description="没有异常链接" className="py-4" /> }}
-              />
+              {links.brokenTotal === 0 && linkView === 'broken' ? (
+                <SuccessLine text={`未发现死链，${links.checkedTotal} 个链接全部可用`} />
+              ) : (
+                <Table
+                  rowKey="url"
+                  size="small"
+                  columns={linkColumns}
+                  dataSource={visibleLinks}
+                  pagination={{ pageSize: 10, hideOnSinglePage: true, showTotal: (total) => `共 ${total} 条` }}
+                  locale={{ emptyText: <span className="block py-4 text-center text-xs text-slate-400">暂无数据</span> }}
+                />
+              )}
             </div>
           )}
         </SectionCard>
