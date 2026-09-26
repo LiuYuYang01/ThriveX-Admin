@@ -22,6 +22,7 @@ import Decycle from '@/pages/decycle';
 import Record from '@/pages/record';
 import Assistant from '@/pages/assistant';
 import PageConfig from '@/pages/page_config';
+import OperationLog from '@/pages/operation_log';
 import { getFlatRoutes } from '@/config/routes.tsx';
 
 export interface RouteConfig {
@@ -57,6 +58,7 @@ const componentMap: Record<string, React.ReactNode> = {
   '/work': <Work />,
   '/assistant': <Assistant />,
   '/page_config': <PageConfig />,
+  '/operation_log': <OperationLog />,
 };
 
 const flatRoutes = getFlatRoutes();

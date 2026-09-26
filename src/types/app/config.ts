@@ -119,7 +119,12 @@ export interface BaiduStatisKeyEnvValue {
 
 /** hCaptcha 人机验证 */
 export interface HcaptchaEnvValue {
+  /** 功能开关：开启后前端渲染验证码、后端强制校验 */
+  enabled: boolean;
+  /** 站点密钥（公钥），下发前端渲染验证组件 */
   key: string;
+  /** 服务端校验密钥（私钥），用于 siteverify 接口 */
+  secret: string;
 }
 
 export interface EmailEnvValue {

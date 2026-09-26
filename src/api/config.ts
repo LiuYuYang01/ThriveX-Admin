@@ -22,6 +22,9 @@ export const getEnvConfigDataAPI = (name: EnvConfigName) => Request<Config>('GET
 // 获取环境配置列表
 export const getEnvConfigListAPI = () => Request<Config[]>('GET', `/env_config/list`);
 
+// 获取公开配置（免登录，仅含可对外的 key 类配置）
+export const getPublicConfigAPI = () => Request<Record<string, { key: string } | null>>('GET', `/env_config/public_config`);
+
 // 更新环境配置
 export const updateEnvConfigDataAPI = (data: Config) => Request('PATCH', `/env_config/json/${data.id}`, { data: data.value });
 

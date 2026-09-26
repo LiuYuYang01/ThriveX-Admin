@@ -1,6 +1,8 @@
 export interface Login {
   username: string;
   password: string;
+  /** hCaptcha 人机验证 Token（站点配置人机验证后必传） */
+  h_captcha_response?: string | null;
 }
 
 export interface UserInfo {

@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'antd/es/form/Form';
 import { Button, Form, Input, notification } from 'antd';
 import { UserOutlined, LockOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import HCaptchaType from '@hcaptcha/react-hcaptcha';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 import { getUserDataAPI, loginDataAPI } from '@/api/user';
+import { getPublicConfigAPI } from '@/api/config';
 import { useUserStore } from '@/stores';
 import { setShowLoginNotification } from '@/components/SystemNotification';
 
@@ -19,15 +22,39 @@ export default () => {
 
   const [isPassVisible, setIsPassVisible] = useState(false);
 
+  // 人机验证：sitekey 存在时才启用（后端 secret 未配置时不校验，这里同步放行）
+  const captchaRef = useRef<HCaptchaType>(null);
+  const [sitekey, setSitekey] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState('');
+
   // 记录上个页面的路径，方便回退
   const returnUrl = new URLSearchParams(location.search).get('returnUrl') || '/';
 
+  useEffect(() => {
+    getPublicConfigAPI()
+      .then(({ data }) => setSitekey(data?.hcaptcha_key?.key || ''))
+      .catch(() => setSitekey(''));
+  }, []);
+
+  const resetCaptcha = () => {
+    setCaptchaToken(null);
+    captchaRef.current?.resetCaptcha();
+  };
+
   const onSubmit = async () => {
     try {
-      setLoading(true);
+      setCaptchaError('');
 
       const values = await form.validateFields();
-      const { data: loginData } = await loginDataAPI(values);
+
+      if (sitekey && !captchaToken) {
+        setCaptchaError('请完成人机验证');
+        return;
+      }
+
+      setLoading(true);
+      const { data: loginData } = await loginDataAPI({ ...values, h_captcha_response: captchaToken });
       const { data: userData } = await getUserDataAPI(loginData.token);
 
       // 将用户信息和token保存起来
@@ -47,6 +74,8 @@ export default () => {
     } catch (error) {
       console.error(error);
       setLoading(false);
+      // token 一次性使用，登录失败后重置验证码
+      resetCaptcha();
     }
   };
 
@@ -80,6 +109,15 @@ export default () => {
             <Form.Item name="password" label={<span className="text-gray-700 font-medium">密码</span>} rules={[{ required: true, message: '请输入密码' }]}>
               <Input.Password prefix={<LockOutlined className="text-gray-400" />} type={isPassVisible ? 'text' : 'password'} placeholder="请输入密码" className="h-12 rounded-xl border-gray-200 hover:border-blue-400 focus:border-blue-500 transition-colors" iconRender={(visible) => (visible ? <EyeOutlined onClick={() => setIsPassVisible(!isPassVisible)} /> : <EyeInvisibleOutlined onClick={() => setIsPassVisible(!isPassVisible)} />)} />
             </Form.Item>
+
+            {sitekey && (
+              <Form.Item>
+                <div className="flex flex-col items-start">
+                  <HCaptcha sitekey={sitekey} onVerify={setCaptchaToken} ref={captchaRef} />
+                  {captchaError && <span className="text-red-400 text-sm mt-1">{captchaError}</span>}
+                </div>
+              </Form.Item>
+            )}
 
             <Form.Item className="mb-6">
               <Button type="primary" htmlType="submit" loading={loading} className="w-full h-12 mt-4 rounded-xl shadow-lg hover:shadow-xl font-medium text-base" block>
