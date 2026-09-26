@@ -360,7 +360,8 @@ export default function SeoPage() {
         >
           {linkLoading ? (
             <div className="py-8 text-center">
-              <Spin tip="正在逐个探测链接，可能需要 1~2 分钟" />
+              <Spin />
+              <p className="mt-3 text-xs text-slate-400">正在逐个探测链接，可能需要 1~2 分钟</p>
             </div>
           ) : !links ? (
             <Empty description="尚未检测，点击「开始检测」" className="py-4" />

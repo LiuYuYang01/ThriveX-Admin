@@ -71,9 +71,6 @@ function getInsertIndex(from: number, overIndex: number, position: DropPosition)
 const sortBtnClass =
   'flex size-5 cursor-pointer items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-white/5';
 
-const inputBaseClass =
-  'rounded-xl! border-slate-200/80! bg-white! shadow-none! transition-colors! placeholder:text-slate-400! hover:border-slate-300! focus:border-primary! dark:border-strokedark! dark:bg-boxdark-2! dark:placeholder:text-slate-500! dark:hover:border-slate-600!';
-
 export default function SwiperPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -781,16 +778,10 @@ export default function SwiperPage() {
                           placeholder="输入图片 URL"
                           allowClear
                           prefix={<FiImage className="text-slate-400" />}
-                          className={`${inputBaseClass} h-10! text-sm!`}
                         />
                       </Form.Item>
 
-                      <Button
-                        type="default"
-                        onClick={openMaterialPicker}
-                        className="inline-flex! h-10! w-full! items-center! justify-center! gap-2! rounded-xl! border-slate-200/80! bg-white! text-sm! font-medium! text-slate-600! shadow-none! hover:border-primary/40! hover:text-primary! dark:border-strokedark! dark:bg-boxdark-2! dark:text-slate-300! dark:hover:text-primary-400!"
-                        icon={<FiUploadCloud size={16} />}
-                      >
+                      <Button type="default" block onClick={openMaterialPicker} icon={<FiUploadCloud size={16} />}>
                         从素材库选择
                       </Button>
 

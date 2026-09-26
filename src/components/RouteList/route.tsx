@@ -24,6 +24,7 @@ import Assistant from '@/pages/assistant';
 import PageConfig from '@/pages/page_config';
 import OperationLog from '@/pages/operation_log';
 import Seo from '@/pages/seo';
+import Backup from '@/pages/backup';
 import { getFlatRoutes } from '@/config/routes.tsx';
 
 export interface RouteConfig {
@@ -61,6 +62,7 @@ const componentMap: Record<string, React.ReactNode> = {
   '/page_config': <PageConfig />,
   '/operation_log': <OperationLog />,
   '/seo': <Seo />,
+  '/backup': <Backup />,
 };
 
 const flatRoutes = getFlatRoutes();

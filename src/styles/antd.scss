@@ -1,48 +1,42 @@
 /* ------------------ 自定义Antd组件样式开始 ------------------ */
 
-// 只取消颜色相关的过渡效果, 其他过渡保持正常 (暗色切换时颜色变化不一致会导致效果不好)
+/*
+ * 表单控件（Input / Select / DatePicker / InputNumber）的统一样式
+ * 全部由 App.tsx 的 ConfigProvider token 负责（高度 36、圆角 8、边框/悬停/聚焦色、3px 聚焦光环）。
+ * 这里不再用 !important 强改控件几何尺寸 —— 那会破坏 antd v6 的 borderless/filled 变体
+ * 与内层 input 的零内边距设计，也是标题框“套娃”、输入行溢出、光标贴字三类问题的根源。
+ */
+
+// 只保留视觉属性的过渡，颜色与布局尺寸瞬时切换
+// （颜色瞬切是为了暗色模式切换不闪烁；布局属性一旦进入过渡列表，任何尺寸变化都会被动画化，界面发黏）
 * {
     transition-property:
-        opacity, transform, translate, scale, box-shadow, filter, width, height, min-width, min-height, max-width,
-        max-height, margin, margin-top, margin-right, margin-bottom, margin-left, padding, padding-top, padding-right,
-        padding-bottom, padding-left, left, right, top, bottom, inset, font-size, font-weight, letter-spacing,
-        line-height, text-indent, text-shadow, border-width, border-radius, outline-width, outline-offset, flex,
-        flex-grow, flex-shrink, flex-basis, gap, row-gap, column-gap, visibility, z-index, clip-path, backdrop-filter,
-        border-style, outline-style !important;
+        opacity, transform, translate, scale, box-shadow, filter, border-radius, clip-path, backdrop-filter !important;
 }
 
 a {
     color: inherit;
-    
+
     &:hover {
         color: var(--color-primary) !important;
     }
 }
 
-/* 表单获取焦点时的阴影效果 */
-.ant-input:focus,
-.ant-input-focused,
-.ant-input-number:focus,
-.ant-input-number-focused,
-.ant-select-focused.ant-select-outlined,
-.ant-select-focused .ant-select-selector,
-.ant-picker-focused,
-.ant-textarea:focus,
-.ant-input-affix-wrapper-focused {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent) !important;
+/*
+ * 输入呼吸感：antd v6 的内层 input 是零内边距设计（间距由外层 wrapper 提供），
+ * 前缀图标与文字之间只剩 4px，光标会紧贴占位符首字，视觉上像把字裁掉了一半。
+ * 给内层补 2px 起步间距，并让光标使用主色 —— 深色细线贴着灰色占位符时不再像乱码方块。
+ */
+.ant-input-affix-wrapper > input.ant-input,
+.ant-input-affix-wrapper > textarea.ant-input {
+    padding-inline: 2px 0;
 }
 
-/* 表单校验失败时的阴影效果 */
-.ant-input-status-error:focus,
-.ant-input-status-error.ant-input-focused,
-.ant-input-number-status-error:focus,
-.ant-input-number-status-error.ant-input-number-focused,
-.ant-select-status-error.ant-select-focused.ant-select-outlined,
-.ant-select-status-error.ant-select-focused .ant-select-selector,
-.ant-picker-status-error.ant-picker-focused,
-.ant-textarea-status-error:focus,
-.ant-input-affix-wrapper-status-error.ant-input-affix-wrapper-focused {
-    box-shadow: 0 0 0 3px color-mix(in srgb, #d92d20 14%, transparent) !important;
+.ant-input,
+.ant-input-affix-wrapper > input.ant-input,
+.ant-picker-input > input,
+.ant-input-number-input {
+    caret-color: var(--color-primary, #60a5fa);
 }
 
 // 自定义input后置按钮样式
@@ -56,57 +50,12 @@ a {
     }
 }
 
-// 图片 URL 输入 + 选择按钮组合
-.image-url-compact {
-    display: flex !important;
-    width: 100%;
-
-    > .ant-input-affix-wrapper,
-    > .ant-input {
-        flex: 1;
-        min-width: 0;
-        border-top-right-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-    }
-
-    > .ant-btn {
-        flex-shrink: 0;
-        height: var(--antd-control-height) !important;
-        padding-inline: 14px !important;
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
-        border-color: var(--antd-control-border) !important;
-        background-color: var(--antd-control-bg) !important;
-        color: var(--antd-control-text);
-        font-size: 13px;
-        box-shadow: none !important;
-
-        &:hover {
-            border-color: var(--antd-control-border-hover) !important;
-            color: var(--color-primary, #3b82f6) !important;
-            z-index: 1;
-        }
-    }
-
-    &:focus-within > .ant-input-affix-wrapper {
-        z-index: 2;
-    }
-}
-
 .ant-form-inline {
     margin-inline-end: 10px;
 }
 
-/* 全站表单控件统一样式（输入框 / 下拉 / 日期） */
+/* 语义色板变量：供表格 / 按钮 / 分页 / Modal / Drawer 等纯主题样式使用 */
 :root {
-    --antd-control-height: 36px;
-    --antd-control-radius: 8px;
-    --antd-control-border: #e4e7ec;
-    --antd-control-border-hover: var(--color-primary, #60a5fa);
-    --antd-control-bg: #fff;
-    --antd-control-placeholder: #98a2b3;
-    --antd-control-text: #101828;
-    --antd-control-icon: #98a2b3;
     --antd-panel: #fff;
     --antd-elevated: #fff;
     --antd-rail: #f8f9fb;
@@ -121,12 +70,6 @@ a {
 }
 
 .dark {
-    --antd-control-border: rgba(255, 255, 255, 0.12);
-    --antd-control-border-hover: var(--color-primary, #60a5fa);
-    --antd-control-bg: #121820;
-    --antd-control-placeholder: #8a99b8;
-    --antd-control-text: #eef2f8;
-    --antd-control-icon: #8a99b8;
     --antd-panel: #151b26;
     --antd-elevated: #1e2738;
     --antd-rail: #1f2838;
@@ -137,157 +80,6 @@ a {
     --antd-row-hover: #252f42;
     --antd-danger: #f87171;
     --antd-danger-soft: rgba(248, 113, 113, 0.2);
-}
-
-.ant-input:not(textarea),
-.ant-input-affix-wrapper,
-.ant-input-number,
-.ant-input-number .ant-input-number-input-wrap,
-.ant-select.ant-select-outlined,
-.ant-select .ant-select-selector,
-.ant-picker {
-    min-height: var(--antd-control-height) !important;
-    border-radius: var(--antd-control-radius) !important;
-    border-color: var(--antd-control-border) !important;
-    background-color: var(--antd-control-bg) !important;
-    color: var(--antd-control-text);
-    font-size: 13px;
-}
-
-.ant-input:not(textarea) {
-    height: var(--antd-control-height);
-    padding-inline: 12px;
-}
-
-.ant-input-affix-wrapper {
-    width: 101%;
-    height: var(--antd-control-height);
-    padding-inline: 10px 12px;
-
-    .ant-input {
-        height: auto;
-        min-height: auto !important;
-        padding-inline: 6px 0;
-        font-size: 13px;
-    }
-
-    .ant-input-prefix,
-    .ant-input-suffix {
-        color: var(--antd-control-icon);
-    }
-}
-
-.ant-input:not(textarea)::placeholder,
-.ant-input-affix-wrapper input::placeholder {
-    color: var(--antd-control-placeholder);
-}
-
-.ant-input-number {
-    height: var(--antd-control-height);
-    width: 100%;
-
-    .ant-input-number-input {
-        height: calc(var(--antd-control-height) - 2px);
-        padding-inline: 12px;
-        font-size: 13px;
-    }
-}
-
-.ant-select {
-    height: var(--antd-control-height);
-
-    .ant-select-selector {
-        height: var(--antd-control-height) !important;
-        padding-inline: 12px !important;
-        align-items: center;
-    }
-
-    &:not(.ant-select-multiple) .ant-select-selection-placeholder,
-    &:not(.ant-select-multiple) .ant-select-selection-item {
-        line-height: calc(var(--antd-control-height) - 2px) !important;
-        font-size: 13px;
-    }
-
-    .ant-select-selection-placeholder {
-        color: var(--antd-control-placeholder) !important;
-    }
-
-    .ant-select-arrow {
-        color: var(--antd-control-icon);
-    }
-
-    /* Ant Design 6 多选使用 SelectInput，根节点默认 flex-start + 旧版 line-height 会导致标签贴顶 */
-    &.ant-select-multiple {
-        height: auto !important;
-        min-height: var(--antd-control-height);
-        align-items: center !important;
-
-        &.ant-select-lg {
-            min-height: 40px;
-        }
-
-        .ant-select-content {
-            align-items: center !important;
-        }
-
-        .ant-select-selection-item {
-            line-height: 20px !important;
-            height: auto !important;
-            font-size: 13px;
-        }
-
-        .ant-select-suffix {
-            align-self: center !important;
-        }
-
-        .ant-select-selector {
-            height: auto !important;
-            min-height: var(--antd-control-height) !important;
-            align-items: center !important;
-        }
-    }
-}
-
-.ant-picker {
-    height: var(--antd-control-height);
-    padding-inline: 10px 12px;
-
-    .ant-picker-input > input {
-        font-size: 13px;
-        color: var(--antd-control-text);
-
-        &::placeholder {
-            color: var(--antd-control-placeholder);
-        }
-    }
-
-    .ant-picker-separator {
-        color: var(--antd-control-icon);
-    }
-
-    .ant-picker-suffix,
-    .ant-picker-clear {
-        color: var(--antd-control-icon);
-    }
-}
-
-.ant-input:not(textarea):hover,
-.ant-input-affix-wrapper:hover,
-.ant-input-number:hover,
-.ant-select:not(.ant-select-disabled):hover.ant-select-outlined,
-.ant-select:not(.ant-select-disabled):hover .ant-select-selector,
-.ant-picker:hover {
-    border-color: var(--antd-control-border-hover) !important;
-}
-
-.ant-input:not(textarea):focus,
-.ant-input-focused,
-.ant-input-affix-wrapper-focused,
-.ant-input-number-focused,
-.ant-select-focused.ant-select-outlined,
-.ant-select-focused .ant-select-selector,
-.ant-picker-focused {
-    border-color: var(--color-primary, #60a5fa) !important;
 }
 
 .ant-tabs-nav {
@@ -316,21 +108,6 @@ a {
 .ant-card {
     .dark & {
         background-color: var(--antd-panel) !important;
-        border-color: var(--antd-line) !important;
-    }
-}
-
-.ant-input,
-.ant-input-affix-wrapper,
-.ant-picker-outlined,
-.ant-picker-panel-layout,
-.ant-picker-range-arrow::before,
-.ant-select.ant-select-outlined,
-.ant-select,
-.ant-select-selector,
-.ant-modal-content {
-    .dark & {
-        background-color: var(--antd-control-bg) !important;
         border-color: var(--antd-line) !important;
     }
 }
@@ -666,7 +443,7 @@ a {
 }
 
 .ant-pagination .ant-pagination-options .ant-select-selector {
-    background-color: var(--antd-control-bg) !important;
+    background-color: var(--antd-panel) !important;
 }
 
 /* Button */

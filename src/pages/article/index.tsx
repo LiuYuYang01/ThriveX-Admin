@@ -53,9 +53,6 @@ import { useWebStore } from '@/stores';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
 import RangePicker from '@/components/RangePicker';
 
-const cateFilterControlClass =
-  'w-full rounded-xl! border-slate-200/80! bg-white! shadow-none! hover:border-slate-300! dark:border-strokedark! dark:bg-boxdark-2! dark:hover:border-slate-600! [&_.ant-select-selection-placeholder]:text-slate-400! dark:[&_.ant-select-selection-placeholder]:text-slate-500! [&_.ant-select-selection-item]:m-0.5! [&_.ant-select-selection-item]:max-w-full! [&_.ant-select-selection-item]:truncate! [&_.ant-select-selection-item]:rounded-md! [&_.ant-select-selection-item]:border-0! [&_.ant-select-selection-item]:bg-primary/10! [&_.ant-select-selection-item]:px-2! [&_.ant-select-selection-item]:py-0! [&_.ant-select-selection-item]:text-xs! [&_.ant-select-selection-item]:font-medium! [&_.ant-select-selection-item]:text-primary! dark:[&_.ant-select-selection-item]:bg-primary/15! dark:[&_.ant-select-selection-item]:text-primary-400! [&_.ant-select-selection-item-remove]:text-primary/50! [&_.ant-select-selection-item-remove]:hover:text-primary! dark:[&_.ant-select-selection-item-remove]:text-primary-400/60! [&_.ant-select-selection-overflow-item]:rounded-md! [&_.ant-select-selection-overflow-item]:border-0! [&_.ant-select-selection-overflow-item]:bg-primary/10! [&_.ant-select-selection-overflow-item]:px-2! [&_.ant-select-selection-overflow-item]:py-0! [&_.ant-select-selection-overflow-item]:text-xs! [&_.ant-select-selection-overflow-item]:font-medium! [&_.ant-select-selection-overflow-item]:text-primary! dark:[&_.ant-select-selection-overflow-item]:bg-primary/15! dark:[&_.ant-select-selection-overflow-item]:text-primary-400!';
-
 function resolveCateIdsFromPaths(paths?: number[][]): number[] | undefined {
   if (!paths?.length) return undefined;
   const ids = [
@@ -633,7 +630,6 @@ export default function ArticlePage() {
                     fieldNames={{ label: 'name', value: 'id' }}
                     placeholder="分类"
                     allowClear
-                    className={cateFilterControlClass}
                   />
                 </Form.Item>
                 <Form.Item name="tagId" className="mb-0! w-[calc(50%-4px)] sm:w-28">

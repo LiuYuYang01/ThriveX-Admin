@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Button, Form, message, Radio } from 'antd';
-import { FiCheck } from 'react-icons/fi';
+import { Button, Form, message, Radio, Tag, Typography } from 'antd';
 import { editWebConfigDataAPI } from '@/api/config';
 import { FileConfig, UPLOAD_COMPRESS_MODE_OPTIONS } from '@/types/app/config';
 import { useFileStore } from '@/stores';
 import { fetchFileConfig } from '@/utils/fileConfig';
-
-const optionCardClass =
-  'mx-0! mt-0! mb-3! flex! w-full! rounded-xl! border! border-gray-200! p-0! shadow-none! transition-all! hover:border-gray-300! last:mb-0! dark:border-strokedark! dark:bg-boxdark/40! dark:hover:border-slate-600! [&_.ant-radio]:hidden! [&_.ant-radio+span]:flex! [&_.ant-radio+span]:w-full! [&_.ant-radio+span]:p-0! [&.ant-radio-wrapper-checked]:border-primary! [&.ant-radio-wrapper-checked]:bg-primary/[0.04]! [&.ant-radio-wrapper-checked]:ring-1! [&.ant-radio-wrapper-checked]:ring-primary/20! dark:[&.ant-radio-wrapper-checked]:bg-primary/10! [&.ant-radio-wrapper-checked_.option-check]:border-primary! [&.ant-radio-wrapper-checked_.option-check]:bg-primary! [&.ant-radio-wrapper-checked_.option-check_svg]:block!';
 
 export default () => {
   const [loading, setLoading] = useState(false);
@@ -59,26 +55,14 @@ export default () => {
           rules={[{ required: true, message: '请选择压缩策略' }]}
           className="mb-2"
         >
-          <Radio.Group className="flex! w-full! flex-col!">
+          <Radio.Group className="flex! w-full! flex-col! gap-3!">
             {UPLOAD_COMPRESS_MODE_OPTIONS.map((item) => (
-              <Radio key={item.value} value={item.value} className={optionCardClass}>
-                <div className="flex w-full items-center gap-3 px-4 py-3.5">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{item.label}</span>
-                      {item.value === 'auto' && (
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium leading-none text-primary dark:bg-primary/20">
-                          推荐
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 text-xs leading-relaxed text-gray-400 dark:text-gray-500">{item.description}</p>
-                  </div>
-
-                  <span className="option-check flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border-2 border-gray-300 transition-all dark:border-gray-600">
-                    <FiCheck className="hidden h-3 w-3 text-white" />
-                  </span>
-                </div>
+              <Radio key={item.value} value={item.value} className="items-start!">
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{item.label}</span>
+                {item.value === 'auto' && <Tag color="processing">推荐</Tag>}
+                <Typography.Text type="secondary" className="mt-1! block! text-xs! leading-relaxed!">
+                  {item.description}
+                </Typography.Text>
               </Radio>
             ))}
           </Radio.Group>

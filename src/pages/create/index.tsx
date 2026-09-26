@@ -347,12 +347,7 @@ export default function CreatePage() {
               </button>
             </Tooltip>
 
-            <Button
-              type="primary"
-              className="inline-flex! h-10! ml-8! items-center! gap-2! rounded-xl! px-5! shadow-none!"
-              icon={<FiSend className="text-base" />}
-              onClick={nextBtn}
-            >
+            <Button type="primary" icon={<FiSend className="text-base" />} onClick={nextBtn}>
               发布
             </Button>
           </div>

@@ -1,4 +1,4 @@
-import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug, BiBook, BiTrash, BiChip, BiMessageSquareDetail, BiCommentDetail, BiGlobe, BiImage, BiMapPin, BiCog, BiPlug, BiStar, BiHistory } from 'react-icons/bi';
+import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug, BiBook, BiTrash, BiChip, BiMessageSquareDetail, BiCommentDetail, BiGlobe, BiImage, BiMapPin, BiCog, BiPlug, BiStar, BiHistory, BiData } from 'react-icons/bi';
 import { FiActivity } from 'react-icons/fi';
 import { TbBrandAirtable, TbWriting } from 'react-icons/tb';
 import { FaRegComments, FaInstagram } from 'react-icons/fa';
@@ -74,6 +74,7 @@ export const sidebarRoutes: RouteGroupConfig[] = [
           { path: '/setup/third_party', name: '第三方配置', icon: <BiPlug className="text-base" /> },
           { path: '/seo', name: 'SEO 体检', icon: <FiActivity className="text-base" /> },
           { path: '/operation_log', name: '操作日志', icon: <BiHistory className="text-base" /> },
+          { path: '/backup', name: '数据库备份', icon: <BiData className="text-base" /> },
         ],
       },
     ],

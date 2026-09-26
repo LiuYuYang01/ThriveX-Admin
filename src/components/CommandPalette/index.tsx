@@ -176,6 +176,7 @@ export default () => {
           prefix={<FiSearch className="text-slate-400" size={16} />}
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
+          className="rounded-xl! dark:hover:bg-white/5!"
         />
 
         <div ref={listRef} className="mt-2 max-h-[50vh] overflow-y-auto border-t border-slate-100 pt-3 dark:border-strokedark">

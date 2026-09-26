@@ -1,31 +1,10 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Form, Input, Button, Select, DatePicker, Cascader, message, Switch, Radio, Space, Tooltip } from 'antd';
-
-const { SHOW_CHILD } = Cascader;
-import TextArea from 'antd/es/input/TextArea';
+import { Button, Card, Cascader, DatePicker, Form, Input, message, Radio, Select, Space, Switch, Tag, Typography } from 'antd';
 import { RuleObject } from 'antd/es/form';
 import dayjs, { Dayjs } from 'dayjs';
-import {
-  FiImage,
-  FiUploadCloud,
-  FiCalendar,
-  FiEye,
-  FiEyeOff,
-  FiLock,
-  FiSend,
-  FiSave,
-  FiLayers,
-  FiType,
-  FiTag,
-  FiClock,
-  FiShield,
-  FiArrowUp,
-  FiEdit3,
-  FiFilePlus,
-  FiLink,
-} from 'react-icons/fi';
+import { FiImage, FiLink, FiSave, FiSend, FiUploadCloud } from 'react-icons/fi';
 import { HiOutlineSparkles } from 'react-icons/hi2';
 
 import { addArticleDataAPI, editArticleDataAPI } from '@/api/article';
@@ -34,7 +13,7 @@ import useAssistant from '@/hooks/useAssistant';
 import { addTagDataAPI, getTagListAPI } from '@/api/tag';
 
 import { Cate } from '@/types/app/cate';
-import { Tag } from '@/types/app/tag';
+import { Tag as TagItem } from '@/types/app/tag';
 import { Article } from '@/types/app/article';
 
 import Material from '@/components/Material';
@@ -67,10 +46,10 @@ interface AssistantResponse {
   }>;
 }
 
-const STATUS_OPTIONS: { value: 1 | 2 | 3; label: string; hint: string; icon: ReactNode }[] = [
-  { value: 1, label: '公开', hint: '全站可见', icon: <FiEye size={15} /> },
-  { value: 2, label: '首页隐藏', hint: '首页不显示', icon: <FiEyeOff size={15} /> },
-  { value: 3, label: '全站隐藏', hint: '全站不显示', icon: <FiLock size={15} /> },
+const STATUS_OPTIONS: { value: 1 | 2 | 3; label: string }[] = [
+  { value: 1, label: '公开' },
+  { value: 2, label: '首页隐藏' },
+  { value: 3, label: '全站隐藏' },
 ];
 
 function findCategoryPathInTree(nodes: Cate[], targetId: number, prefix: number[] = []): number[] | null {
@@ -98,57 +77,19 @@ function toCascaderPaths(ids: number[], tree: Cate[]): number[][] {
   return ids.map((id) => findCategoryPathInTree(tree, id)).filter((path): path is number[] => path != null);
 }
 
-type PanelProps = {
-  title: string;
-  description?: string;
-  icon: ReactNode;
-  action?: ReactNode;
-  children: ReactNode;
-  className?: string;
-};
-
-function Panel({ title, description, icon, action, children, className = '' }: PanelProps) {
+// Card 标题：主标题 + 次级说明
+function cardTitle(title: string, description?: string) {
   return (
-    <section
-      className={`overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark ${className}`}
-    >
-      <header className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-strokedark">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/15">
-            {icon}
-          </span>
-          <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
-            {description && (
-              <p className="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{description}</p>
-            )}
-          </div>
-        </div>
-        {action}
-      </header>
-      <div className="space-y-4 px-5 py-5">{children}</div>
-    </section>
+    <div className="min-w-0">
+      <Typography.Text strong>{title}</Typography.Text>
+      {description && (
+        <Typography.Paragraph type="secondary" className="mb-0! mt-0.5! text-xs!">
+          {description}
+        </Typography.Paragraph>
+      )}
+    </div>
   );
 }
-
-const formItemClass =
-  '[&.ant-form-item]:mb-4! [&_.ant-form-item-label>label]:text-slate-500! [&_.ant-form-item-label>label]:text-xs! [&_.ant-form-item-label>label]:font-medium! dark:[&_.ant-form-item-label>label]:text-slate-400! [&_.ant-form-item-explain]:mt-1! [&_.ant-form-item-explain]:text-xs!';
-
-const inputBaseClass =
-  'rounded-xl! border-slate-200/80! bg-white! shadow-none! placeholder:text-slate-400! hover:border-slate-300! focus:border-primary! dark:border-strokedark! dark:bg-boxdark-2! dark:placeholder:text-slate-500! dark:hover:border-slate-600!';
-
-const formControlClass =
-  'w-full rounded-xl! border-slate-200/80! bg-white! shadow-none! hover:border-slate-300! dark:border-strokedark! dark:bg-boxdark-2! dark:hover:border-slate-600!';
-
-const tagChipClass =
-  '[&_.ant-select-selector]:py-2! [&_.ant-select-selection-placeholder]:text-slate-400! dark:[&_.ant-select-selection-placeholder]:text-slate-500! [&_.ant-select-selection-item]:mx-0.5! [&_.ant-select-selection-item]:my-0.5! [&_.ant-select-selection-item]:max-w-full! [&_.ant-select-selection-item]:truncate! [&_.ant-select-selection-item]:rounded-md! [&_.ant-select-selection-item]:border-0! [&_.ant-select-selection-item]:bg-primary/10! [&_.ant-select-selection-item]:px-2! [&_.ant-select-selection-item]:py-0.5! [&_.ant-select-selection-item]:text-xs! [&_.ant-select-selection-item]:font-medium! [&_.ant-select-selection-item]:text-primary! dark:[&_.ant-select-selection-item]:bg-primary/15! dark:[&_.ant-select-selection-item]:text-primary! [&_.ant-select-selection-item-remove]:text-primary/50! [&_.ant-select-selection-item-remove]:hover:text-primary! dark:[&_.ant-select-selection-item-remove]:text-primary/60! [&_.ant-select-selection-overflow-item]:rounded-md! [&_.ant-select-selection-overflow-item]:border-0! [&_.ant-select-selection-overflow-item]:bg-primary/10! [&_.ant-select-selection-overflow-item]:px-2! [&_.ant-select-selection-overflow-item]:py-0.5! [&_.ant-select-selection-overflow-item]:text-xs! [&_.ant-select-selection-overflow-item]:font-medium! [&_.ant-select-selection-overflow-item]:text-primary! dark:[&_.ant-select-selection-overflow-item]:bg-primary/15! dark:[&_.ant-select-selection-overflow-item]:text-primary!';
-
-const multiSelectControlClass = `${formControlClass} ${tagChipClass}`;
-
-const selectControlClass = multiSelectControlClass;
-
-const statusRadioClass =
-  'relative! h-auto! w-full! rounded-xl! border! border-slate-200/80! bg-white! p-3! text-center! shadow-none! before:content-none! hover:border-slate-300! dark:border-strokedark! dark:bg-boxdark-2! dark:hover:border-slate-600! [&_.ant-radio-button]:hidden! [&.ant-radio-button-wrapper-checked]:z-auto! [&.ant-radio-button-wrapper-checked]:border-primary! [&.ant-radio-button-wrapper-checked]:bg-primary/5! [&.ant-radio-button-wrapper-checked]:text-primary! dark:[&.ant-radio-button-wrapper-checked]:bg-primary/10! [&.ant-radio-button-wrapper-checked_.status-icon]:bg-primary/10! [&.ant-radio-button-wrapper-checked_.status-icon]:text-primary! dark:[&.ant-radio-button-wrapper-checked_.status-icon]:bg-primary/20!';
 
 const PublishForm = ({ data, closeModel }: Props) => {
   const [params] = useSearchParams();
@@ -163,18 +104,20 @@ const PublishForm = ({ data, closeModel }: Props) => {
   const coverValue = Form.useWatch('cover', form);
 
   const [cateList, setCateList] = useState<Cate[]>([]);
-  const [tagList, setTagList] = useState<Tag[]>([]);
+  const [tagList, setTagList] = useState<TagItem[]>([]);
   const [isEncryptEnabled, setIsEncryptEnabled] = useState(false);
 
   const isEditing = Boolean(id && !isDraftParams);
   const showDraftActions = (isDraftParams && id) || !id;
   const primaryLabel = isEditing ? '保存修改' : '发布文章';
   const draftLabel = isDraftParams ? '保存草稿' : '存为草稿';
+  const modeTagColor = isEditing ? 'processing' : isDraftParams ? 'gold' : 'default';
+  const modeLabel = isEditing ? '编辑文章' : isDraftParams ? '发布草稿' : '新建发布';
 
   useEffect(() => {
     if (!id) return form.resetFields();
 
-    const tagIds = (data?.tagList ?? []).map((item: Tag) => item.id);
+    const tagIds = (data?.tagList ?? []).map((item: TagItem) => item.id);
     const rawCateIds = resolveArticleCateIds(data);
     const catePaths = toCascaderPaths(rawCateIds, cateList);
 
@@ -349,18 +292,11 @@ const PublishForm = ({ data, closeModel }: Props) => {
 
   const hasCoverPreview = Boolean(coverValue && /^(https?:\/\/)/.test(coverValue));
 
-  const modeMeta = isEditing
-    ? { label: '编辑文章', hint: '修改后将立即生效', icon: <FiEdit3 size={14} />, tone: 'text-primary bg-primary/10' }
-    : isDraftParams
-      ? { label: '发布草稿', hint: '完善信息后正式发布', icon: <FiFilePlus size={14} />, tone: 'text-amber-600 bg-amber-500/10 dark:text-amber-400' }
-      : { label: '新建发布', hint: '填写元信息后即可上线', icon: <FiSend size={14} />, tone: 'text-slate-600 bg-slate-100 dark:text-slate-300 dark:bg-boxdark-2' };
-
   return (
     <div className="publish-form flex min-h-full flex-col">
       <Form
         form={form}
         name="publish"
-        size="large"
         layout="vertical"
         onFinish={onSubmit}
         autoComplete="off"
@@ -369,122 +305,94 @@ const PublishForm = ({ data, closeModel }: Props) => {
         requiredMark={false}
       >
         <div className="min-h-0 flex-1 overflow-y-auto pb-28 pt-2">
-          <div className="mx-auto max-w-5xl space-y-5">
+          <div className="mx-auto max-w-5xl px-1">
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)] lg:items-start">
               {/* 主内容区 */}
-              <div className="space-y-5">
-                <Panel
-                  title="标题与摘要"
-                  description="读者第一眼看到的信息，直接影响点击率与搜索收录"
-                  icon={<FiType size={16} />}
-                  action={
-                    <Tooltip title="基于正文内容自动提炼标题与摘要">
-                      <Button
-                        type="text"
-                        loading={generating}
-                        onClick={generateTitleAndDescription}
-                        className="inline-flex! h-7! shrink-0! cursor-pointer! items-center! gap-1! rounded-lg! px-2! text-xs! font-medium! text-primary! shadow-none! hover:text-primary! dark:text-primary!"
-                        icon={<HiOutlineSparkles size={13} />}
-                      >
-                        AI 填充
-                      </Button>
-                    </Tooltip>
+              <div className="flex flex-col gap-5">
+                <Card
+                  title={cardTitle('标题与摘要', '读者第一眼看到的信息，直接影响点击率与搜索收录')}
+                  extra={
+                    <Button
+                      type="text"
+                      size="small"
+                      loading={generating}
+                      onClick={generateTitleAndDescription}
+                      icon={<HiOutlineSparkles />}
+                    >
+                      AI 填充
+                    </Button>
                   }
                 >
                   <Form.Item
-                    className={formItemClass}
                     label="文章标题"
                     name="title"
                     rules={[{ required: true, message: '请输入文章标题' }]}
                   >
-                    <Input
-                      placeholder="输入清晰、有吸引力的标题"
-                      allowClear
-                      variant="borderless"
-                      className="h-auto! min-h-0! w-full! rounded-lg! px-3! py-2! text-xl! font-bold! leading-snug! shadow-none! hover:bg-slate-50! focus:bg-slate-100! dark:hover:bg-boxdark-2/60! dark:focus:bg-boxdark-2!"
-                    />
+                    <Input placeholder="输入清晰、有吸引力的标题" allowClear />
                   </Form.Item>
 
-                  <Form.Item className={`${formItemClass} mb-0!`} label="文章摘要" name="description">
-                    <TextArea
+                  <Form.Item label="文章摘要" name="description" className="mb-0!">
+                    <Input.TextArea
                       autoSize={{ minRows: 3, maxRows: 5 }}
                       showCount
                       maxLength={200}
                       placeholder="一两句话概括核心内容，便于列表展示与 SEO"
-                      className={`${inputBaseClass} px-3.5! py-2.5! text-sm! leading-relaxed!`}
                     />
                   </Form.Item>
-                </Panel>
+                </Card>
 
-                <Panel
-                  title="封面配图"
-                  description="可选。建议 16:9 比例，用于列表与社交分享展示"
-                  icon={<FiImage size={16} />}
-                >
-                  <div className="flex flex-col gap-4">
-                    {/* 链接输入 + 素材库按钮组合 */}
-                    <div className="flex w-full flex-col gap-3">
-                      <Form.Item name="cover" noStyle rules={[{ validator: validateURL }]} className="mb-0! min-w-0!">
-                        <Space.Compact block className="image-url-compact">
-                          <Input
-                            placeholder="请输入图片地址"
-                            allowClear
-                            prefix={<FiLink className="text-slate-400" size={15} />}
-                            className={`${inputBaseClass} h-10! rounded-r-none! text-sm!`}
-                          />
-                          <Button
-                            type="default"
-                            onClick={() => setIsMaterialModalOpen(true)}
-                            className="inline-flex! h-10! cursor-pointer! items-center! gap-2! rounded-l-none! border-slate-200/80! border-l-0! bg-white! px-4! text-sm! font-medium! text-slate-600! shadow-none! hover:border-primary/40! hover:text-primary! dark:border-strokedark! dark:bg-boxdark-2! dark:text-slate-300! dark:hover:text-primary!"
-                            icon={<FiUploadCloud size={16} />}
-                          >
-                            素材库
-                          </Button>
-                        </Space.Compact>
+                <Card title={cardTitle('封面配图', '可选。建议 16:9 比例，用于列表与社交分享展示')}>
+                  <Form.Item label="封面地址">
+                    <Space.Compact block>
+                      <Form.Item name="cover" noStyle rules={[{ validator: validateURL }]}>
+                        <Input
+                          placeholder="请输入图片地址"
+                          allowClear
+                          prefix={<FiLink className="text-slate-400" size={15} />}
+                        />
                       </Form.Item>
-                    </div>
+                      <Button type="default" onClick={() => setIsMaterialModalOpen(true)} icon={<FiUploadCloud />}>
+                        素材库
+                      </Button>
+                    </Space.Compact>
+                  </Form.Item>
 
-                    {/* 缩略预览 */}
-                    <button
-                      type="button"
-                      onClick={() => setIsMaterialModalOpen(true)}
-                      className={`group relative flex w-full shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-200 bg-slate-50 hover:border-primary/50 dark:border-strokedark dark:bg-boxdark-2/60 dark:hover:border-primary/40 ${hasCoverPreview ? 'aspect-video' : 'h-28'
-                        }`}
-                    >
-                      {hasCoverPreview ? (
-                        <>
-                          <img
-                            src={coverValue}
-                            alt="封面预览"
-                            className="size-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                          <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
-                            <FiUploadCloud size={20} className="text-white" />
-                          </span>
-                        </>
-                      ) : (
-                        <div className="flex flex-col items-center gap-2 px-3 text-slate-400">
-                          <FiImage size={22} />
-                          <span className="text-center text-xs leading-snug">点击选择素材</span>
-                        </div>
-                      )}
-                    </button>
-                  </div>
-                </Panel>
+                  {/* 缩略预览 */}
+                  <button
+                    type="button"
+                    onClick={() => setIsMaterialModalOpen(true)}
+                    className={`group relative flex w-full shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-200 bg-slate-50 hover:border-primary/50 dark:border-strokedark dark:bg-boxdark-2/60 dark:hover:border-primary/40 ${
+                      hasCoverPreview ? 'aspect-video' : 'h-28'
+                    }`}
+                  >
+                    {hasCoverPreview ? (
+                      <>
+                        <img
+                          src={coverValue}
+                          alt="封面预览"
+                          className="size-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                          <FiUploadCloud size={20} className="text-white" />
+                        </span>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 px-3 text-slate-400">
+                        <FiImage size={22} />
+                        <span className="text-center text-xs leading-snug">点击选择素材</span>
+                      </div>
+                    )}
+                  </button>
+                </Card>
               </div>
 
               {/* 侧边配置区 */}
-              <aside className="space-y-5 lg:sticky lg:top-2 lg:self-start">
-                <Panel
-                  title="分类与标签"
-                  description="帮助读者发现内容，至少选择一个分类"
-                  icon={<FiLayers size={16} />}
-                >
+              <aside className="flex flex-col gap-5">
+                <Card title={cardTitle('分类与标签', '帮助读者发现内容，至少选择一个分类')}>
                   <Form.Item
-                    className={formItemClass}
                     label="归属分类"
                     name="cateIds"
                     rules={[{ required: true, message: '请选择文章分类' }]}
@@ -494,15 +402,14 @@ const PublishForm = ({ data, closeModel }: Props) => {
                       options={cateList}
                       multiple
                       maxTagCount="responsive"
-                      showCheckedStrategy={SHOW_CHILD}
+                      showCheckedStrategy={Cascader.SHOW_CHILD}
                       fieldNames={{ label: 'name', value: 'id' }}
                       placeholder="选择分类（可多选）"
                       allowClear
-                      className={multiSelectControlClass}
                     />
                   </Form.Item>
 
-                  <Form.Item className={`${formItemClass} [&.ant-form-item]:mb-0!`} label="关联标签" name="tagIds">
+                  <Form.Item label="关联标签" name="tagIds" className="mb-0!">
                     <Select
                       allowClear
                       mode="tags"
@@ -511,23 +418,17 @@ const PublishForm = ({ data, closeModel }: Props) => {
                       fieldNames={{ label: 'name', value: 'id' }}
                       filterOption={(input, option) => !!option?.name.includes(input)}
                       placeholder="选择或输入，回车创建"
-                      suffixIcon={<FiTag className="text-slate-400" size={14} />}
-                      className={selectControlClass}
+                      style={{ width: '100%' }}
                     />
                   </Form.Item>
-                </Panel>
+                </Card>
 
-                <Panel
-                  title="发布设置"
-                  description="控制上线时间与可见范围"
-                  icon={<FiCalendar size={16} />}
-                >
-                  <Form.Item className={formItemClass} label="发布时间" name="createTime">
+                <Card title={cardTitle('发布设置', '控制上线时间与可见范围')}>
+                  <Form.Item label="发布时间" name="createTime">
                     <DatePicker
                       showTime
                       placeholder="默认立即发布"
-                      className={`${formControlClass} py-1.5!`}
-                      suffixIcon={<FiClock className="text-slate-400" size={15} />}
+                      className="w-full"
                       disabledDate={(current) => Boolean(current && current.isAfter(dayjs().endOf('day')))}
                       disabledTime={(current) => {
                         if (!current) return {};
@@ -548,70 +449,41 @@ const PublishForm = ({ data, closeModel }: Props) => {
                     />
                   </Form.Item>
 
-                  <Form.Item className={formItemClass} label="可见性" name={['config', 'status']}>
-                    <Radio.Group className="grid! w-full! grid-cols-3! gap-2.5! [&_.ant-radio-button-wrapper]:relative! [&_.ant-radio-button-wrapper]:m-0! [&_.ant-radio-button-wrapper:not(:last-child)]:me-0! [&_.ant-radio-button-wrapper]:h-auto! [&_.ant-radio-button-wrapper]:rounded-xl! [&_.ant-radio-button-wrapper]:transition-none! [&_.ant-radio-button-wrapper::before]:hidden!">
+                  <Form.Item label="可见性" name={['config', 'status']}>
+                    <Radio.Group optionType="button" buttonStyle="solid" className="w-full!">
                       {STATUS_OPTIONS.map((opt) => (
-                        <Radio.Button key={opt.value} value={opt.value} className={statusRadioClass}>
-                          <span className="flex flex-col items-center gap-1.5">
-                            <span className="status-icon flex size-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-boxdark dark:text-slate-400">
-                              {opt.icon}
-                            </span>
-                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{opt.label}</span>
-                            <span className="text-[10px] leading-tight text-slate-400 dark:text-slate-500">{opt.hint}</span>
-                          </span>
+                        <Radio.Button key={opt.value} value={opt.value}>
+                          {opt.label}
                         </Radio.Button>
                       ))}
                     </Radio.Group>
                   </Form.Item>
 
-                  <div className="space-y-3 rounded-xl border border-slate-200/80 p-3.5 dark:border-strokedark">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-boxdark dark:text-slate-400">
-                          <FiArrowUp size={14} />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-xs font-medium text-slate-700 dark:text-slate-200">置顶文章</p>
-                          <p className="text-[11px] text-slate-400 dark:text-slate-500">在列表顶部优先展示</p>
-                        </div>
-                      </div>
-                      <Form.Item name="isTop" valuePropName="checked" className="mb-0! shrink-0">
-                        <Switch size="small" />
-                      </Form.Item>
-                    </div>
+                  <Form.Item label="置顶文章" name="isTop" valuePropName="checked" extra="在列表顶部优先展示">
+                    <Switch />
+                  </Form.Item>
 
-                    <div className="h-px bg-slate-100 dark:bg-strokedark" />
+                  <Form.Item
+                    label="访问加密"
+                    name={['config', 'isEncrypt']}
+                    valuePropName="checked"
+                    extra="访客需输入密码阅读"
+                    className="mb-2!"
+                  >
+                    <Switch onChange={(checked: boolean) => setIsEncryptEnabled(checked)} />
+                  </Form.Item>
 
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-boxdark dark:text-slate-400">
-                          <FiShield size={14} />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-xs font-medium text-slate-700 dark:text-slate-200">访问加密</p>
-                          <p className="text-[11px] text-slate-400 dark:text-slate-500">访客需输入密码阅读</p>
-                        </div>
-                      </div>
-                      <Form.Item name={['config', 'isEncrypt']} valuePropName="checked" className="mb-0! shrink-0">
-                        <Switch size="small" onChange={(checked: boolean) => setIsEncryptEnabled(checked)} />
-                      </Form.Item>
-                    </div>
-
-                    {isEncryptEnabled && (
-                      <Form.Item
-                        className="mb-0! pt-1"
-                        name={['config', 'password']}
-                        rules={[{ required: isEncryptEnabled, message: '请输入访问密码' }]}
-                      >
-                        <Input.Password
-                          placeholder="设置访问密码"
-                          prefix={<FiLock className="text-slate-400" size={14} />}
-                          className={`${inputBaseClass} h-10! text-sm!`}
-                        />
-                      </Form.Item>
-                    )}
-                  </div>
-                </Panel>
+                  {isEncryptEnabled && (
+                    <Form.Item
+                      label="访问密码"
+                      name={['config', 'password']}
+                      rules={[{ required: isEncryptEnabled, message: '请输入访问密码' }]}
+                      className="mb-0!"
+                    >
+                      <Input.Password placeholder="设置访问密码" />
+                    </Form.Item>
+                  )}
+                </Card>
               </aside>
             </div>
           </div>
@@ -621,32 +493,20 @@ const PublishForm = ({ data, closeModel }: Props) => {
         <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur-sm dark:border-strokedark dark:bg-boxdark/95 sm:px-6">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
             <div className="hidden min-w-0 items-center gap-2 sm:flex">
-              <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${modeMeta.tone}`}>
-                {modeMeta.icon}
-                {modeMeta.label}
-              </span>
-              <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+              <Tag color={modeTagColor} className="m-0!">
+                {modeLabel}
+              </Tag>
+              <Typography.Text type="secondary" className="text-xs!">
                 {isEditing ? '保存后将更新线上版本' : '确认信息无误后发布'}
-              </p>
+              </Typography.Text>
             </div>
             <div className="ml-auto flex items-center gap-2.5">
               {showDraftActions && (
-                <Button
-                  className="inline-flex! h-10! items-center! gap-2! rounded-xl! border-slate-200/80! px-5! text-sm! font-medium! shadow-none! hover:border-slate-300! hover:bg-slate-50! dark:border-strokedark! dark:hover:bg-boxdark-2!"
-                  loading={btnLoading}
-                  onClick={handleDraftSave}
-                  icon={<FiSave size={16} />}
-                >
+                <Button loading={btnLoading} onClick={handleDraftSave} icon={<FiSave />}>
                   {draftLabel}
                 </Button>
               )}
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={btnLoading}
-                className="inline-flex! h-10! min-w-32! items-center! gap-2! rounded-xl! px-6! text-sm! font-semibold! shadow-none!"
-                icon={<FiSend size={16} />}
-              >
+              <Button type="primary" htmlType="submit" loading={btnLoading} icon={<FiSend />}>
                 {primaryLabel}
               </Button>
             </div>
