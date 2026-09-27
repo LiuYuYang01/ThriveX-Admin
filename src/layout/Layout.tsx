@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header/index';
 import Sidebar from '../components/Sidebar/index';
+import CommandPalette from '../components/CommandPalette';
 import { useConfigStore } from '@/stores';
 import { useUserStore } from '@/stores';
 import { getUserDataAPI } from '@/api/user';
@@ -45,6 +46,8 @@ export default ({ children }: { children: React.ReactNode }) => {
               {children}
             </div>
           </main>
+
+          <CommandPalette />
         </div>
       </div>
     </div>

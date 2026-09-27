@@ -171,12 +171,10 @@ export default () => {
           ref={inputRef}
           allowClear
           size="large"
-          variant="borderless"
           placeholder="搜索文章、闪念，或输入页面名称跳转"
           prefix={<FiSearch className="text-slate-400" size={16} />}
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          className="rounded-xl! dark:hover:bg-white/5!"
         />
 
         <div ref={listRef} className="mt-2 max-h-[50vh] overflow-y-auto border-t border-slate-100 pt-3 dark:border-strokedark">
@@ -194,9 +192,8 @@ export default () => {
                       data-active={active}
                       onMouseEnter={() => setActiveIndex(index)}
                       onClick={() => select(item)}
-                      className={`mb-0.5 flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-slate-600 dark:text-slate-300 ${
-                        active ? 'bg-primary/10 text-primary' : ''
-                      }`}
+                      className={`mb-0.5 flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-slate-600 dark:text-slate-300 ${active ? 'bg-primary/10 text-primary' : ''
+                        }`}
                     >
                       <span className="flex w-4 shrink-0 justify-center text-sm">{item.icon}</span>
                       <span className={`min-w-0 flex-1 ${item.key.startsWith('record-') ? 'line-clamp-2' : 'truncate'}`}>

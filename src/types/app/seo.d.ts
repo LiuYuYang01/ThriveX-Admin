@@ -1,4 +1,4 @@
-// SEO 体检相关类型
+// SEO 优化相关类型
 
 export interface SeoArticleIssue {
   id: number;

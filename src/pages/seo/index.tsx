@@ -312,7 +312,7 @@ export default function SeoPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col text-slate-600 dark:text-slate-300">
-      <Title value="SEO 体检">
+      <Title value="SEO 优化">
         <Button type="primary" icon={<FiActivity />} loading={runAllLoading} onClick={runAll}>
           开始体检
         </Button>

@@ -72,7 +72,7 @@ export const sidebarRoutes: RouteGroupConfig[] = [
         subMenu: [
           { path: '/setup/system', name: '系统配置', icon: <BiCog className="text-base" /> },
           { path: '/setup/third_party', name: '第三方配置', icon: <BiPlug className="text-base" /> },
-          { path: '/seo', name: 'SEO 体检', icon: <FiActivity className="text-base" /> },
+          { path: '/seo', name: 'SEO 优化', icon: <FiActivity className="text-base" /> },
           { path: '/operation_log', name: '操作日志', icon: <BiHistory className="text-base" /> },
           { path: '/backup', name: '数据库备份', icon: <BiData className="text-base" /> },
         ],

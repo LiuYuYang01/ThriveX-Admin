@@ -83,7 +83,7 @@ export default () => {
                 <button
                   type="button"
                   onClick={() => openTrend(article)}
-                  className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition hover:bg-black/5 dark:hover:bg-white/5"
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
                   title="查看浏览趋势"
                 >
                   <span
