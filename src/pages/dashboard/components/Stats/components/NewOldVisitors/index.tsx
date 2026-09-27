@@ -117,7 +117,7 @@ export default () => {
             <div className="flex w-full items-center">
               <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-primary"></span>
               <p className="flex w-full justify-between text-sm font-medium text-black dark:text-white">
-                <span className="text-black dark:text-slate-400"> 老访客 </span>
+                <span className="text-black dark:text-strokedark"> 老访客 </span>
                 <span> {result.oldVisitors.toFixed(2)}% </span>
               </p>
             </div>

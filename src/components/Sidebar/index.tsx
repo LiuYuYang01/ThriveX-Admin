@@ -191,9 +191,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                         const base =
                                           'group relative flex items-center gap-1.5 rounded-md px-4 duration-300 ease-in-out dark:hover:text-primary!';
                                         if (isSideBarTheme === 'dark') {
-                                          return `${base} ${isActive ? 'text-primary! dark:text-primary! dark:bg-[#1f2838]' : 'text-[#8A99AF] font-medium hover:text-white'}`;
+                                          return `${base} ${isActive ? 'text-primary! dark:text-primary! dark:bg-[#313D4A]' : 'text-[#8A99AF] font-medium hover:text-white'}`;
                                         }
-                                        return `${base} ${isActive ? 'text-primary! dark:text-primary! dark:bg-[#1f2838]' : 'text-[#666]! dark:text-slate-400! hover:text-primary!'}`;
+                                        return `${base} ${isActive ? 'text-primary! dark:text-primary! dark:bg-[#313D4A]' : 'text-[#666]! dark:text-slate-400! hover:text-primary!'}`;
                                       }}
                                     >
                                       {subItem.icon}

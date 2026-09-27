@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header/index';
 import Sidebar from '../components/Sidebar/index';
-import CommandPalette from '../components/CommandPalette';
 import { useConfigStore } from '@/stores';
 import { useUserStore } from '@/stores';
 import { getUserDataAPI } from '@/api/user';
@@ -48,9 +47,6 @@ export default ({ children }: { children: React.ReactNode }) => {
           </main>
         </div>
       </div>
-
-      {/* 全局命令面板 Ctrl+K */}
-      <CommandPalette />
     </div>
   );
 };

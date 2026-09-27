@@ -16,7 +16,6 @@ import { getTagListAPI, addTagDataAPI, editTagDataAPI, delTagDataAPI, getTagData
 import type { Tag } from '@/types/app/tag';
 import Title from '@/components/Title';
 import Skeleton from './Skeleton';
-import TagArticleModal from './components/TagArticleModal';
 
 export default function TagPage() {
   const [loading, setLoading] = useState(false);
@@ -29,7 +28,6 @@ export default function TagPage() {
   const [form] = Form.useForm();
   const [tag, setTag] = useState<Tag>({} as Tag);
   const [list, setList] = useState<Tag[]>([]);
-  const [viewTag, setViewTag] = useState<Tag | null>(null);
 
   const isEditing = Boolean(tag.id);
 
@@ -151,25 +149,17 @@ export default function TagPage() {
         dataIndex: 'count',
         width: 120,
         align: 'center',
-        render: (count: number, record: Tag) => {
-          const hasArticles = Boolean(count);
-          return (
-            <Tooltip title={hasArticles ? '查看关联文章' : ''}>
-              <button
-                type="button"
-                disabled={!hasArticles}
-                onClick={() => setViewTag(record)}
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${hasArticles
-                  ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-primary dark:bg-boxdark-2 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-primary cursor-pointer'
-                  : 'bg-slate-50 text-slate-400 dark:bg-boxdark/60 dark:text-slate-500 cursor-default'
-                  }`}
-              >
-                <FiFileText size={12} />
-                {count ?? 0}
-              </button>
-            </Tooltip>
-          );
-        },
+        render: (count: number) => (
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${count > 0
+              ? 'bg-slate-100 text-slate-600 dark:bg-boxdark-2 dark:text-slate-300'
+              : 'bg-slate-50 text-slate-400 dark:bg-boxdark/60 dark:text-slate-500'
+              }`}
+          >
+            <FiFileText size={12} />
+            {count ?? 0}
+          </span>
+        ),
       },
       {
         title: '操作',
@@ -350,8 +340,6 @@ export default function TagPage() {
           </Spin>
         </aside>
       </div>
-
-      {viewTag && <TagArticleModal tag={viewTag} onClose={() => setViewTag(null)} />}
     </div>
   );
 }

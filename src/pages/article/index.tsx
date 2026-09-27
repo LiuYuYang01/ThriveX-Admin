@@ -32,7 +32,6 @@ import {
   FiImage,
   FiHeart,
   FiShare2,
-  FiBookmark,
 } from 'react-icons/fi';
 import dayjs from 'dayjs';
 
@@ -43,7 +42,7 @@ import Skeleton from './Skeleton';
 
 import { getCateListAPI } from '@/api/cate';
 import { getTagListAPI } from '@/api/tag';
-import { delArticleDataAPI, getArticlePagingAPI, addArticleDataAPI, delBatchArticleDataAPI, topArticleDataAPI } from '@/api/article';
+import { delArticleDataAPI, getArticlePagingAPI, addArticleDataAPI, delBatchArticleDataAPI } from '@/api/article';
 
 import type { Tag as ArticleTag } from '@/types/app/tag';
 import type { Cate as ArticleCate } from '@/types/app/cate';
@@ -52,6 +51,9 @@ import type { Article, Config, ArticleFilterQueryParams, ArticleFilterDataForm }
 import { useWebStore } from '@/stores';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
 import RangePicker from '@/components/RangePicker';
+
+const cateFilterControlClass =
+  'w-full rounded-xl! border-slate-200/80! bg-white! shadow-none! hover:border-slate-300! dark:border-strokedark! dark:bg-boxdark-2! dark:hover:border-slate-600! [&_.ant-select-selection-placeholder]:text-slate-400! dark:[&_.ant-select-selection-placeholder]:text-slate-500! [&_.ant-select-selection-item]:m-0.5! [&_.ant-select-selection-item]:max-w-full! [&_.ant-select-selection-item]:truncate! [&_.ant-select-selection-item]:rounded-md! [&_.ant-select-selection-item]:border-0! [&_.ant-select-selection-item]:bg-primary/10! [&_.ant-select-selection-item]:px-2! [&_.ant-select-selection-item]:py-0! [&_.ant-select-selection-item]:text-xs! [&_.ant-select-selection-item]:font-medium! [&_.ant-select-selection-item]:text-primary! dark:[&_.ant-select-selection-item]:bg-primary/15! dark:[&_.ant-select-selection-item]:text-primary-400! [&_.ant-select-selection-item-remove]:text-primary/50! [&_.ant-select-selection-item-remove]:hover:text-primary! dark:[&_.ant-select-selection-item-remove]:text-primary-400/60! [&_.ant-select-selection-overflow-item]:rounded-md! [&_.ant-select-selection-overflow-item]:border-0! [&_.ant-select-selection-overflow-item]:bg-primary/10! [&_.ant-select-selection-overflow-item]:px-2! [&_.ant-select-selection-overflow-item]:py-0! [&_.ant-select-selection-overflow-item]:text-xs! [&_.ant-select-selection-overflow-item]:font-medium! [&_.ant-select-selection-overflow-item]:text-primary! dark:[&_.ant-select-selection-overflow-item]:bg-primary/15! dark:[&_.ant-select-selection-overflow-item]:text-primary-400!';
 
 function resolveCateIdsFromPaths(paths?: number[][]): number[] | undefined {
   if (!paths?.length) return undefined;
@@ -157,19 +159,6 @@ export default function ArticlePage() {
     [getArticleList],
   );
 
-  const topArticleData = useCallback(
-    async (record: Article) => {
-      try {
-        await topArticleDataAPI(record.id!, !record.isTop);
-        await getArticleList();
-        message.success(record.isTop ? '已取消置顶' : '置顶成功');
-      } catch (error) {
-        console.error('置顶操作失败：', error);
-      }
-    },
-    [getArticleList],
-  );
-
   const columns: ColumnsType<Article> = useMemo(
     () => [
       {
@@ -205,32 +194,22 @@ export default function ArticlePage() {
         width: 280,
         render: (text: string, record: Article) =>
           text ? (
-            <div className="flex max-w-[280px] items-center gap-1.5">
-              {record.isTop && (
-                <Tooltip title="置顶文章">
-                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
-                    <FiBookmark size={10} className="fill-current" />
-                    置顶
-                  </span>
-                </Tooltip>
-              )}
-              <Tooltip title={text} placement="topLeft">
-                <a
-                  href={`${web.url}/article/${record.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group inline-flex min-w-0 items-center gap-2 truncate"
-                >
-                  <span className="truncate font-medium text-slate-700 transition-colors group-hover:text-primary dark:text-slate-200">
-                    {text}
-                  </span>
-                  <FiExternalLink
-                    size={12}
-                    className="shrink-0 text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-slate-500"
-                  />
-                </a>
-              </Tooltip>
-            </div>
+            <Tooltip title={text} placement="topLeft">
+              <a
+                href={`${web.url}/article/${record.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="group inline-flex max-w-[280px] items-center gap-2 truncate"
+              >
+                <span className="truncate font-medium text-slate-700 transition-colors group-hover:text-primary dark:text-slate-200">
+                  {text}
+                </span>
+                <FiExternalLink
+                  size={12}
+                  className="shrink-0 text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-slate-500"
+                />
+              </a>
+            </Tooltip>
           ) : (
             <span className="text-xs italic text-slate-400 dark:text-slate-500">暂无标题</span>
           ),
@@ -347,25 +326,11 @@ export default function ArticlePage() {
         title: '操作',
         key: 'action',
         fixed: 'right',
-        width: 150,
+        width: 120,
         align: 'center',
         render: (_, record: Article) => (
           <div className="flex items-center justify-center gap-0.5">
             <ArticleExport.Single article={record} />
-            <Tooltip title={record.isTop ? '取消置顶' : '置顶'}>
-              <button
-                type="button"
-                onClick={() => topArticleData(record)}
-                className={`flex size-8 items-center justify-center rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer ${
-                  record.isTop
-                    ? 'text-amber-500 dark:text-amber-400'
-                    : 'text-slate-400 hover:text-amber-500 dark:hover:text-amber-400'
-                }`}
-                aria-label={record.isTop ? `取消置顶 ${record.title}` : `置顶 ${record.title}`}
-              >
-                <FiBookmark size={16} className={record.isTop ? 'fill-current' : ''} />
-              </button>
-            </Tooltip>
             <Tooltip title="编辑">
               <Link
                 to={`/create?id=${record.id}`}
@@ -398,7 +363,7 @@ export default function ArticlePage() {
         ),
       },
     ],
-    [web.url, btnLoading, delArticleData, topArticleData],
+    [web.url, btnLoading, delArticleData],
   );
 
   const { onValuesChange: onFilterChange } = useDebouncedChange<ArticleFilterDataForm>({
@@ -630,6 +595,7 @@ export default function ArticlePage() {
                     fieldNames={{ label: 'name', value: 'id' }}
                     placeholder="分类"
                     allowClear
+                    className={cateFilterControlClass}
                   />
                 </Form.Item>
                 <Form.Item name="tagId" className="mb-0! w-[calc(50%-4px)] sm:w-28">
@@ -732,7 +698,7 @@ export default function ArticlePage() {
             dataSource={articleList}
             columns={columns}
             loading={loading}
-            scroll={{ x: 1558 }}
+            scroll={{ x: 1528 }}
             pagination={{
               position: ['bottomRight'],
               current: filter?.pageNum,
