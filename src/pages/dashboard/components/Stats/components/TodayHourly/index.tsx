@@ -27,7 +27,7 @@ export default () => {
 
   const options: ApexOptions = {
     chart: { fontFamily: 'Satoshi, sans-serif', toolbar: { show: false } },
-    colors: ['#34d399'],
+    colors: ['#10b981'],
     plotOptions: { bar: { columnWidth: '35%' } },
     dataLabels: { enabled: false },
     grid: { strokeDashArray: 4, borderColor: 'rgba(148, 163, 184, 0.25)' },

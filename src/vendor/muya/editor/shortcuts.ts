@@ -54,6 +54,15 @@ export function handleEditorShortcuts(muya: Muya, event: Event): boolean {
     if (!label)
         return false;
 
+    // Q/O/U/X 必须搭配 Shift（如 Ctrl+Shift+X），裸 Ctrl+X 放行给原生剪切
+    if (event.code === 'KeyQ' || event.code === 'KeyO' || event.code === 'KeyU' || event.code === 'KeyX') {
+        if (!event.shiftKey)
+            return false;
+    }
+    else if (event.shiftKey) {
+        return false;
+    }
+
     const selection = muya.editor.selection.getSelection();
     const anchorBlock = selection?.anchor.block as Content | undefined;
     if (!selection?.isSelectionInSameBlock || !anchorBlock?.text)

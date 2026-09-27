@@ -18,11 +18,8 @@ export default () => {
   const max = Math.max(...list.map((item) => item.count), 1);
 
   return (
-    <div className="col-span-12 flex flex-col rounded-xl border border-stroke bg-light-gradient dark:bg-dark-gradient px-5 pt-7 pb-5 shadow-default dark:border-transparent sm:px-7 xl:col-span-4">
-      <Spin
-        spinning={loading}
-        className="flex flex-1 flex-col [&_.ant-spin-container]:flex [&_.ant-spin-container]:flex-1 [&_.ant-spin-container]:flex-col"
-      >
+    <div className="col-span-12 rounded-xl border border-stroke bg-light-gradient dark:bg-dark-gradient px-5 pt-7 pb-5 shadow-default dark:border-transparent sm:px-7 xl:col-span-4">
+      <Spin spinning={loading}>
         <div className="mb-4 flex items-center justify-between gap-4">
           <h5 className="text-xl font-semibold text-black dark:text-white">搜索热词</h5>
           <span className="text-xs text-slate-400">近 30 天</span>
@@ -31,16 +28,16 @@ export default () => {
         {list.length === 0 && !loading ? (
           <Empty />
         ) : (
-          <ul className="flex flex-1 flex-col justify-center gap-5">
+          <ul className="flex flex-col gap-4">
             {list.map((item) => (
               <li key={item.keyword}>
                 <div className="flex items-center justify-between gap-3">
                   <span className="truncate text-sm text-black dark:text-white">{item.keyword}</span>
                   <span className="shrink-0 text-xs text-slate-400">{item.count} 次</span>
                 </div>
-                <div className="mt-1.5 h-1.5 w-full rounded-full bg-slate-200/70 dark:bg-slate-700/70">
+                <div className="mt-1.5 h-2 w-full rounded-full bg-slate-200/70 dark:bg-slate-700/70">
                   <div
-                    className="h-full rounded-full bg-primary"
+                    className="h-full rounded-full bg-[#eab308]"
                     style={{ width: `${Math.max((item.count / max) * 100, 4)}%` }}
                   />
                 </div>

@@ -68,11 +68,8 @@ export default () => {
   };
 
   return (
-    <div className="col-span-12 flex flex-col rounded-xl border border-stroke bg-light-gradient dark:bg-dark-gradient px-5 pt-7 pb-5 shadow-default dark:border-transparent sm:px-7 xl:col-span-4">
-      <Spin
-        spinning={loading}
-        className="flex flex-1 flex-col [&_.ant-spin-container]:flex [&_.ant-spin-container]:flex-1 [&_.ant-spin-container]:flex-col"
-      >
+    <div className="col-span-12 rounded-xl border border-stroke bg-light-gradient dark:bg-dark-gradient px-5 pt-7 pb-5 shadow-default dark:border-transparent sm:px-7 xl:col-span-4">
+      <Spin spinning={loading}>
         <div className="mb-4 flex items-center justify-between gap-4">
           <h5 className="text-xl font-semibold text-black dark:text-white">热门文章</h5>
           <span className="text-xs text-slate-400">近 30 天</span>
@@ -81,7 +78,7 @@ export default () => {
         {list.length === 0 && !loading ? (
           <Empty />
         ) : (
-          <ul className="flex flex-1 flex-col justify-center gap-1">
+          <ul className="flex flex-col gap-1">
             {list.map((article, index) => (
               <li key={article.id}>
                 <button
