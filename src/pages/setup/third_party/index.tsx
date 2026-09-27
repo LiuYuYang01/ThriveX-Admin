@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { BiBarChart, BiCrosshair, BiEnvelope, BiHdd, BiLineChart, BiMap, BiShield } from 'react-icons/bi';
+import { BiArchive, BiBarChart, BiCrosshair, BiEnvelope, BiHdd, BiLineChart, BiMap, BiShield } from 'react-icons/bi';
 
 import Title from '@/components/Title';
+import BackupStorageForm from '@/components/BackupStorageForm';
 import { getEnvConfigListAPI } from '@/api/config';
 import { Config, THIRD_PARTY_ENV_NAMES, ThirdPartyEnvName } from '@/types/app/config';
 import ThirdPartySkeleton from './Skeleton';
@@ -63,6 +64,12 @@ const MENU_LIST: MenuItem[] = [
     title: '文件存储',
     description: '本地存储或七牛云的切换与参数配置',
     icon: <BiHdd />,
+  },
+  {
+    key: 'backup_storage',
+    title: '备份存储',
+    description: '数据库备份的云端存储与定时备份',
+    icon: <BiArchive />,
   },
   {
     key: 'hcaptcha_key',
@@ -194,6 +201,9 @@ export default function ThirdPartyConfigPage() {
             {activeKey === 'gaode_coordinate' && <GaodeCoordinateForm row={byName[activeKey]} onSaved={reload} />}
             {activeKey === 'storage' && (
               <StorageForm row={byName[activeKey]} qiniuRow={byName['qiniu_storage']} onSaved={reload} />
+            )}
+            {activeKey === 'backup_storage' && (
+              <BackupStorageForm row={byName[activeKey]} qiniuRow={byName['qiniu_storage']} onSaved={reload} />
             )}
             {activeKey === 'hcaptcha_key' && <HcaptchaForm row={byName[activeKey]} onSaved={reload} />}
           </div>

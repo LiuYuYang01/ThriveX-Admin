@@ -19,6 +19,13 @@ export interface ViewTrendItem {
   count: number
 }
 
+export interface SiteSummary {
+  articleCount: number
+  totalWords: number
+  totalViews: number
+  totalLikes: number
+}
+
 // 热门文章排行（基于自建浏览日志）
 export const getHotArticlesAPI = (days = 30, limit = 10) =>
   Request<HotArticle[]>('GET', '/analysis/hot-articles', { params: { days, limit } })
@@ -30,3 +37,6 @@ export const getHotKeywordsAPI = (days = 30, limit = 10) =>
 // 单篇文章按天浏览趋势
 export const getArticleViewTrendAPI = (articleId: number, days = 30) =>
   Request<ViewTrendItem[]>('GET', '/analysis/view-trend', { params: { articleId, days } })
+
+// 站点内容概览（可见文章的累计数据）
+export const getSiteSummaryAPI = () => Request<SiteSummary>('GET', '/analysis/site-summary')

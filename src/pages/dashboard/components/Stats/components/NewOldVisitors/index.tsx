@@ -15,7 +15,7 @@ const options: ApexOptions = {
     fontFamily: 'Satoshi, sans-serif',
     type: 'donut',
   },
-  colors: ['#91C8EA', '#60a5fa'],
+  colors: ['#3b82f6', '#f59e0b'],
   labels: ['新访客', '老访客'],
   legend: {
     show: false,
@@ -105,7 +105,7 @@ export default () => {
         <div className="-mx-8 mt-8 flex flex-wrap items-center justify-center gap-y-3">
           <div className="sm:w-1/2 w-full px-8">
             <div className="flex w-full items-center">
-              <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#91C8EA]"></span>
+              <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#3b82f6]"></span>
               <p className="flex w-full justify-between text-sm font-medium text-black dark:text-white">
                 <span className="text-black dark:text-slate-400"> 新访客 </span>
                 <span> {result.newVisitors.toFixed(2)}% </span>
@@ -115,7 +115,7 @@ export default () => {
 
           <div className="sm:w-1/2 w-full px-8">
             <div className="flex w-full items-center">
-              <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-primary"></span>
+              <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#f59e0b]"></span>
               <p className="flex w-full justify-between text-sm font-medium text-black dark:text-white">
                 <span className="text-black dark:text-strokedark"> 老访客 </span>
                 <span> {result.oldVisitors.toFixed(2)}% </span>

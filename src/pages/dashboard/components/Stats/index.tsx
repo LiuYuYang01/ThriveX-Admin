@@ -5,11 +5,22 @@ import NewOldVisitors from './components/NewOldVisitors';
 import HotArticles from './components/HotArticles';
 import HotKeywords from './components/HotKeywords';
 import VisitorProfile from './components/VisitorProfile';
+import TodayHourly from './components/TodayHourly';
 import CardDataStats from '@/components/CardDataStats';
 
-import { AiOutlineEye, AiOutlineMeh, AiOutlineStock, AiOutlineFieldTime } from 'react-icons/ai';
+import {
+  AiOutlineEye,
+  AiOutlineMeh,
+  AiOutlineStock,
+  AiOutlineFieldTime,
+  AiOutlineFileText,
+  AiOutlineAlignLeft,
+  AiOutlineFire,
+  AiOutlineLike,
+} from 'react-icons/ai';
 import dayjs from 'dayjs';
 import { getStatisAPI } from '@/api/statis';
+import { getSiteSummaryAPI, SiteSummary } from '@/api/analysis';
 import { StatisResponse } from './components/VisitorsStatisChat/type';
 
 export default () => {
@@ -22,7 +33,17 @@ export default () => {
     avgTime: '',
   });
 
+  const [summary, setSummary] = useState<SiteSummary>({
+    articleCount: 0,
+    totalWords: 0,
+    totalViews: 0,
+    totalLikes: 0,
+  });
+
   const date = dayjs(new Date()).format('YYYY/MM/DD');
+
+  // 万级数字缩写
+  const formatCount = (n: number) => (n >= 10000 ? `${(n / 10000).toFixed(1)}万` : `${n}`);
 
   const formatTime = (seconds: number) => {
     // 四舍五入到最接近的整数
@@ -43,7 +64,11 @@ export default () => {
     try {
       setLoading(true);
 
-      const { data } = await getStatisAPI('overview', date, date);
+      const [{ data }, { data: summaryData }] = await Promise.all([
+        getStatisAPI('overview', date, date),
+        getSiteSummaryAPI(),
+      ]);
+      if (summaryData) setSummary(summaryData);
       if (!data) return setLoading(false);
       const { result } = data as StatisResponse;
 
@@ -121,6 +146,25 @@ export default () => {
         </CardDataStats>
       </div>
 
+      {/* 站点累计 */}
+      <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
+        <CardDataStats title="文章总数" total={formatCount(summary.articleCount)}>
+          <AiOutlineFileText className="fill-primary dark:fill-white text-2xl" />
+        </CardDataStats>
+
+        <CardDataStats title="累计字数" total={formatCount(summary.totalWords)}>
+          <AiOutlineAlignLeft className="fill-primary dark:fill-white text-2xl" />
+        </CardDataStats>
+
+        <CardDataStats title="累计浏览" total={formatCount(summary.totalViews)}>
+          <AiOutlineFire className="fill-primary dark:fill-white text-2xl" />
+        </CardDataStats>
+
+        <CardDataStats title="累计获赞" total={formatCount(summary.totalLikes)}>
+          <AiOutlineLike className="fill-primary dark:fill-white text-2xl" />
+        </CardDataStats>
+      </div>
+
       <div className="rounded-xl mt-2 grid grid-cols-12 gap-2 mb-[15px]">
         <VisitorsStatisChat />
         <NewOldVisitors />
@@ -130,6 +174,10 @@ export default () => {
         <HotArticles />
         <HotKeywords />
         <VisitorProfile />
+      </div>
+
+      <div className="grid grid-cols-12 gap-2 mb-[15px]">
+        <TodayHourly />
       </div>
     </Spin>
   );

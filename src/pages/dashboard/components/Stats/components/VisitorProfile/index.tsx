@@ -13,7 +13,8 @@ interface ProfileItem {
   value: number;
 }
 
-const COLORS = ['#60a5fa', '#91C8EA', '#3b82f6', '#93c5fd', '#1d4ed8', '#bfdbfe', '#2563eb', '#7dd3fc'];
+// 设备环形图用品牌蓝的深浅层次（地域柱状图同为蓝色系）
+const COLORS = ['#2563eb', '#60a5fa', '#93c5fd', '#1d4ed8', '#bfdbfe', '#3b82f6', '#7dd3fc', '#91C8EA'];
 
 // 百度维度报表的 items 结构：items[0] 为维度名行，items[1] 为指标值行
 // 新版维度单元格是对象如 {"name":"广东"}，趋势类仍是数组/字符串

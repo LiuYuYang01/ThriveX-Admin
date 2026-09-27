@@ -92,6 +92,7 @@ export type EnvConfigName =
   | 'gaode_coordinate'
   | 'qiniu_storage'
   | 'storage'
+  | 'backup_storage'
   | 'hcaptcha_key';
 
 /** 在项目配置「环境配置」表格中隐藏、改由「第三方配置」页表单维护的 name */
@@ -103,6 +104,7 @@ export const THIRD_PARTY_ENV_NAMES = [
   'gaode_coordinate',
   'qiniu_storage',
   'storage',
+  'backup_storage',
   'hcaptcha_key',
 ] as const;
 export type ThirdPartyEnvName = (typeof THIRD_PARTY_ENV_NAMES)[number];
@@ -171,6 +173,24 @@ export const DEFAULT_STORAGE_ENV_VALUE: StorageEnvValue = {
   type: 'local',
   domain: '',
 };
+
+/** 数据库备份存储方式 */
+export type BackupStorageType = 'local' | 'qiniu';
+
+/** 数据库备份存储与定时备份 */
+export interface BackupStorageEnvValue {
+  type: BackupStorageType;
+  /** 七牛私有桶名称（密钥复用 qiniu_storage 的 AK/SK） */
+  bucket_name: string;
+  /** 私有桶绑定的下载域名 */
+  domain: string;
+  /** 定时备份开关 */
+  enabled: boolean;
+  /** 定时备份 cron 表达式（Spring cron） */
+  cron: string;
+  /** 定时备份保留份数，0 为不清理 */
+  retain_count: number;
+}
 
 export interface Config {
   id: string;

@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, notification, Popconfirm, Table, Tag, Tooltip } from 'antd';
+import { Button, Drawer, notification, Popconfirm, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { saveAs } from 'file-saver';
-import { FiDownload, FiTrash2, FiUploadCloud } from 'react-icons/fi';
+import { FiDownload, FiSettings, FiTrash2, FiUploadCloud } from 'react-icons/fi';
 
 import { delBackupDataAPI, exportBackupDataAPI, getBackupListAPI } from '@/api/backup';
+import { getEnvConfigListAPI } from '@/api/config';
+import BackupStorageForm from '@/components/BackupStorageForm';
 import Title from '@/components/Title';
 import { useUserStore } from '@/stores';
 import { getApiUrl } from '@/utils/config';
 import type { BackupRecord } from '@/types/app/backup';
+import type { Config } from '@/types/app/config';
 
 import Skeleton from './Skeleton';
 
@@ -33,6 +36,25 @@ export default function BackupPage() {
   const [list, setList] = useState<BackupRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [filter, setFilter] = useState<QueryParams>({ pageNum: 1, pageSize: DEFAULT_PAGE_SIZE });
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [configRows, setConfigRows] = useState<Config[]>([]);
+
+  const backupRow = configRows.find((r) => r.name === 'backup_storage');
+  const qiniuRow = configRows.find((r) => r.name === 'qiniu_storage');
+
+  const loadConfigRows = useCallback(async () => {
+    try {
+      const { data } = await getEnvConfigListAPI();
+      setConfigRows(data);
+    } catch (error) {
+      console.error('获取环境配置失败：', error);
+    }
+  }, []);
+
+  const openSettings = () => {
+    setSettingsOpen(true);
+    void loadConfigRows();
+  };
 
   const getBackupList = useCallback(async () => {
     try {
@@ -202,22 +224,27 @@ export default function BackupPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <Title value="数据库备份">
-        <Popconfirm
-          title="立即备份"
-          description="将导出包含用户数据在内的全部数据库内容，请妥善保管备份文件。"
-          okText="开始备份"
-          cancelText="取消"
-          onConfirm={onExport}
-        >
-          <Button
-            type="primary"
-            icon={<FiUploadCloud />}
-            loading={exporting}
-            className="inline-flex items-center gap-1"
-          >
-            立即备份
+        <div className="flex items-center gap-2">
+          <Button icon={<FiSettings />} onClick={openSettings} className="inline-flex items-center gap-1">
+            备份设置
           </Button>
-        </Popconfirm>
+          <Popconfirm
+            title="立即备份"
+            description="将导出包含用户数据在内的全部数据库内容，请妥善保管备份文件。"
+            okText="开始备份"
+            cancelText="取消"
+            onConfirm={onExport}
+          >
+            <Button
+              type="primary"
+              icon={<FiUploadCloud />}
+              loading={exporting}
+              className="inline-flex items-center gap-1"
+            >
+              立即备份
+            </Button>
+          </Popconfirm>
+        </div>
       </Title>
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
@@ -237,6 +264,10 @@ export default function BackupPage() {
           }}
         />
       </section>
+
+      <Drawer title="备份设置" width={520} open={settingsOpen} onClose={() => setSettingsOpen(false)}>
+        <BackupStorageForm row={backupRow} qiniuRow={qiniuRow} onSaved={loadConfigRows} />
+      </Drawer>
     </div>
   );
 }

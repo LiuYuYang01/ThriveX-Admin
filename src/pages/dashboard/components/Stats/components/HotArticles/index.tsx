@@ -6,7 +6,8 @@ import Empty from '@/components/Empty';
 import { getHotArticlesAPI, getArticleViewTrendAPI } from '@/api/analysis';
 import type { HotArticle, ViewTrendItem } from '@/api/analysis';
 
-const RANK_COLORS = ['bg-primary', 'bg-[#60a5fa]', 'bg-[#91C8EA]'];
+// 前三名金银铜奖牌色，其余用中性灰
+const RANK_COLORS = ['bg-[#f59e0b]', 'bg-[#94a3b8]', 'bg-[#d97706]'];
 
 export default () => {
   const [loading, setLoading] = useState(true);
