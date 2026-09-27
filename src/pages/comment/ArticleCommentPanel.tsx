@@ -449,7 +449,7 @@ export default function ArticleCommentPanel() {
                 position: ['bottomRight'],
                 pageSize: 8,
                 showSizeChanger: false,
-                className: 'px-4! py-3!',
+                className: 'px-4!',
                 showTotal: (total) => (
                   <span className="text-xs text-slate-500 dark:text-slate-400">共 {total} 条</span>
                 ),

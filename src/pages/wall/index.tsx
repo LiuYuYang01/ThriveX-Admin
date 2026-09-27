@@ -609,7 +609,7 @@ export default function WallPage() {
                   pageNum: page,
                   pageSize: size ?? prev.pageSize ?? 8,
                 })),
-              className: 'px-4! py-3!',
+              className: 'px-4!',
               showTotal: (t) => (
                 <span className="text-xs text-slate-500 dark:text-slate-400">共 {t} 条</span>
               ),

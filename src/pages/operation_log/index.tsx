@@ -418,6 +418,7 @@ export default function OperationLogPage() {
                   setPagination({ current, pageSize });
                   void getLogList(current, pageSize);
                 },
+                className:'px-5!'
               }}
               scroll={{ x: 1150 }}
             />

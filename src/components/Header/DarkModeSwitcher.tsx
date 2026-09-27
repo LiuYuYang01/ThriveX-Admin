@@ -5,7 +5,7 @@ const DarkModeSwitcher = () => {
   const setColorMode = useConfigStore((state) => state.setColorMode);
 
   return (
-    <li className="ml-4">
+    <li>
       <label className={`relative m-0 block h-7 w-14 rounded-full ${colorMode === 'dark' ? 'bg-primary' : 'bg-stroke'}`}>
         <input
           type="checkbox"

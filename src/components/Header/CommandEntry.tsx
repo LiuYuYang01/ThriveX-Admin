@@ -13,15 +13,15 @@ const CommandEntry = () => {
   }, []);
 
   return (
-    <li className="ml-4">
+    <li>
       <button
         type="button"
         onClick={openPalette}
         aria-label="搜索"
         title="搜索"
-        className="flex cursor-pointer items-center gap-2 rounded-lg border border-stroke bg-white px-2.5 py-1.5 text-xs text-gray-500 shadow-xs hover:text-primary dark:border-strokedark dark:bg-boxdark dark:text-gray-400"
+        className="flex h-7 cursor-pointer items-center gap-1.5 rounded-full border border-stroke bg-white/70 px-2.5 text-xs text-gray-500 shadow-xs hover:border-primary/50 hover:text-primary dark:border-strokedark dark:bg-white/5 dark:text-gray-400 dark:hover:border-primary/50"
       >
-        <FiSearch size={14} />
+        <FiSearch size={13} />
         搜索
         {shortcut && (
           <kbd className="rounded border border-stroke px-1 py-0.5 text-[10px] leading-none dark:border-strokedark">{shortcut}</kbd>
