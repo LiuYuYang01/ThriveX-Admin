@@ -169,6 +169,8 @@ a {
         min-height: auto !important;
         padding-inline: 6px 0;
         font-size: 13px;
+        /* 行高超过自适应高度时 Chrome 会裁剪光标，导致光标只剩一个小点 */
+        line-height: normal;
     }
 
     .ant-input-prefix,
@@ -200,6 +202,11 @@ a {
         height: var(--antd-control-height) !important;
         padding-inline: 12px !important;
         align-items: center;
+    }
+
+    /* 下拉搜索框同样是自适应高度 input，行高超过高度会裁剪光标 */
+    .ant-select-selection-search-input {
+        line-height: normal;
     }
 
     &:not(.ant-select-multiple) .ant-select-selection-placeholder,
@@ -254,6 +261,8 @@ a {
 
     .ant-picker-input > input {
         font-size: 13px;
+        /* 同 affix-wrapper 内 input：行高超过自适应高度会裁剪光标 */
+        line-height: normal;
         color: var(--antd-control-text);
 
         &::placeholder {

@@ -694,7 +694,7 @@ export default () => {
   const [cleanupDeleting, setCleanupDeleting] = useState(false);
 
   useEffect(() => {
-    getEnvConfigDataAPI('storage')
+    getEnvConfigDataAPI('local_storage')
       .then(({ data }) => setIsLocalStorage(((data.value as Partial<StorageEnvValue>)?.type ?? 'qiniu') === 'local'))
       .catch((e) => console.error(e));
   }, []);

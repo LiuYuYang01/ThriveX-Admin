@@ -25,7 +25,7 @@ export default function StorageConfigForm({ onSuccess }: InitStepFormProps) {
       setLoading(true);
       try {
         const [storageRes, qiniuRes] = await Promise.all([
-          getEnvConfigDataAPI('storage'),
+          getEnvConfigDataAPI('local_storage'),
           getEnvConfigDataAPI('qiniu_storage'),
         ]);
 

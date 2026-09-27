@@ -60,7 +60,7 @@ const MENU_LIST: MenuItem[] = [
     icon: <BiCrosshair />,
   },
   {
-    key: 'storage',
+    key: 'local_storage',
     title: '文件存储',
     description: '本地存储或七牛云的切换与参数配置',
     icon: <BiHdd />,
@@ -199,7 +199,7 @@ export default function ThirdPartyConfigPage() {
             {activeKey === 'email' && <EmailForm row={byName[activeKey]} onSaved={reload} />}
             {activeKey === 'gaode_map_key' && <GaodeMapForm row={byName[activeKey]} onSaved={reload} />}
             {activeKey === 'gaode_coordinate' && <GaodeCoordinateForm row={byName[activeKey]} onSaved={reload} />}
-            {activeKey === 'storage' && (
+            {activeKey === 'local_storage' && (
               <StorageForm row={byName[activeKey]} qiniuRow={byName['qiniu_storage']} onSaved={reload} />
             )}
             {activeKey === 'backup_storage' && (

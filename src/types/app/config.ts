@@ -91,7 +91,7 @@ export type EnvConfigName =
   | 'gaode_map_key'
   | 'gaode_coordinate'
   | 'qiniu_storage'
-  | 'storage'
+  | 'local_storage'
   | 'backup_storage'
   | 'hcaptcha_key';
 
@@ -103,7 +103,7 @@ export const THIRD_PARTY_ENV_NAMES = [
   'gaode_map_key',
   'gaode_coordinate',
   'qiniu_storage',
-  'storage',
+  'local_storage',
   'backup_storage',
   'hcaptcha_key',
 ] as const;
