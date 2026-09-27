@@ -15,6 +15,9 @@ export function BaiduForm({ row, onSaved }: ThirdPartyFormProps) {
     form.setFieldsValue({
       site_id: v?.site_id ?? 0,
       access_token: v?.access_token ?? '',
+      refresh_token: v?.refresh_token ?? '',
+      client_id: v?.client_id ?? '',
+      client_secret: v?.client_secret ?? '',
     });
   }, [row, form]);
 
@@ -42,6 +45,23 @@ export function BaiduForm({ row, onSaved }: ThirdPartyFormProps) {
       </Form.Item>
       <Form.Item name="access_token" label="Access Token" rules={[{ required: true, message: '请输入 Access Token' }]}>
         <Input.Password placeholder="e5bf799a3e49312141c8b677b7bec1c2" autoComplete="off" />
+      </Form.Item>
+      <Form.Item
+        name="refresh_token"
+        label="Refresh Token"
+        extra="长期刷新凭证（有效期 10 年），与 ApiKey/SecretKey 一起配置后 token 每周自动续期，无需再手动更换"
+      >
+        <Input.Password placeholder="填写后启用自动续期" autoComplete="off" />
+      </Form.Item>
+      <Form.Item
+        name="client_id"
+        label="ApiKey（client_id）"
+        extra="百度统计「数据导出」应用管理中的 ApiKey"
+      >
+        <Input placeholder="与 Refresh Token 配套填写" autoComplete="off" />
+      </Form.Item>
+      <Form.Item name="client_secret" label="SecretKey（client_secret）">
+        <Input.Password placeholder="百度统计「数据导出」应用管理中的 SecretKey" autoComplete="off" />
       </Form.Item>
       <Form.Item>
         <Button type="primary" htmlType="submit" loading={saving} className="w-full">

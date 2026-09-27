@@ -52,6 +52,7 @@ const MODULE_OPTIONS = [
   '邮件管理',
   '操作日志管理',
   '鱼塘管理',
+  'SEO优化',
 ].map((name) => ({ label: name, value: name }));
 
 const TYPE_OPTIONS = ['新增', '修改', '删除', '登录', '操作'].map((name) => ({ label: name, value: name }));

@@ -110,6 +110,12 @@ export type ThirdPartyEnvName = (typeof THIRD_PARTY_ENV_NAMES)[number];
 export interface BaiduStatisEnvValue {
   site_id: number;
   access_token: string;
+  /** 长期刷新凭证，配置后 token 自动续期，无需手动更换 */
+  refresh_token: string;
+  /** 百度统计数据导出应用的 ApiKey */
+  client_id: string;
+  /** 百度统计数据导出应用的 SecretKey */
+  client_secret: string;
 }
 
 /** 百度统计前端脚本等使用的 Key */
