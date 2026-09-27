@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import Empty from '@/components/Empty';
 import { getStatisAPI } from '@/api/statis';
 
-type ProfileKey = 'region' | 'source' | 'client';
+type ProfileKey = 'region' | 'client';
 
 interface ProfileItem {
   name: string;
@@ -16,6 +16,7 @@ interface ProfileItem {
 const COLORS = ['#60a5fa', '#91C8EA', '#3b82f6', '#93c5fd', '#1d4ed8', '#bfdbfe', '#2563eb', '#7dd3fc'];
 
 // 百度维度报表的 items 结构：items[0] 为维度名行，items[1] 为指标值行
+// 新版维度单元格是对象如 {"name":"广东"}，趋势类仍是数组/字符串
 const parseBaiduItems = (payload: unknown): ProfileItem[] => {
   const result = (payload as { result?: { items?: unknown[] } } | null | undefined)?.result;
   const items = result?.items;
@@ -24,7 +25,9 @@ const parseBaiduItems = (payload: unknown): ProfileItem[] => {
   const [nameRows, valueRows] = items as unknown[][];
   return nameRows
     .map((row, index) => {
-      const name = Array.isArray(row) ? String(row[0]) : String(row);
+      const cell = Array.isArray(row) ? row[0] : row;
+      const name =
+        cell !== null && typeof cell === 'object' ? String((cell as { name?: unknown }).name) : String(cell);
       const valueRow = valueRows[index];
       const value = Number(Array.isArray(valueRow) ? valueRow[0] : valueRow) || 0;
       return { name, value };
@@ -43,7 +46,6 @@ export default () => {
   const [loading, setLoading] = useState(true);
   const [state, setState] = useState<Record<ProfileKey, ProfileItem[]>>({
     region: [],
-    source: [],
     client: [],
   });
 
@@ -60,12 +62,13 @@ export default () => {
       }
     };
 
-    Promise.all([fetchOne('region'), fetchOne('source'), fetchOne('client')])
-      .then(([region, source, client]) => setState({ region, source, client }))
+    // 来源分类报表（visit/source/all/a）已被百度开放 API 下线，暂无替代方法名
+    Promise.all([fetchOne('region'), fetchOne('client')])
+      .then(([region, client]) => setState({ region, client }))
       .finally(() => setLoading(false));
   }, []);
 
-  const isAllEmpty = !state.region.length && !state.source.length && !state.client.length;
+  const isAllEmpty = !state.region.length && !state.client.length;
 
   const renderRegion = () => {
     const top = state.region.slice(0, 10);
@@ -131,7 +134,6 @@ export default () => {
             size="small"
             items={[
               { key: 'region', label: '地域', children: renderRegion() },
-              { key: 'source', label: '来源', children: renderDonut(state.source) },
               { key: 'client', label: '设备', children: renderDonut(state.client) },
             ]}
           />
