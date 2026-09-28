@@ -1740,7 +1740,7 @@ export default () => {
         title="清理未引用文件"
         open={cleanupOpen}
         onCancel={() => setCleanupOpen(false)}
-        width={760}
+        width={920}
         footer={
           cleanupResult && cleanupResult.count > 0 ? (
             <div className="flex items-center justify-between gap-3">
@@ -1811,15 +1811,15 @@ export default () => {
                       ellipsis: true,
                       render: (_, item) => (
                         <Tooltip title={item.path}>
-                          <span className="block max-w-52 truncate text-sm">{item.name}</span>
+                          <span className="block max-w-72 truncate text-sm">{item.name}</span>
                         </Tooltip>
                       ),
                     },
-                    { title: '目录', dataIndex: 'dir', width: 110, ellipsis: true },
+                    { title: '目录', dataIndex: 'dir', width: 170, ellipsis: true },
                     {
                       title: '大小',
                       dataIndex: 'size',
-                      width: 90,
+                      width: 110,
                       render: (size?: number) => <span className="tabular-nums">{formatFileSize(size ?? 0)}</span>,
                     },
                     {
