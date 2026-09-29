@@ -8,7 +8,7 @@ export default function Skeleton() {
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
         <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
-          <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
+          <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-2 dark:border-strokedark">
             <div className="flex flex-wrap items-center gap-2">
               <div className="skeleton h-4 rounded-md" style={{ width: 88 }} />
               <div className="skeleton h-5 rounded-full" style={{ width: 28 }} />

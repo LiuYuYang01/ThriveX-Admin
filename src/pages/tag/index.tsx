@@ -223,7 +223,7 @@ export default function TagPage() {
       <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
         {/* 列表区 */}
         <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
-          <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
+          <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-2 dark:border-strokedark">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">全部标签</h3>
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-boxdark-2 dark:text-slate-300">

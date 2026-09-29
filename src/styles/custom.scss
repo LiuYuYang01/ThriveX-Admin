@@ -72,3 +72,20 @@
     );
     background-size: 200% 100%;
 }
+
+// 卡片入场动画
+@keyframes rise-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.rise-in {
+    animation: rise-in .45s cubic-bezier(.22, .61, .36, 1) backwards;
+}

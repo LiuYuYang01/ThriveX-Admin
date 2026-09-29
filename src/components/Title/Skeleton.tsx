@@ -38,7 +38,7 @@ export default function TitleSkeleton({
 
   return (
     <div
-      className={`mb-2 rounded-2xl border border-slate-200/80 bg-white px-5 py-3.5 dark:border-strokedark dark:bg-boxdark ${className}`}
+      className={`mb-2 rounded-2xl border border-slate-200/80 bg-white px-5 ${action !== 'none' ? 'py-2' : 'py-3'} dark:border-strokedark dark:bg-boxdark ${className}`}
     >
       <div className="flex items-center justify-between gap-4 overflow-auto">
         <div className="skeleton h-7 min-w-24 shrink-0 rounded-md" style={{ width: titleWidth }} />

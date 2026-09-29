@@ -1766,7 +1766,7 @@ export default () => {
         }
         destroyOnHidden
       >
-        <Spin spinning={cleanupLoading} tip="正在扫描全部业务数据与文件，请稍候…">
+        <Spin spinning={cleanupLoading} tip="正在扫描，请稍候…">
           {cleanupResult && (
             <>
               <Alert
@@ -1834,6 +1834,8 @@ export default () => {
               )}
             </>
           )}
+          {/* 扫描中内容为空，给占位高度避免加载提示被截断 */}
+          {!cleanupResult && <div className="h-44" />}
         </Spin>
       </Modal>
 

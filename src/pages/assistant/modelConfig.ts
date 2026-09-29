@@ -18,6 +18,8 @@ export type AssistantModelTheme = {
   icon: string;
   logo?: string;
   logoShape?: 'avatar' | 'default';
+  /** 卡片顶部品牌色渗透渐变（gradient from 色） */
+  washClass: string;
 };
 
 /** 预设服务商（面向文本创作与长文写作场景） */
@@ -63,12 +65,14 @@ const ASSISTANT_MODEL_THEME_MAP: Record<string, AssistantModelTheme> = {
     textClass: 'text-blue-600 dark:text-blue-400',
     icon: 'DS',
     logo: deepseekLogo,
+    washClass: 'from-blue-100/80 dark:from-blue-500/15',
   },
   'qwen-max': {
     bgClass: 'bg-red-100 dark:bg-red-900/40',
     textClass: 'text-red-600 dark:text-red-400',
     icon: 'QW',
     logo: qwenLogo,
+    washClass: 'from-red-100/80 dark:from-red-500/15',
   },
   'glm-4-long': {
     bgClass: 'bg-pink-100 dark:bg-pink-900/40',
@@ -76,12 +80,14 @@ const ASSISTANT_MODEL_THEME_MAP: Record<string, AssistantModelTheme> = {
     icon: 'GLM',
     logo: glmLogo,
     logoShape: 'avatar',
+    washClass: 'from-pink-100/80 dark:from-pink-500/15',
   },
   'ernie-4.5-turbo-128k': {
     bgClass: 'bg-amber-100 dark:bg-amber-900/40',
     textClass: 'text-amber-600 dark:text-amber-400',
     icon: 'EB',
     logo: ernieLogo,
+    washClass: 'from-amber-100/80 dark:from-amber-500/15',
   },
   'doubao-pro-128k': {
     bgClass: 'bg-indigo-100 dark:bg-indigo-900/40',
@@ -89,6 +95,7 @@ const ASSISTANT_MODEL_THEME_MAP: Record<string, AssistantModelTheme> = {
     icon: 'DB',
     logo: doubaoLogo,
     logoShape: 'avatar',
+    washClass: 'from-indigo-100/80 dark:from-indigo-500/15',
   },
 };
 
@@ -97,6 +104,7 @@ const DEFAULT_MODEL_THEME: AssistantModelTheme = {
   textClass: 'text-slate-600 dark:text-slate-400',
   icon: 'AI',
   logo: defaultLogo,
+  washClass: 'from-slate-100/80 dark:from-slate-500/10',
 };
 
 export function resolveProviderId(model: string): string {

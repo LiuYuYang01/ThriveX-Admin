@@ -263,7 +263,7 @@ const IterativePage = () => {
 
       <section className="mb-4">
         <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
-          <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-2 dark:border-strokedark">
             <FiGithub size={18} className="text-slate-500 dark:text-slate-400" />
             <div>
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">

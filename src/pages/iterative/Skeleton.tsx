@@ -35,7 +35,7 @@ export default function Skeleton() {
 
       <section className="mb-4">
         <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
-          <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5 dark:border-strokedark">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-2 dark:border-strokedark">
             <div className="skeleton size-[18px] shrink-0 rounded-sm" />
             <div className="space-y-1.5">
               <div className="skeleton h-4 rounded-md" style={{ width: 140 }} />
