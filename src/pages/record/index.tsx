@@ -1,56 +1,46 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-import {
-  Button,
-  Form,
-  Input,
-  message,
-  Popconfirm,
-  Table,
-  Tooltip,
-} from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import dayjs from 'dayjs';
-import {
-  FiMessageSquare,
-  FiSearch,
-  FiEdit2,
-  FiTrash2,
-  FiPlus,
-  FiCalendar,
-  FiRotateCcw,
-  FiHash,
-  FiHeart,
-} from 'react-icons/fi';
+import { Button, Form, message, Pagination } from 'antd';
+import { FiMessageSquare, FiPlus, FiSearch } from 'react-icons/fi';
 
 import Title from '@/components/Title';
-import RangePicker from '@/components/RangePicker';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
 
 import { delRecordDataAPI, getRecordListAPI } from '@/api/record';
 import type { Record, RecordFilterDataForm, RecordFilterQueryParams } from '@/types/app/record';
 
+import { RecordCommentsModal } from './RecordCommentsModal';
+import { RecordFeed } from './RecordFeed';
+import { RecordList } from './RecordList';
+import { RecordToolbar, type RecordView } from './RecordToolbar';
 import Skeleton from './Skeleton';
-import { RecordImagesCell, RecordVideoCell } from './recordTableShared';
+
+const VIEW_STORAGE_KEY = 'thrivex_record_view';
 
 export default function RecordPage() {
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [skeletonLoading, setSkeletonLoading] = useState(true);
-  const [btnLoading, setBtnLoading] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const [form] = Form.useForm<RecordFilterDataForm>();
   const [recordList, setRecordList] = useState<Record[]>([]);
   const [total, setTotal] = useState(0);
+  const [commentsRecord, setCommentsRecord] = useState<Record | null>(null);
+
+  const [view, setView] = useState<RecordView>(() => {
+    if (typeof window === 'undefined') return 'feed';
+    return window.localStorage.getItem(VIEW_STORAGE_KEY) === 'list' ? 'list' : 'feed';
+  });
 
   const [filter, setFilter] = useState<RecordFilterQueryParams>({
     pageNum: 1,
     pageSize: 8,
   });
 
-  const hasActiveFilters = Boolean(
-    filter.content?.trim() || filter.startDate || filter.endDate,
-  );
+  const hasActiveFilters = Boolean(filter.content?.trim() || filter.startDate || filter.endDate);
 
   const getRecordList = useCallback(async () => {
     try {
@@ -71,7 +61,7 @@ export default function RecordPage() {
       setTotal(data.total);
       setRecordList(data.result);
     } catch (error) {
-      console.error('获取说说列表失败：', error);
+      console.error('获取闪念列表失败：', error);
     } finally {
       setSkeletonLoading(false);
       setLoading(false);
@@ -81,163 +71,20 @@ export default function RecordPage() {
   const delRecordData = useCallback(
     async (id: number) => {
       try {
-        setBtnLoading(id);
+        setDeletingId(id);
         await delRecordDataAPI(id);
         await getRecordList();
-        message.success('删除成功');
+        message.success('闪念已删除');
       } catch (error) {
-        console.error('删除说说失败：', error);
+        console.error('删除闪念失败：', error);
       } finally {
-        setBtnLoading(null);
+        setDeletingId(null);
       }
     },
     [getRecordList],
   );
 
-  const columns: ColumnsType<Record> = useMemo(
-    () => [
-      {
-        title: 'ID',
-        dataIndex: 'id',
-        key: 'id',
-        width: 72,
-        align: 'center',
-        render: (id: number) => (
-          <span className="inline-flex items-center gap-0.5 font-mono text-xs text-slate-400 dark:text-slate-500">
-            <FiHash size={11} />
-            {id}
-          </span>
-        ),
-      },
-      {
-        title: '内容',
-        dataIndex: 'content',
-        key: 'content',
-        width: 300,
-        render: (text: string) => (
-          <Tooltip title={text} placement="topLeft">
-            <div className="max-w-md py-0.5">
-              {text ? (
-                <p className="line-clamp-2 whitespace-pre-line text-sm leading-relaxed text-slate-700 dark:text-slate-200">
-                  {text}
-                </p>
-              ) : (
-                <span className="text-sm italic text-slate-400 dark:text-slate-500">暂无文字</span>
-              )}
-            </div>
-          </Tooltip>
-        ),
-      },
-      {
-        title: '心情',
-        dataIndex: 'mood',
-        key: 'mood',
-        width: 100,
-        align: 'center',
-        render: (mood: string | undefined) =>
-          mood ? (
-            <span className="inline-block rounded-full text-xl font-medium text-amber-600 dark:text-amber-400">
-              {mood}
-            </span>
-          ) : (
-            <span className="text-xs text-slate-300 dark:text-slate-600">—</span>
-          ),
-      },
-      {
-        title: '图片',
-        dataIndex: 'images',
-        key: 'images',
-        width: 150,
-        render: (_: unknown, row: Record) => <RecordImagesCell imagesRaw={row.images} />,
-      },
-      {
-        title: '视频',
-        dataIndex: 'video',
-        key: 'video',
-        width: 110,
-        render: (_: unknown, row: Record) => <RecordVideoCell video={row.video} />,
-      },
-      {
-        title: '点赞',
-        dataIndex: 'likeCount',
-        key: 'likeCount',
-        width: 88,
-        align: 'center',
-        render: (count: number | undefined) => (
-          <span className="inline-flex items-center gap-1 text-sm tabular-nums text-rose-500 dark:text-rose-400">
-            <FiHeart size={14} className="fill-current" />
-            {count ?? 0}
-          </span>
-        ),
-      },
-      {
-        title: '发布时间',
-        dataIndex: 'createTime',
-        key: 'createTime',
-        render: (text: string | number) => (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-boxdark-2 dark:text-slate-400">
-              <FiCalendar size={14} />
-            </span>
-            <div className="flex min-w-0 flex-col leading-tight">
-              <span className="font-medium text-slate-700 dark:text-slate-200">
-                {dayjs(+text).format('YYYY-MM-DD')}
-              </span>
-              <span className="text-xs text-slate-400 dark:text-slate-500">
-                {dayjs(+text).format('HH:mm')}
-              </span>
-            </div>
-          </div>
-        ),
-      },
-      {
-        title: '操作',
-        key: 'action',
-        fixed: 'right',
-        width: 96,
-        align: 'center',
-        render: (_: unknown, row: Record) => (
-          <div className="flex items-center justify-center gap-0.5">
-            <Tooltip title="编辑">
-              <Link
-                to={`/create_record?id=${row.id}`}
-                className="flex size-8 items-center justify-center rounded-lg text-slate-400! transition-colors hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary!"
-                aria-label="编辑说说"
-              >
-                <FiEdit2 size={16} />
-              </Link>
-            </Tooltip>
-            <Popconfirm
-              title="删除说说"
-              description="删除后无法恢复，确定继续吗？"
-              okText="删除"
-              cancelText="取消"
-              okButtonProps={{ danger: true }}
-              onConfirm={() => delRecordData(row.id!)}
-            >
-              <Tooltip title="删除">
-                <button
-                  type="button"
-                  disabled={btnLoading === row.id}
-                  className="flex size-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
-                  aria-label="删除说说"
-                >
-                  {btnLoading === row.id ? (
-                    <span className="size-4 animate-spin rounded-full border-2 border-slate-300 border-t-red-500" />
-                  ) : (
-                    <FiTrash2 size={16} />
-                  )}
-                </button>
-              </Tooltip>
-            </Popconfirm>
-          </div>
-        ),
-      },
-    ],
-    [btnLoading, delRecordData],
-  );
-
-  const { onValuesChange: onFilterChange } = useDebouncedChange<RecordFilterDataForm>({
+  const { onValuesChange: onFilterChange, cancelPending } = useDebouncedChange<RecordFilterDataForm>({
     debouncedKeys: ['content'],
     debounceMs: 400,
     getValues: () => form.getFieldsValue(),
@@ -252,17 +99,25 @@ export default function RecordPage() {
     },
   });
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
+    cancelPending();
     form.resetFields();
-    setFilter((prev) => ({
-      pageNum: 1,
-      pageSize: prev.pageSize ?? 8,
-    }));
-  };
+    setFilter((prev) => ({ pageNum: 1, pageSize: prev.pageSize ?? 8 }));
+  }, [cancelPending, form]);
+
+  const changeView = useCallback((next: RecordView) => {
+    setView(next);
+    window.localStorage.setItem(VIEW_STORAGE_KEY, next);
+  }, []);
 
   useEffect(() => {
     void getRecordList();
   }, [getRecordList]);
+
+  const summary = useMemo(() => {
+    if (loading && !recordList.length) return '正在加载…';
+    return hasActiveFilters ? `筛选出 ${total} 条` : `共 ${total} 条`;
+  }, [hasActiveFilters, loading, recordList.length, total]);
 
   if (skeletonLoading) {
     return (
@@ -275,101 +130,122 @@ export default function RecordPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col text-slate-600 dark:text-slate-300">
       <Title value="闪念管理">
-        <Link to="/create_record">
-          <Button type="primary" icon={<FiPlus />} className="inline-flex items-center gap-1">
-            发布闪念
-          </Button>
-        </Link>
+        <Button
+          type="primary"
+          icon={<FiPlus />}
+          onClick={() => navigate('/create_record')}
+          className="inline-flex cursor-pointer items-center gap-1"
+        >
+          发布闪念
+        </Button>
       </Title>
 
+      <div className="mb-3">
+        <RecordToolbar
+          form={form}
+          onValuesChange={onFilterChange}
+          view={view}
+          onViewChange={changeView}
+          hasActiveFilters={hasActiveFilters}
+          onReset={resetFilters}
+          summary={summary}
+        />
+      </div>
 
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
-        <header className="shrink-0 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
-          <Form form={form} onValuesChange={onFilterChange}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <Form.Item name="content" className="mb-0! w-full sm:w-56">
-                  <Input
-                    allowClear
-                    placeholder="搜索说说内容…"
-                    prefix={<FiSearch className="text-slate-400" size={15} />}
-                  />
-                </Form.Item>
-                <Form.Item name="createTime" className="mb-0! w-full sm:w-auto">
-                  <RangePicker
-                    className="w-full sm:w-56!"
-                    placeholder={['开始日期', '结束日期']}
-                    disabledDate={(current) => current && current > dayjs().endOf('day')}
-                  />
-                </Form.Item>
-                <Tooltip title="重置筛选">
-                  <Button
-                    type="text"
-                    icon={<FiRotateCcw size={15} />}
-                    onClick={resetFilters}
-                    disabled={!hasActiveFilters}
-                    className="shrink-0 text-slate-400 hover:text-slate-600 disabled:opacity-40 dark:hover:text-slate-200"
-                  />
-                </Tooltip>
-              </div>
-            </div>
-          </Form>
-        </header>
+      {view === 'feed' ? (
+        <div className="min-h-0 flex-1 overflow-y-auto pb-1">
+          {recordList.length > 0 ? (
+            <RecordFeed
+              list={recordList}
+              onDelete={delRecordData}
+              deletingId={deletingId}
+              onComments={setCommentsRecord}
+            />
+          ) : (
+            <EmptyState hasActiveFilters={hasActiveFilters} onReset={resetFilters} />
+          )}
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <Table
-            rowKey="id"
-            dataSource={recordList}
-            columns={columns}
-            loading={loading}
-            scroll={{ x: 'max-content' }}
-            pagination={{
-              position: ['bottomRight'],
-              current: filter.pageNum,
-              pageSize: filter.pageSize,
-              total,
-              showTotal: (totalCount) => {
-                const pageSize = filter.pageSize ?? 8;
-                const pageNum = filter.pageNum ?? 1;
-                const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-                return (
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    第 {pageNum} / {totalPages} 页 · 共 {totalCount} 条
-                  </span>
-                );
-              },
-              onChange: (page, size) =>
-                setFilter((prev) => ({
-                  ...prev,
-                  pageNum: page,
-                  pageSize: size ?? prev.pageSize ?? 8,
-                })),
-              onShowSizeChange: (_, size) =>
-                setFilter((prev) => ({
-                  ...prev,
-                  pageNum: 1,
-                  pageSize: size ?? prev.pageSize ?? 8,
-                })),
-              className: 'px-5! py-3!',
-            }}
-            className="min-h-0 flex-1 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-[#1f2838]! dark:[&_.ant-table-thead>tr>th]:text-slate-400!"
-            locale={{
-              emptyText: (
-                <div className="py-14 text-center">
-                  <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400 dark:bg-boxdark-2 dark:text-slate-500">
-                    <FiMessageSquare size={22} />
-                  </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {hasActiveFilters
-                      ? '没有匹配的说说，试试调整关键词或日期范围'
-                      : '还没有说说，点击右上角「发布闪念」写下第一条吧'}
-                  </p>
-                </div>
-              ),
-            }}
-          />
+          {recordList.length > 0 ? (
+            <Pagination
+              current={filter.pageNum}
+              pageSize={filter.pageSize}
+              total={total}
+              showSizeChanger={false}
+              onChange={(page, size) =>
+                setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev.pageSize }))
+              }
+              className="mt-1 flex justify-center! pb-1"
+            />
+          ) : null}
         </div>
-      </section>
+      ) : (
+        <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {recordList.length > 0 ? (
+              <RecordList
+                list={recordList}
+                loading={loading}
+                onDelete={delRecordData}
+                deletingId={deletingId}
+                onComments={setCommentsRecord}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <EmptyState hasActiveFilters={hasActiveFilters} onReset={resetFilters} />
+              </div>
+            )}
+          </div>
+
+          {recordList.length > 0 ? (
+            <div className="shrink-0 border-t border-slate-100 px-5 py-2.5 dark:border-strokedark">
+              <Pagination
+                current={filter.pageNum}
+                pageSize={filter.pageSize}
+                total={total}
+                size="small"
+                showSizeChanger={false}
+                onChange={(page, size) =>
+                  setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev.pageSize }))
+                }
+                className="flex justify-end!"
+              />
+            </div>
+          ) : null}
+        </section>
+      )}
+
+      <RecordCommentsModal record={commentsRecord} onClose={() => setCommentsRecord(null)} />
+    </div>
+  );
+}
+
+function EmptyState({
+  hasActiveFilters,
+  onReset,
+}: {
+  hasActiveFilters: boolean;
+  onReset: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-boxdark-2 dark:text-slate-400">
+        {hasActiveFilters ? <FiSearch size={22} /> : <FiMessageSquare size={22} />}
+      </div>
+
+      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+        {hasActiveFilters ? '没有匹配的闪念' : '还没有闪念'}
+      </p>
+      <p className="mt-1 max-w-xs text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+        {hasActiveFilters
+          ? '换个关键词，或者把日期范围放宽一点试试'
+          : '闪念是带时间的心情碎片，可以配图、配视频，也可以只写一句话'}
+      </p>
+
+      {hasActiveFilters ? (
+        <Button icon={<FiSearch size={14} />} onClick={onReset} className="mt-4 cursor-pointer">
+          清除筛选条件
+        </Button>
+      ) : null}
     </div>
   );
 }
