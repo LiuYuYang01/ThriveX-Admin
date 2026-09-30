@@ -4,6 +4,9 @@ import { RecordComment, RecordCommentFilterQueryParams } from '@/types/app/recor
 // 新增闪念评论
 export const addRecordCommentDataAPI = (data: RecordComment) => Request('POST', '/record/comment', { data });
 
+// 管理端回复闪念评论（直接审核通过）
+export const replyRecordCommentDataAPI = (data: RecordComment) => Request('POST', '/record/comment/reply', { data });
+
 // 删除闪念评论
 export const delRecordCommentDataAPI = (id: number) => Request('DELETE', `/record/comment/${id}`);
 

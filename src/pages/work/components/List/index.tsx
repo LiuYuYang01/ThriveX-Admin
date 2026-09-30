@@ -6,7 +6,7 @@ import { BiBook, BiCheck, BiGlobe, BiLinkExternal, BiReply, BiTag, BiX, BiBoltCi
 import { HiOutlineMail } from 'react-icons/hi';
 import { IoTimeOutline } from 'react-icons/io5';
 
-import { auditCommentDataAPI, delCommentDataAPI, addCommentDataAPI } from '@/api/comment';
+import { auditCommentDataAPI, delCommentDataAPI, replyCommentDataAPI } from '@/api/comment';
 import { auditRecordCommentDataAPI, delRecordCommentDataAPI } from '@/api/recordComment';
 import { auditWallDataAPI, delWallDataAPI } from '@/api/wall';
 import { delLinkDataAPI, auditWebDataAPI } from '@/api/web';
@@ -93,7 +93,7 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
       await handleApproval();
 
       if (type === 'comment' && item.commentSource !== 'record') {
-        await addCommentDataAPI({
+        await replyCommentDataAPI({
           avatar: user.avatar,
           url: web.url,
           content: replyInfo,

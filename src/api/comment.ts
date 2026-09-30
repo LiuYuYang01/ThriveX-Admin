@@ -4,6 +4,9 @@ import { Comment, CommentFilterQueryParams } from '@/types/app/comment'
 // 新增评论
 export const addCommentDataAPI = (data: Comment) => Request('POST', '/comment', { data })
 
+// 管理端回复评论（直接审核通过）
+export const replyCommentDataAPI = (data: Comment) => Request('POST', '/comment/reply', { data })
+
 // 删除评论
 export const delCommentDataAPI = (id: number) => Request('DELETE', `/comment/${id}`)
 

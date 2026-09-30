@@ -98,7 +98,7 @@ export default () => {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Title value="工作台" className='py-3'>
+      <Title value="工作台" className="py-3">
         <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
           集中处理待审核内容
         </span>
