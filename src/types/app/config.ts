@@ -1,5 +1,5 @@
 // 网站配置类型
-export type WebConfigType = 'web' | 'theme' | 'other' | 'file';
+export type WebConfigType = 'web' | 'theme' | 'other' | 'file' | 'announcement';
 
 /** 上传图片压缩策略（与七牛 pfop mode 对齐） */
 export type UploadCompressMode = 'original' | 'auto' | 'light' | 'medium' | 'strong';
@@ -77,6 +77,28 @@ export interface Theme {
   record_mode?: string;
   record_mode_info?: string;
 }
+
+// 站点公告配置：前台弹窗展示
+export interface Announcement {
+  enable: boolean;
+  title: string;
+  content: string;
+  // 自动关闭秒数，0 表示不自动关闭
+  auto_close: number;
+  // 关闭后 N 天内不再显示，0 表示每次访问都显示
+  silent_days: number;
+  // 保存时间戳，前台据此识别公告已更新并重新弹出
+  update_time: number;
+}
+
+export const DEFAULT_ANNOUNCEMENT_CONFIG: Announcement = {
+  enable: false,
+  title: '站点公告',
+  content: '',
+  auto_close: 8,
+  silent_days: 7,
+  update_time: 0,
+};
 
 // 其他配置
 export interface Other {

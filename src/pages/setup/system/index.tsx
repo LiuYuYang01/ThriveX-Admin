@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { BiGlobe, BiImage, BiLayout, BiShieldQuarter, BiUser, BiChat } from 'react-icons/bi';
+import { BiGlobe, BiImage, BiLayout, BiHeadphone, BiShieldQuarter, BiUser, BiChat } from 'react-icons/bi';
 
 import Title from '@/components/Title';
 import My from './components/My';
@@ -11,6 +11,7 @@ import RecordTheme from './components/Theme/components/RecordTheme';
 import Web from './components/Web';
 import Other from './components/Other';
 import File from './components/File';
+import Announcement from './components/Announcement';
 import Skeleton from './Skeleton';
 
 interface Setup {
@@ -26,7 +27,7 @@ export default () => {
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const isFirstLoadRef = useRef<boolean>(true);
 
-  const validKeys = ['system', 'web', 'theme', 'record', 'my', 'file', 'other'];
+  const validKeys = ['system', 'web', 'theme', 'record', 'my', 'file', 'announcement', 'other'];
   const initialActive = tabFromUrl && validKeys.includes(tabFromUrl) ? tabFromUrl : 'system';
 
   const [active, setActive] = useState(initialActive);
@@ -88,6 +89,12 @@ export default () => {
       description: '上传图片压缩策略与存储相关设置',
       icon: <BiImage />,
       key: 'file',
+    },
+    {
+      title: '公告配置',
+      description: '前台弹窗公告与展示策略',
+      icon: <BiHeadphone />,
+      key: 'announcement',
     },
   ];
 
@@ -169,6 +176,7 @@ export default () => {
             {active === 'record' && <RecordTheme />}
             {active === 'my' && <My />}
             {active === 'file' && <File />}
+            {active === 'announcement' && <Announcement />}
             {active === 'other' && <Other />}
           </div>
         </div>
