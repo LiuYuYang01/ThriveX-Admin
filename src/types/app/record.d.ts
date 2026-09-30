@@ -4,6 +4,7 @@ export interface Record {
   images: string | string[];
   video?: string;
   likeCount?: number;
+  commentCount?: number;
   mood?: string;
   location?: string;
   createTime?: string | Dayjs;

@@ -22,7 +22,7 @@ export function ExternalLink({ href, children }: { href: string; children: React
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex min-w-0 items-center gap-1 text-primary transition-colors hover:underline"
+      className="inline-flex min-w-0 items-center gap-1 text-primary hover:underline"
     >
       <span className="truncate">{children}</span>
       <FiExternalLink size={12} className="shrink-0 opacity-60" />

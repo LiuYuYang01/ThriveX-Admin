@@ -18,13 +18,13 @@ export function RecordList({
   list,
   loading,
   onDelete,
-  deletingId,
+  deletingIds,
   onComments,
 }: {
   list: Record[];
   loading: boolean;
   onDelete: (id: number) => void;
-  deletingId: number | null;
+  deletingIds: number[];
   onComments: (record: Record) => void;
 }) {
   const columns: ColumnsType<Record> = useMemo(
@@ -46,10 +46,6 @@ export function RecordList({
             )}
 
             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
-                #{row.id}
-              </span>
-
               <RecordMoodTag mood={row.mood} />
 
               {row.location ? (
@@ -99,13 +95,13 @@ export function RecordList({
           <RecordActions
             record={row}
             onDelete={onDelete}
-            deleting={deletingId === row.id}
+            deleting={deletingIds.includes(row.id!)}
             onComments={onComments}
           />
         ),
       },
     ],
-    [onDelete, deletingId, onComments],
+    [onDelete, deletingIds, onComments],
   );
 
   return (
@@ -118,7 +114,7 @@ export function RecordList({
       scroll={{ x: 720 }}
       onRow={() => ({
         className:
-          'transition-colors hover:[&>td]:bg-slate-50/80! dark:hover:[&>td]:bg-boxdark-2/60!',
+          'hover:[&>td]:bg-slate-50/80! dark:hover:[&>td]:bg-boxdark-2/60!',
       })}
       className="[&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-[#1f2838]! dark:[&_.ant-table-thead>tr>th]:text-slate-400!"
     />

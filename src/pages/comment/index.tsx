@@ -10,7 +10,7 @@ type CommentTab = 'article' | 'record';
 
 const TABS: { key: CommentTab; label: string; desc: string; icon: typeof FiFileText }[] = [
   { key: 'article', label: '文章评论', desc: '文章下的读者互动', icon: FiFileText },
-  { key: 'record', label: '说说评论', desc: '闪念下的读者互动', icon: FiZap },
+  { key: 'record', label: '闪念评论', desc: '闪念下的读者互动', icon: FiZap },
 ];
 
 export default function CommentPage() {
@@ -52,7 +52,7 @@ export default function CommentPage() {
               key={tab.key}
               type="button"
               onClick={() => switchTab(tab.key)}
-              className={`flex min-w-[140px] flex-1 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors sm:max-w-[220px] ${isActive
+              className={`flex min-w-[140px] flex-1 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-left sm:max-w-[220px] ${isActive
                 ? 'border-primary/30 bg-primary/5 dark:bg-primary/10'
                 : 'border-slate-200/80 bg-white hover:border-slate-300 dark:border-strokedark dark:bg-boxdark dark:hover:border-slate-600'
                 }`}

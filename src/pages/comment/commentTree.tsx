@@ -67,7 +67,7 @@ export function commentTableExpandable<T extends TreeItem>(): ExpandableConfig<T
           type="button"
           aria-label={expanded ? '收起回复' : '展开回复'}
           onClick={(e) => onExpand(record, e)}
-          className="ml-2 flex size-6 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/5 dark:hover:text-slate-300 cursor-pointer"
+          className="ml-2 flex size-6 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/5 dark:hover:text-slate-300 cursor-pointer"
         >
           {expanded ? <FiChevronDown size={14} /> : <FiChevronRight size={14} />}
         </button>

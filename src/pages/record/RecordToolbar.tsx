@@ -73,7 +73,8 @@ export function RecordToolbar({
                 type="button"
                 onClick={() => onViewChange(option.key)}
                 aria-pressed={isActive}
-                className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                aria-label={`切换为${option.label}视图`}
+                className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${
                   isActive
                     ? 'bg-white text-slate-800 dark:bg-[#1f2838] dark:text-slate-100'
                     : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'

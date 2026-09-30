@@ -181,7 +181,7 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
       case 'comment':
         email_info = {
           name: item.name,
-          type: item.commentSource === 'record' ? '说说评论' : '评论',
+          type: item.commentSource === 'record' ? '闪念评论' : '评论',
           url: item.commentSource === 'record' ? `${web.url}/record` : `${web.url}/article/${item.articleId}`,
         };
         break;
@@ -210,7 +210,7 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
   const displayName = type === 'link' ? item.title : item.name;
   const canReply = type === 'wall' || (type === 'comment' && item.commentSource !== 'record');
   const commentSourceLabel =
-    type === 'comment' ? (item.commentSource === 'record' ? '说说' : '文章') : null;
+    type === 'comment' ? (item.commentSource === 'record' ? '闪念' : '文章') : null;
 
   const openModal = (mode: 'reply' | 'dismiss') => {
     setBtnType(mode);
@@ -330,7 +330,7 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
                 {type === 'comment' && item.commentSource === 'record' && (
                   <MetaChip icon={BiBoltCircle}>
                     <ExternalLink href={`${web.url}/record`}>
-                      {item.recordContent || `说说 #${item.recordId}`}
+                      {item.recordContent || `闪念 #${item.recordId}`}
                     </ExternalLink>
                   </MetaChip>
                 )}

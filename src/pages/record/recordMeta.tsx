@@ -39,10 +39,20 @@ export interface DayGroup {
  */
 export const groupRecordsByDay = (list: Record[]): DayGroup[] => {
   const groups: DayGroup[] = [];
+  let unknown: DayGroup | null = null;
 
   for (const item of list) {
     const date = dayjs(+(item.createTime ?? 0));
-    if (!date.isValid()) continue;
+
+    // 时间缺失的旧数据归入「未知时间」，否则卡片视图会比列表视图少渲染条目
+    if (!date.isValid()) {
+      if (!unknown) {
+        unknown = { key: 'unknown', main: '未知时间', sub: '', isToday: false, items: [] };
+        groups.push(unknown);
+      }
+      unknown.items.push(item);
+      continue;
+    }
 
     const key = date.format('YYYY-MM-DD');
     const last = groups[groups.length - 1];

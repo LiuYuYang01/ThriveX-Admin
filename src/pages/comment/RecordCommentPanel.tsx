@@ -170,7 +170,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
         await delRecordCommentDataAPI(id);
         if (selected?.id === id) setSelected(null);
         await getCommentList(filterForm.getFieldsValue());
-        message.success('🎉 删除评论成功');
+        message.success('评论已删除');
       } catch (error) {
         console.error(error);
         setLoading(false);
@@ -206,7 +206,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
         createTime: Date.now(),
       });
 
-      message.success('🎉 回复评论成功');
+      message.success('回复成功');
       setIsReplyModalOpen(false);
       setReplyInfo('');
       await getCommentList(filterForm.getFieldsValue());
@@ -260,7 +260,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
                   e.stopPropagation();
                   setSelected(record);
                 }}
-                className={`line-clamp-2 text-left text-sm leading-relaxed transition-colors cursor-pointer ${selected?.id === record.id
+                className={`line-clamp-2 text-left text-sm leading-relaxed cursor-pointer ${selected?.id === record.id
                   ? 'text-primary'
                   : 'text-slate-700 hover:text-primary dark:text-slate-200'
                   }`}
@@ -273,7 +273,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
           ),
       },
       {
-        title: '所属说说',
+        title: '所属闪念',
         dataIndex: 'recordContent',
         key: 'recordContent',
         width: 200,
@@ -284,7 +284,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
               <ExternalLink href={`${web.url}/record`}>{text}</ExternalLink>
             </Tooltip>
           ) : (
-            <span className="text-xs text-slate-400 dark:text-slate-500">说说 #{record.recordId}</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">闪念 #{record.recordId}</span>
           ),
       },
       {
@@ -319,7 +319,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
                   openReply(record);
                 }}
                 aria-label={`回复 ${record.name}`}
-                className="flex size-8 items-center justify-center rounded-lg text-slate-400! transition-colors hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary! cursor-pointer"
+                className="flex size-8 items-center justify-center rounded-lg text-slate-400! hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary! cursor-pointer"
               >
                 <FiCornerUpRight size={16} />
               </button>
@@ -337,7 +337,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
                   type="button"
                   onClick={(e) => e.stopPropagation()}
                   aria-label="删除评论"
-                  className="flex size-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
+                  className="flex size-8 items-center justify-center rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300 cursor-pointer"
                 >
                   <FiTrash2 size={16} />
                 </button>
@@ -366,7 +366,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
           type="button"
           onClick={() => setSelected(null)}
           aria-label="关闭详情"
-          className="flex size-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/5 dark:hover:text-slate-200 cursor-pointer"
+          className="flex size-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/5 dark:hover:text-slate-200 cursor-pointer"
         >
           <FiX size={16} />
         </button>
@@ -412,12 +412,12 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
           </div>
           <div className="flex min-w-0 items-start gap-2.5 text-xs">
             <FiZap size={14} className="mt-0.5 shrink-0 text-slate-400" />
-            <span className="w-8 shrink-0 text-slate-400">说说</span>
+            <span className="w-8 shrink-0 text-slate-400">闪念</span>
             <div className="min-w-0 flex-1">
               {record.recordContent ? (
                 <ExternalLink href={`${web.url}/record`}>{record.recordContent}</ExternalLink>
               ) : (
-                <span className="text-slate-400">说说 #{record.recordId}</span>
+                <span className="text-slate-400">闪念 #{record.recordId}</span>
               )}
             </div>
           </div>
@@ -457,7 +457,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
                 </Form.Item>
                 {recordIdFilter && (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs text-primary">
-                    说说 #{recordIdFilter}
+                    闪念 #{recordIdFilter}
                     <button
                       type="button"
                       onClick={() => {
@@ -465,7 +465,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
                         onClearRecordFilter?.();
                       }}
                       className="flex size-4 cursor-pointer items-center justify-center rounded-full hover:bg-primary/10"
-                      aria-label="清除说说筛选"
+                      aria-label="清除闪念筛选"
                     >
                       <FiX size={12} />
                     </button>
@@ -498,7 +498,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
             expandable={tableExpandable}
             onRow={(row: RecordComment) => ({
               onClick: () => setSelected(row),
-              className: `cursor-pointer transition-colors ${selected?.id === row.id
+              className: `cursor-pointer ${selected?.id === row.id
                 ? '[&>td]:bg-primary/5! dark:[&>td]:bg-primary/10!'
                 : 'hover:[&>td]:bg-slate-50/80! dark:hover:[&>td]:bg-boxdark-2/50!'
                 }`,
@@ -520,7 +520,7 @@ export default function RecordCommentPanel({ initRecordId, onClearRecordFilter }
                     <FiInbox size={22} />
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    暂无说说评论，用户在前台闪念页留言后会显示在这里
+                    暂无闪念评论，用户在前台闪念页留言后会显示在这里
                   </p>
                 </div>
               ),

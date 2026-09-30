@@ -87,7 +87,7 @@ export default () => {
 
   const getNavDesc = (key: Menu) => {
     if (key === 'comment') {
-      return `文章 ${articleCommentList.length} · 说说 ${recordCommentList.length}`;
+      return `文章 ${articleCommentList.length} · 闪念 ${recordCommentList.length}`;
     }
     return NAV_ITEMS.find((item) => item.key === key)?.desc ?? '';
   };
@@ -98,7 +98,7 @@ export default () => {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <Title value="工作台">
+      <Title value="工作台" className='py-3'>
         <span className="text-sm font-normal text-slate-500 dark:text-slate-400">
           集中处理待审核内容
         </span>

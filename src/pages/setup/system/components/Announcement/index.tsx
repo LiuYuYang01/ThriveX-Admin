@@ -82,7 +82,7 @@ export default () => {
             >
               <Input.TextArea
                 placeholder="输入公告内容，支持换行"
-                autoSize={{ minRows: 10, maxRows: 24 }}
+                autoSize={{ minRows: 5, maxRows: 24 }}
                 maxLength={500}
                 showCount
               />
@@ -94,7 +94,7 @@ export default () => {
               extra="弹窗弹出多少秒后自动关闭，0 表示不自动关闭"
               className="mb-4"
             >
-              <InputNumber min={0} max={600} className="w-28!" />
+              <InputNumber min={0} max={600} className="w-22!" />
             </Form.Item>
 
             <Form.Item
@@ -103,7 +103,7 @@ export default () => {
               extra="访客关闭公告后多少天内不再弹出，0 表示每次访问都弹出"
               className="mb-4"
             >
-              <InputNumber min={0} max={365} className="w-28!" />
+              <InputNumber min={0} max={365} className="w-22!" />
             </Form.Item>
           </>
         )}

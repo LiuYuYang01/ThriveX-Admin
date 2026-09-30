@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button, Form, message, Pagination } from 'antd';
-import { FiMessageSquare, FiPlus, FiSearch } from 'react-icons/fi';
+import { FiMessageSquare, FiPlus, FiRotateCcw, FiSearch } from 'react-icons/fi';
 
 import Title from '@/components/Title';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
@@ -18,22 +18,27 @@ import Skeleton from './Skeleton';
 
 const VIEW_STORAGE_KEY = 'thrivex_record_view';
 
+function readStoredView(): RecordView {
+  try {
+    return window.localStorage.getItem(VIEW_STORAGE_KEY) === 'list' ? 'list' : 'feed';
+  } catch {
+    return 'feed';
+  }
+}
+
 export default function RecordPage() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [skeletonLoading, setSkeletonLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
   const [form] = Form.useForm<RecordFilterDataForm>();
   const [recordList, setRecordList] = useState<Record[]>([]);
   const [total, setTotal] = useState(0);
   const [commentsRecord, setCommentsRecord] = useState<Record | null>(null);
 
-  const [view, setView] = useState<RecordView>(() => {
-    if (typeof window === 'undefined') return 'feed';
-    return window.localStorage.getItem(VIEW_STORAGE_KEY) === 'list' ? 'list' : 'feed';
-  });
+  const [view, setView] = useState<RecordView>(readStoredView);
 
   const [filter, setFilter] = useState<RecordFilterQueryParams>({
     pageNum: 1,
@@ -71,14 +76,14 @@ export default function RecordPage() {
   const delRecordData = useCallback(
     async (id: number) => {
       try {
-        setDeletingId(id);
+        setDeletingIds((prev) => [...prev, id]);
         await delRecordDataAPI(id);
         await getRecordList();
         message.success('闪念已删除');
       } catch (error) {
         console.error('删除闪念失败：', error);
       } finally {
-        setDeletingId(null);
+        setDeletingIds((prev) => prev.filter((item) => item !== id));
       }
     },
     [getRecordList],
@@ -92,7 +97,7 @@ export default function RecordPage() {
       setFilter((prev) => ({
         ...prev,
         pageNum: 1,
-        content: values.content,
+        content: values.content?.trim() || undefined,
         startDate: values.createTime?.[0] ? values.createTime[0].valueOf() : undefined,
         endDate: values.createTime?.[1] ? values.createTime[1].valueOf() : undefined,
       }));
@@ -107,7 +112,11 @@ export default function RecordPage() {
 
   const changeView = useCallback((next: RecordView) => {
     setView(next);
-    window.localStorage.setItem(VIEW_STORAGE_KEY, next);
+    try {
+      window.localStorage.setItem(VIEW_STORAGE_KEY, next);
+    } catch {
+      // 隐私模式下 localStorage 不可写，视图偏好仅本次会话生效
+    }
   }, []);
 
   useEffect(() => {
@@ -118,6 +127,10 @@ export default function RecordPage() {
     if (loading && !recordList.length) return '正在加载…';
     return hasActiveFilters ? `筛选出 ${total} 条` : `共 ${total} 条`;
   }, [hasActiveFilters, loading, recordList.length, total]);
+
+  const changePage = useCallback((page: number, size: number) => {
+    setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev.pageSize }));
+  }, []);
 
   if (skeletonLoading) {
     return (
@@ -153,31 +166,27 @@ export default function RecordPage() {
       </div>
 
       {view === 'feed' ? (
-        <div className="min-h-0 flex-1 overflow-y-auto pb-1">
-          {recordList.length > 0 ? (
-            <RecordFeed
-              list={recordList}
-              onDelete={delRecordData}
-              deletingId={deletingId}
-              onComments={setCommentsRecord}
-            />
-          ) : (
-            <EmptyState hasActiveFilters={hasActiveFilters} onReset={resetFilters} />
-          )}
+        <section className="flex min-h-0 flex-1 flex-col">
+          <div
+            className={`min-h-0 flex-1 overflow-y-auto pb-1 ${loading ? 'opacity-60' : ''}`}
+            aria-busy={loading}
+          >
+            {recordList.length > 0 ? (
+              <RecordFeed
+                list={recordList}
+                onDelete={delRecordData}
+                deletingIds={deletingIds}
+                onComments={setCommentsRecord}
+              />
+            ) : (
+              <EmptyState hasActiveFilters={hasActiveFilters} onReset={resetFilters} />
+            )}
+          </div>
 
           {recordList.length > 0 ? (
-            <Pagination
-              current={filter.pageNum}
-              pageSize={filter.pageSize}
-              total={total}
-              showSizeChanger={false}
-              onChange={(page, size) =>
-                setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev.pageSize }))
-              }
-              className="mt-1 flex justify-center! pb-1"
-            />
+            <ViewPagination filter={filter} total={total} onChange={changePage} />
           ) : null}
-        </div>
+        </section>
       ) : (
         <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -186,7 +195,7 @@ export default function RecordPage() {
                 list={recordList}
                 loading={loading}
                 onDelete={delRecordData}
-                deletingId={deletingId}
+                deletingIds={deletingIds}
                 onComments={setCommentsRecord}
               />
             ) : (
@@ -197,24 +206,42 @@ export default function RecordPage() {
           </div>
 
           {recordList.length > 0 ? (
-            <div className="shrink-0 border-t border-slate-100 px-5 py-2.5 dark:border-strokedark">
-              <Pagination
-                current={filter.pageNum}
-                pageSize={filter.pageSize}
-                total={total}
-                size="small"
-                showSizeChanger={false}
-                onChange={(page, size) =>
-                  setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev.pageSize }))
-                }
-                className="flex justify-end!"
-              />
-            </div>
+            <ViewPagination filter={filter} total={total} onChange={changePage} bordered />
           ) : null}
         </section>
       )}
 
       <RecordCommentsModal record={commentsRecord} onClose={() => setCommentsRecord(null)} />
+    </div>
+  );
+}
+
+function ViewPagination({
+  filter,
+  total,
+  onChange,
+  bordered = false,
+}: {
+  filter: RecordFilterQueryParams;
+  total: number;
+  onChange: (page: number, size: number) => void;
+  bordered?: boolean;
+}) {
+  return (
+    <div
+      className={`flex shrink-0 justify-end py-2.5 ${
+        bordered ? 'border-t border-slate-100 px-5 dark:border-strokedark' : 'pt-3 pb-1'
+      }`}
+    >
+      <Pagination
+        current={filter.pageNum}
+        pageSize={filter.pageSize}
+        total={total}
+        size="small"
+        showSizeChanger={false}
+        showTotal={(t) => `共 ${t} 条`}
+        onChange={onChange}
+      />
     </div>
   );
 }
@@ -242,7 +269,7 @@ function EmptyState({
       </p>
 
       {hasActiveFilters ? (
-        <Button icon={<FiSearch size={14} />} onClick={onReset} className="mt-4 cursor-pointer">
+        <Button icon={<FiRotateCcw size={14} />} onClick={onReset} className="mt-4 cursor-pointer">
           清除筛选条件
         </Button>
       ) : null}

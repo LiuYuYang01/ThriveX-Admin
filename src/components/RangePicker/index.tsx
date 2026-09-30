@@ -16,12 +16,12 @@ export default ({ onChange, ...props }: RangePickerProps) => {
         currentDateInShop.clone().subtract(1, 'day').endOf('day'),
       ],
     },
-    { label: '最近7天', value: [currentDateInShop.clone().add(-7, 'd'), currentDateInShop.clone()] },
-    { label: '最近15天', value: [currentDateInShop.clone().add(-14, 'd'), currentDateInShop.clone()] },
-    { label: '最近30天', value: [currentDateInShop.clone().add(-30, 'd'), currentDateInShop.clone()] },
-    { label: '最近90天', value: [currentDateInShop.clone().add(-90, 'd'), currentDateInShop.clone()] },
-    { label: '最近半年', value: [currentDateInShop.clone().add(-180, 'd'), currentDateInShop.clone()] },
-    { label: '最近一年', value: [currentDateInShop.clone().add(-365, 'd'), currentDateInShop.clone()] },
+    { label: '最近7天', value: [currentDateInShop.clone().subtract(6, 'day').startOf('day'), currentDateInShop.clone().endOf('day')] },
+    { label: '最近15天', value: [currentDateInShop.clone().subtract(14, 'day').startOf('day'), currentDateInShop.clone().endOf('day')] },
+    { label: '最近30天', value: [currentDateInShop.clone().subtract(29, 'day').startOf('day'), currentDateInShop.clone().endOf('day')] },
+    { label: '最近90天', value: [currentDateInShop.clone().subtract(89, 'day').startOf('day'), currentDateInShop.clone().endOf('day')] },
+    { label: '最近半年', value: [currentDateInShop.clone().subtract(179, 'day').startOf('day'), currentDateInShop.clone().endOf('day')] },
+    { label: '最近一年', value: [currentDateInShop.clone().subtract(364, 'day').startOf('day'), currentDateInShop.clone().endOf('day')] },
   ];
 
   return (

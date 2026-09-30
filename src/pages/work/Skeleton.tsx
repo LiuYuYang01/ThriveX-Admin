@@ -3,7 +3,7 @@ import TitleSkeleton from '@/components/Title/Skeleton';
 export default function WorkSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <TitleSkeleton titleWidth={96} action="text" actionWidth={140} />
+      <TitleSkeleton titleWidth={96} action="text" actionWidth={140} className='py-3' />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[1, 2, 3].map((item) => (

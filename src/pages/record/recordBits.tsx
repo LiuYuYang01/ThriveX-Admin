@@ -6,10 +6,10 @@ import { getMoodLabel } from './recordMeta';
 import type { Record } from '@/types/app/record';
 
 const actionLink =
-  'flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400! transition-colors hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary!';
+  'flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400! hover:bg-slate-100! hover:text-primary! dark:hover:bg-white/5! dark:hover:text-primary!';
 
 const dangerButton =
-  'flex size-8 cursor-pointer items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300';
+  'flex size-8 cursor-pointer items-center justify-center rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-500/10 dark:hover:text-red-300';
 
 /** 点赞数：0 的时候保持安静，避免整屏都是实心红心。 */
 export function RecordLikeCount({ count }: { count?: number }) {
@@ -50,7 +50,6 @@ export function RecordMoodTag({ mood }: { mood?: string }) {
       title={label ? `心情：${label}` : '心情'}
     >
       <span className="text-[13px] leading-none">{mood}</span>
-      {label ? <span className="font-medium">{label}</span> : null}
     </span>
   );
 }
@@ -67,16 +66,23 @@ export function RecordActions({
   deleting: boolean;
   onComments: (record: Record) => void;
 }) {
+  const commentCount = record.commentCount ?? 0;
+
   return (
     <div className="flex shrink-0 items-center gap-0.5">
-      <Tooltip title="查看评论">
+      <Tooltip title={commentCount > 0 ? `查看评论（${commentCount} 条）` : '查看评论'}>
         <button
           type="button"
           onClick={() => onComments(record)}
-          className={actionLink}
-          aria-label="查看这条闪念的评论"
+          className={`${actionLink} relative`}
+          aria-label={`查看这条闪念的评论${commentCount > 0 ? `（${commentCount} 条）` : ''}`}
         >
           <FiMessageSquare size={15} />
+          {commentCount > 0 ? (
+            <span className="absolute -top-1 -right-1.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-medium leading-4 text-white tabular-nums">
+              {commentCount > 99 ? '99+' : commentCount}
+            </span>
+          ) : null}
         </button>
       </Tooltip>
 
@@ -88,7 +94,7 @@ export function RecordActions({
 
       <Popconfirm
         title="删除闪念"
-        description="你确定要删除吗？"
+        description={`删除后不可恢复${commentCount > 0 ? `（含 ${commentCount} 条评论）` : ''}，确定删除吗？`}
         okText="删除"
         cancelText="取消"
         okButtonProps={{ danger: true }}
