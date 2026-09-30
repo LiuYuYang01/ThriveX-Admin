@@ -80,7 +80,12 @@ export default () => {
               rules={[{ required: true, message: '请输入公告内容' }]}
               className="mb-4"
             >
-              <Input.TextArea placeholder="输入公告内容，支持换行" rows={10} maxLength={500} showCount />
+              <Input.TextArea
+                placeholder="输入公告内容，支持换行"
+                autoSize={{ minRows: 10, maxRows: 24 }}
+                maxLength={500}
+                showCount
+              />
             </Form.Item>
 
             <Form.Item
