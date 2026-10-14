@@ -38,7 +38,7 @@ export default () => {
   const [linkList, setLinkList] = useState<Web[]>([]);
   const [wallList, setWallList] = useState<Wall[]>([]);
 
-  const fetchData = async (type: Menu) => {
+  const fetchData = async () => {
     try {
       if (isFirstLoadRef.current) {
         setInitialLoading(true);
@@ -46,20 +46,17 @@ export default () => {
         setLoading(true);
       }
 
-      if (type === 'comment') {
-        const [articleRes, recordRes] = await Promise.all([
-          getCommentListAPI({ status: 0, pattern: 'list' }),
-          getRecordCommentListAPI({ status: 0, pageNum: 1, pageSize: 9999 }),
-        ]);
-        setArticleCommentList(articleRes.data.result);
-        setRecordCommentList(recordRes.data.result ?? []);
-      } else if (type === 'link') {
-        const { data } = await getLinkListAPI({ status: 0, pageNum: 1, pageSize: 9999 });
-        setLinkList(data.result);
-      } else if (type === 'wall') {
-        const { data } = await getWallListAPI({ status: 0 });
-        setWallList(data.result);
-      }
+      // 三类待审核数据一次性拉全，保证卡片计数与列表内容始终一致
+      const [articleRes, recordRes, linkRes, wallRes] = await Promise.all([
+        getCommentListAPI({ status: 0, pattern: 'list' }),
+        getRecordCommentListAPI({ status: 0, pageNum: 1, pageSize: 9999 }),
+        getLinkListAPI({ status: 0, pageNum: 1, pageSize: 9999 }),
+        getWallListAPI({ status: 0 }),
+      ]);
+      setArticleCommentList(articleRes.data.result);
+      setRecordCommentList(recordRes.data.result ?? []);
+      setLinkList(linkRes.data.result ?? []);
+      setWallList(wallRes.data.result ?? []);
 
       isFirstLoadRef.current = false;
     } catch (error) {
@@ -71,8 +68,8 @@ export default () => {
   };
 
   useEffect(() => {
-    fetchData(active);
-  }, [active]);
+    fetchData();
+  }, []);
 
   const activeList = useMemo(() => {
     if (active === 'comment') {
@@ -177,7 +174,7 @@ export default () => {
                     <List
                       item={item}
                       type={active}
-                      fetchData={(type) => fetchData(type)}
+                      fetchData={() => fetchData()}
                       setLoading={setLoading}
                     />
                   </li>

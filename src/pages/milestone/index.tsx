@@ -409,11 +409,13 @@ export default function MilestonePage() {
               columns={columns}
               dataSource={pagedList}
               pagination={{
+                position: ['bottomRight'],
                 current: pagination.current,
                 pageSize: pagination.pageSize,
                 total: filteredList.length,
                 showSizeChanger: true,
                 onChange: (current, pageSize) => setPagination({ current, pageSize }),
+                className: 'px-5! py-3!',
               }}
               scroll={{ x: 960 }}
             />
