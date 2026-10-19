@@ -1,15 +1,16 @@
 import type { FormInstance } from 'antd';
 import { Button, Form, Input, Tooltip } from 'antd';
-import { FiCalendar, FiGrid, FiList, FiRotateCcw, FiSearch } from 'react-icons/fi';
+import { FiCalendar, FiGrid, FiList, FiMessageSquare, FiRotateCcw, FiSearch } from 'react-icons/fi';
 
 import RangePicker from '@/components/RangePicker';
 import type { RecordFilterDataForm } from '@/types/app/record';
 
-export type RecordView = 'feed' | 'list';
+export type RecordView = 'feed' | 'list' | 'comments';
 
 const VIEW_OPTIONS: { key: RecordView; label: string; icon: typeof FiList }[] = [
   { key: 'feed', label: '卡片', icon: FiGrid },
   { key: 'list', label: '列表', icon: FiList },
+  { key: 'comments', label: '评论', icon: FiMessageSquare },
 ];
 
 export function RecordToolbar({
@@ -20,6 +21,7 @@ export function RecordToolbar({
   hasActiveFilters,
   onReset,
   summary,
+  showFilters = true,
 }: {
   form: FormInstance<RecordFilterDataForm>;
   onValuesChange: (changedValues: Partial<RecordFilterDataForm>, allValues: RecordFilterDataForm) => void;
@@ -28,31 +30,35 @@ export function RecordToolbar({
   hasActiveFilters: boolean;
   onReset: () => void;
   summary: string;
+  // 评论视图自带筛选栏，闪念的搜索/日期筛选需隐藏，否则会出现两条重复的筛选条
+  showFilters?: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-3 py-2.5 dark:border-strokedark dark:bg-boxdark">
-      <Form
-        form={form}
-        onValuesChange={onValuesChange}
-        className="flex flex-wrap items-center gap-2"
-      >
-        <Form.Item name="content" className="mb-0! w-full sm:w-52">
-          <Input
-            allowClear
-            placeholder="搜索闪念内容…"
-            aria-label="搜索闪念内容"
-            prefix={<FiSearch className="text-slate-400" size={15} />}
-          />
-        </Form.Item>
+      {showFilters && (
+        <Form
+          form={form}
+          onValuesChange={onValuesChange}
+          className="flex flex-wrap items-center gap-2"
+        >
+          <Form.Item name="content" className="mb-0! w-full sm:w-52">
+            <Input
+              allowClear
+              placeholder="搜索闪念内容…"
+              aria-label="搜索闪念内容"
+              prefix={<FiSearch className="text-slate-400" size={15} />}
+            />
+          </Form.Item>
 
-        <Form.Item name="createTime" className="mb-0! w-full sm:w-auto">
-          <RangePicker
-            className="w-full sm:w-60!"
-            placeholder={['开始日期', '结束日期']}
-            suffixIcon={<FiCalendar className="text-slate-400" size={15} />}
-          />
-        </Form.Item>
-      </Form>
+          <Form.Item name="createTime" className="mb-0! w-full sm:w-auto">
+            <RangePicker
+              className="w-full sm:w-60!"
+              placeholder={['开始日期', '结束日期']}
+              suffixIcon={<FiCalendar className="text-slate-400" size={15} />}
+            />
+          </Form.Item>
+        </Form>
+      )}
 
       <div className="ml-auto flex shrink-0 items-center gap-2">
         <span className="hidden text-xs tabular-nums text-slate-500 dark:text-slate-400 sm:inline">

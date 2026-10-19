@@ -15,12 +15,16 @@ import { RecordFeed } from './RecordFeed';
 import { RecordList } from './RecordList';
 import { RecordToolbar, type RecordView } from './RecordToolbar';
 import Skeleton from './Skeleton';
+import RecordCommentPanel from '@/pages/comment/RecordCommentPanel';
 
 const VIEW_STORAGE_KEY = 'thrivex_record_view';
 
+const RECORD_VIEWS: RecordView[] = ['feed', 'list', 'comments'];
+
 function readStoredView(): RecordView {
   try {
-    return window.localStorage.getItem(VIEW_STORAGE_KEY) === 'list' ? 'list' : 'feed';
+    const stored = window.localStorage.getItem(VIEW_STORAGE_KEY) as RecordView | null;
+    return stored && RECORD_VIEWS.includes(stored) ? stored : 'feed';
   } catch {
     return 'feed';
   }
@@ -36,6 +40,7 @@ export default function RecordPage() {
   const [form] = Form.useForm<RecordFilterDataForm>();
   const [recordList, setRecordList] = useState<Record[]>([]);
   const [total, setTotal] = useState(0);
+  const [commentTotal, setCommentTotal] = useState(0);
   const [commentsRecord, setCommentsRecord] = useState<Record | null>(null);
 
   const [view, setView] = useState<RecordView>(readStoredView);
@@ -124,9 +129,10 @@ export default function RecordPage() {
   }, [getRecordList]);
 
   const summary = useMemo(() => {
+    if (view === 'comments') return `共 ${commentTotal} 条评论`;
     if (loading && !recordList.length) return '正在加载…';
     return hasActiveFilters ? `筛选出 ${total} 条` : `共 ${total} 条`;
-  }, [hasActiveFilters, loading, recordList.length, total]);
+  }, [commentTotal, hasActiveFilters, loading, recordList.length, total, view]);
 
   const changePage = useCallback((page: number, size: number) => {
     setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev.pageSize }));
@@ -162,10 +168,13 @@ export default function RecordPage() {
           hasActiveFilters={hasActiveFilters}
           onReset={resetFilters}
           summary={summary}
+          showFilters={view !== 'comments'}
         />
       </div>
 
-      {view === 'feed' ? (
+      {view === 'comments' ? (
+        <RecordCommentPanel onTotalChange={setCommentTotal} />
+      ) : view === 'feed' ? (
         <section className="flex min-h-0 flex-1 flex-col">
           <div
             className={`min-h-0 flex-1 overflow-y-auto pb-1 ${loading ? 'opacity-60' : ''}`}

@@ -7,7 +7,11 @@ import { HiOutlineMail } from 'react-icons/hi';
 import { IoTimeOutline } from 'react-icons/io5';
 
 import { auditCommentDataAPI, delCommentDataAPI, replyCommentDataAPI } from '@/api/comment';
-import { auditRecordCommentDataAPI, delRecordCommentDataAPI } from '@/api/recordComment';
+import {
+  auditRecordCommentDataAPI,
+  delRecordCommentDataAPI,
+  replyRecordCommentDataAPI,
+} from '@/api/recordComment';
 import { auditWallDataAPI, delWallDataAPI } from '@/api/wall';
 import { delLinkDataAPI, auditWebDataAPI } from '@/api/web';
 import { sendDismissEmailAPI, sendReplyWallEmailAPI } from '@/api/email';
@@ -92,8 +96,8 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
     try {
       await handleApproval();
 
-      if (type === 'comment' && item.commentSource !== 'record') {
-        await replyCommentDataAPI({
+      if (type === 'comment') {
+        const baseReply = {
           avatar: user.avatar,
           url: web.url,
           content: replyInfo,
@@ -101,9 +105,14 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
           status: 1,
           email: user.email ? user.email : null,
           name: user.name,
-          articleId: item.articleId!,
           createTime: new Date().getTime(),
-        });
+        };
+
+        if (item.commentSource === 'record') {
+          await replyRecordCommentDataAPI({ ...baseReply, recordId: item.recordId! });
+        } else {
+          await replyCommentDataAPI({ ...baseReply, articleId: item.articleId! });
+        }
       }
 
       if (type === 'wall') {
@@ -208,7 +217,7 @@ export default ({ item, type, fetchData, setLoading }: ListItemProps) => {
   };
 
   const displayName = type === 'link' ? item.title : item.name;
-  const canReply = type === 'wall' || (type === 'comment' && item.commentSource !== 'record');
+  const canReply = type === 'wall' || type === 'comment';
   const commentSourceLabel =
     type === 'comment' ? (item.commentSource === 'record' ? '闪念' : '文章') : null;
 
