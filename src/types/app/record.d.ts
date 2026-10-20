@@ -7,6 +7,7 @@ export interface Record {
   commentCount?: number;
   mood?: string;
   location?: string;
+  top?: boolean;
   createTime?: string | Dayjs;
 }
 

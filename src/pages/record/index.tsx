@@ -7,7 +7,9 @@ import { FiMessageSquare, FiPlus, FiRotateCcw, FiSearch } from 'react-icons/fi';
 import Title from '@/components/Title';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
 
-import { delRecordDataAPI, getRecordListAPI } from '@/api/record';
+import { delRecordDataAPI, getRecordListAPI, setRecordTopAPI } from '@/api/record';
+import { revalidateFrontendCacheAPI } from '@/api/revalidate';
+import { useWebStore } from '@/stores';
 import type { Record, RecordFilterDataForm, RecordFilterQueryParams } from '@/types/app/record';
 
 import { RecordCommentsModal } from './RecordCommentsModal';
@@ -32,10 +34,12 @@ function readStoredView(): RecordView {
 
 export default function RecordPage() {
   const navigate = useNavigate();
+  const web = useWebStore((state) => state.web);
 
   const [loading, setLoading] = useState(false);
   const [skeletonLoading, setSkeletonLoading] = useState(true);
   const [deletingIds, setDeletingIds] = useState<number[]>([]);
+  const [toppingIds, setToppingIds] = useState<number[]>([]);
 
   const [form] = Form.useForm<RecordFilterDataForm>();
   const [recordList, setRecordList] = useState<Record[]>([]);
@@ -85,13 +89,35 @@ export default function RecordPage() {
         await delRecordDataAPI(id);
         await getRecordList();
         message.success('闪念已删除');
+        // 前台闪念页是 ISR 缓存的，删除后只刷 records 标签，不阻塞本次操作
+        if (web.url) void revalidateFrontendCacheAPI(web.url, ['records']).catch(() => {});
       } catch (error) {
         console.error('删除闪念失败：', error);
       } finally {
         setDeletingIds((prev) => prev.filter((item) => item !== id));
       }
     },
-    [getRecordList],
+    [getRecordList, web.url],
+  );
+
+  const toggleRecordTop = useCallback(
+    async (record: Record) => {
+      const id = record.id!;
+      const next = !record.top;
+      try {
+        setToppingIds((prev) => [...prev, id]);
+        await setRecordTopAPI(id, next);
+        message.success(next ? '已置顶，将展示在前台时间轴顶部' : '已取消置顶');
+        await getRecordList();
+        // 前台闪念页是 ISR 缓存的，置顶后只刷 records 标签，不阻塞本次操作
+        if (web.url) void revalidateFrontendCacheAPI(web.url, ['records']).catch(() => {});
+      } catch (error) {
+        console.error('设置闪念置顶失败：', error);
+      } finally {
+        setToppingIds((prev) => prev.filter((item) => item !== id));
+      }
+    },
+    [getRecordList, web.url],
   );
 
   const { onValuesChange: onFilterChange, cancelPending } = useDebouncedChange<RecordFilterDataForm>({
@@ -186,6 +212,8 @@ export default function RecordPage() {
                 onDelete={delRecordData}
                 deletingIds={deletingIds}
                 onComments={setCommentsRecord}
+                onToggleTop={toggleRecordTop}
+                toppingIds={toppingIds}
               />
             ) : (
               <EmptyState hasActiveFilters={hasActiveFilters} onReset={resetFilters} />
@@ -206,6 +234,8 @@ export default function RecordPage() {
                 onDelete={delRecordData}
                 deletingIds={deletingIds}
                 onComments={setCommentsRecord}
+                onToggleTop={toggleRecordTop}
+                toppingIds={toppingIds}
               />
             ) : (
               <div className="flex h-full items-center justify-center">

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Popconfirm, Tooltip } from 'antd';
 import { FiEdit2, FiHeart, FiMessageSquare, FiTrash2 } from 'react-icons/fi';
+import { RiPushpinFill, RiPushpinLine } from 'react-icons/ri';
 
 import { getMoodLabel } from './recordMeta';
 import type { Record } from '@/types/app/record';
@@ -54,17 +55,36 @@ export function RecordMoodTag({ mood }: { mood?: string }) {
   );
 }
 
+/** 置顶标记：置顶的闪念会在前台时间轴顶部单列一条入口 */
+export function RecordTopTag({ top }: { top?: boolean }) {
+  if (!top) return null;
+
+  return (
+    <span
+      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"
+      title="已置顶"
+    >
+      <RiPushpinFill />
+      置顶
+    </span>
+  );
+}
+
 /** 行内操作：弹框查看评论、改发布页、删除。各视图共用同一组，行为一致。 */
 export function RecordActions({
   record,
   onDelete,
   deleting,
   onComments,
+  onToggleTop,
+  topping,
 }: {
   record: Record;
   onDelete: (id: number) => void;
   deleting: boolean;
   onComments: (record: Record) => void;
+  onToggleTop: (record: Record) => void;
+  topping?: boolean;
 }) {
   const commentCount = record.commentCount ?? 0;
 
@@ -83,6 +103,24 @@ export function RecordActions({
               {commentCount > 99 ? '99+' : commentCount}
             </span>
           ) : null}
+        </button>
+      </Tooltip>
+
+      <Tooltip title={record.top ? '取消置顶' : '置顶这条闪念'}>
+        <button
+          type="button"
+          disabled={topping}
+          onClick={() => onToggleTop(record)}
+          className={`${actionLink} disabled:opacity-50 ${record.top ? 'text-primary!' : ''}`}
+          aria-label={record.top ? '取消置顶' : '置顶闪念'}
+        >
+          {topping ? (
+            <span className="size-4 animate-spin rounded-full border-2 border-slate-300 border-t-primary" />
+          ) : record.top ? (
+            <RiPushpinFill className="h-[15px] w-[15px]" />
+          ) : (
+            <RiPushpinLine className="h-[15px] w-[15px]" />
+          )}
         </button>
       </Tooltip>
 

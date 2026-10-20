@@ -4,7 +4,7 @@ import { Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { FiMapPin } from 'react-icons/fi';
 
-import { RecordActions, RecordLikeCount, RecordMoodTag } from './recordBits';
+import { RecordActions, RecordLikeCount, RecordMoodTag, RecordTopTag } from './recordBits';
 import { RecordMediaCell } from './recordTableShared';
 import { formatRecordTime } from './recordMeta';
 import type { Record } from '@/types/app/record';
@@ -20,12 +20,16 @@ export function RecordList({
   onDelete,
   deletingIds,
   onComments,
+  onToggleTop,
+  toppingIds,
 }: {
   list: Record[];
   loading: boolean;
   onDelete: (id: number) => void;
   deletingIds: number[];
   onComments: (record: Record) => void;
+  onToggleTop: (record: Record) => void;
+  toppingIds: number[];
 }) {
   const columns: ColumnsType<Record> = useMemo(
     () => [
@@ -46,6 +50,7 @@ export function RecordList({
             )}
 
             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <RecordTopTag top={row.top} />
               <RecordMoodTag mood={row.mood} />
 
               {row.location ? (
@@ -97,11 +102,13 @@ export function RecordList({
             onDelete={onDelete}
             deleting={deletingIds.includes(row.id!)}
             onComments={onComments}
+            onToggleTop={onToggleTop}
+            topping={toppingIds.includes(row.id!)}
           />
         ),
       },
     ],
-    [onDelete, deletingIds, onComments],
+    [onDelete, deletingIds, onComments, onToggleTop, toppingIds],
   );
 
   return (

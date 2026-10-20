@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { FiChevronDown, FiMapPin } from 'react-icons/fi';
 
-import { RecordActions, RecordLikeCount } from './recordBits';
+import { RecordActions, RecordLikeCount, RecordTopTag } from './recordBits';
 import { RecordMediaStrip } from './recordTableShared';
 import { formatRecordTime, getMoodLabel, groupRecordsByDay } from './recordMeta';
 import type { Record } from '@/types/app/record';
@@ -75,11 +75,15 @@ export function RecordFeed({
   onDelete,
   deletingIds,
   onComments,
+  onToggleTop,
+  toppingIds,
 }: {
   list: Record[];
   onDelete: (id: number) => void;
   deletingIds: number[];
   onComments: (record: Record) => void;
+  onToggleTop: (record: Record) => void;
+  toppingIds: number[];
 }) {
   const groups = useMemo(() => groupRecordsByDay(list), [list]);
 
@@ -127,6 +131,8 @@ export function RecordFeed({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-100 px-4 py-2 dark:border-strokedark">
+                    <RecordTopTag top={row.top} />
+
                     {row.location ? (
                       <span className="flex min-w-0 max-w-52 items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                         <FiMapPin size={12} className="shrink-0 text-slate-400 dark:text-slate-500" />
@@ -148,6 +154,8 @@ export function RecordFeed({
                         onDelete={onDelete}
                         deleting={deletingIds.includes(row.id!)}
                         onComments={onComments}
+                        onToggleTop={onToggleTop}
+                        topping={toppingIds.includes(row.id!)}
                       />
                     </div>
                   </div>

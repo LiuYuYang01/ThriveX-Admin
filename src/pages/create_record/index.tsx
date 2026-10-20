@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Dropdown, Image, Input, message, Modal, Spin, Tabs, Tooltip } from 'antd';
+import { Button, Dropdown, Image, Input, message, Modal, Spin, Switch, Tabs, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import { BiLogoTelegram, BiLink } from 'react-icons/bi';
 import { FiNavigation } from 'react-icons/fi';
@@ -8,6 +8,8 @@ import { LuImagePlus, LuVideo } from 'react-icons/lu';
 import { RiDeleteBinLine, RiLoader4Line, RiTiktokLine } from 'react-icons/ri';
 import Material from '@/components/Material';
 import { addRecordDataAPI, editRecordDataAPI, getRecordDataAPI } from '@/api/record';
+import { revalidateFrontendCacheAPI } from '@/api/revalidate';
+import { useWebStore } from '@/stores';
 import { MOOD_OPTIONS } from '@/constants/mood';
 import { getDouyinEmbedUrl } from '@/utils';
 import { loadGaodeWebKey, resolveLocationAddress } from '@/utils/location';
@@ -20,10 +22,12 @@ export default () => {
   const [params] = useSearchParams();
   const id = +params.get('id')!;
   const navigate = useNavigate();
+  const web = useWebStore((state) => state.web);
 
   const [imageList, setImageList] = useState<string[]>([]);
   const [video, setVideo] = useState('');
   const [mood, setMood] = useState('');
+  const [top, setTop] = useState(false);
   const [location, setLocation] = useState('');
   const [locating, setLocating] = useState(false);
   const [gaodeApKey, setGaodeApKey] = useState('');
@@ -53,16 +57,20 @@ export default () => {
         video: video.trim() || undefined,
         mood: mood || undefined,
         location: location.trim() || undefined,
+        top: top,
         createTime: new Date().getTime().toString(),
       };
 
       if (id) {
-        await editRecordDataAPI({ id, content: data.content, images: data.images, video: data.video, mood: data.mood, location: data.location });
+        await editRecordDataAPI({ id, content: data.content, images: data.images, video: data.video, mood: data.mood, location: data.location, top: data.top });
         message.success('想法已更新');
       } else {
         await addRecordDataAPI(data);
         message.success('闪念已发布');
       }
+
+      // 前台闪念页是 ISR 缓存的，发布后只刷 records 标签，不阻塞跳转
+      if (web.url) void revalidateFrontendCacheAPI(web.url, ['records']).catch(() => {});
 
       setLoading(false);
       navigate('/record');
@@ -87,6 +95,7 @@ export default () => {
       }
       setMood(data.mood || '');
       setLocation(data.location || '');
+      setTop(Boolean(data.top));
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -362,6 +371,14 @@ export default () => {
                       </Tooltip>
                     </div>
                     <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="如：厦门市 · 环岛路" allowClear className="h-12 rounded-2xl border-slate-200/80 bg-slate-50 px-4 dark:border-strokedark dark:bg-boxdark-2" />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 dark:bg-boxdark-2">
+                    <div className="mr-4 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">置顶这条闪念</div>
+                      <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">前台时间轴顶部会单列一条入口，类似朋友圈置顶</div>
+                    </div>
+                    <Switch checked={top} onChange={setTop} className="cursor-pointer shrink-0" />
                   </div>
                 </div>
               </section>

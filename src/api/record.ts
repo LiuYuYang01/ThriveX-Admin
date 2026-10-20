@@ -10,6 +10,9 @@ export const delRecordDataAPI = (id: number) => Request('DELETE', `/record/${id}
 // 修改闪念
 export const editRecordDataAPI = (data: Record) => Request('PATCH', '/record', { data })
 
+// 设置闪念置顶状态
+export const setRecordTopAPI = (id: number, top: boolean) => Request('PATCH', `/record/${id}/top`, { data: { top } })
+
 // 获取闪念
 export const getRecordDataAPI = (id?: number) => Request<Record>('GET', `/record/${id}`)
 
