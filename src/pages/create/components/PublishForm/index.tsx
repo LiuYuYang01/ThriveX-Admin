@@ -108,6 +108,8 @@ const PublishForm = ({ data, closeModel }: Props) => {
   const [isEncryptEnabled, setIsEncryptEnabled] = useState(false);
 
   const isEditing = Boolean(id && !isDraftParams);
+  // 密码明文不再下发，编辑时留空表示沿用原密码
+  const hasExistingPassword = Boolean(data?.config?.hasPassword);
   const showDraftActions = (isDraftParams && id) || !id;
   const primaryLabel = isEditing ? '保存修改' : '发布文章';
   const draftLabel = isDraftParams ? '保存草稿' : '存为草稿';
@@ -128,7 +130,7 @@ const PublishForm = ({ data, closeModel }: Props) => {
       isTop: data.isTop ?? false,
       config: data.config,
       status: data.config.status,
-      password: data.config.password,
+      password: '',
       isEncrypt: data.config.isEncrypt,
       tagIds,
       createTime: dayjs(data.createTime!),
@@ -477,10 +479,11 @@ const PublishForm = ({ data, closeModel }: Props) => {
                     <Form.Item
                       label="访问密码"
                       name={['config', 'password']}
-                      rules={[{ required: isEncryptEnabled, message: '请输入访问密码' }]}
+                      rules={[{ required: isEncryptEnabled && !hasExistingPassword, message: '请输入访问密码' }]}
+                      extra={hasExistingPassword ? '已设置过访问密码，留空表示不修改' : undefined}
                       className="mb-0!"
                     >
-                      <Input.Password placeholder="设置访问密码" />
+                      <Input.Password placeholder={hasExistingPassword ? '留空表示不修改密码' : '设置访问密码'} />
                     </Form.Item>
                   )}
                 </Card>

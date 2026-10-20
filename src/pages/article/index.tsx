@@ -88,7 +88,8 @@ const ARTICLE_STATUS_META: Record<
 };
 
 function renderArticleStatusCell(config: Config) {
-  const hasPassword = Boolean(config.password?.trim());
+  // 优先使用服务端给出的只读标记，密码明文不再下发
+  const hasPassword = config.hasPassword ?? Boolean(config.password?.trim());
   if (hasPassword) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">

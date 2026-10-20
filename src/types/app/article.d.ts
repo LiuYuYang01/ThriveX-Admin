@@ -5,7 +5,10 @@ export interface Config {
   id?: number;
   articleId?: number;
   status: 1 | 2 | 3;
-  password: string;
+  /** 访问密码：仅提交时携带，服务端不会回显明文 */
+  password?: string;
+  /** 服务端只读标记：是否已设置过访问密码 */
+  hasPassword?: boolean;
   isEncrypt: boolean;
   isDraft: boolean;
   isDel: boolean;
