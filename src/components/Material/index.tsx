@@ -4,6 +4,7 @@ import { Button, Empty, Image, Input, Modal, Space, Spin, Tooltip, message } fro
 import { getFileTreeAPI } from '@/api/file';
 import FileUpload from '@/components/FileUpload';
 import { File, FileTreeData, FileTreeNode } from '@/types/app/file';
+import { VIDEO_EXTENSIONS } from '@/utils/fileTypes';
 import errorImg from '@/pages/file/image/error.png';
 import fileSvg from '@/pages/file/image/file.svg';
 
@@ -59,8 +60,6 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
-
-const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogg', '.mov', '.m4v', '.avi', '.mkv'];
 
 function isVideoFile(file: File): boolean {
   if (file.mimeType?.startsWith('video/')) return true;

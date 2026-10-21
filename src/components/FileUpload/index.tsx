@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useUserStore, useFileStore } from '@/stores';
 import { DirList } from '@/types/app/file';
 import { getApiUrl } from '@/utils/config';
+import { UPLOAD_ACCEPT } from '@/utils/fileTypes';
 import { compressImageFiles, getUploadCompressModeLabel } from '@/utils/imageCompress';
 
 interface Props {
@@ -156,10 +157,17 @@ export default ({ multiple, dir, open, onCancel, onSuccess }: Props) => {
           </div>
 
           <p className="text-base text-center">{isDragging ? '释放文件以上传' : '点击或拖动文件到此区域进行上传'}</p>
-          <p className="text-sm text-[#999] text-center">支持单个或多个上传</p>
+          <p className="text-sm text-[#999] text-center">支持单个或多个上传，仅限 jpg、jpeg、png、webp 图片与 mp4 视频</p>
         </div>
 
-        <input multiple={multiple} type="file" onChange={handleFileInput} ref={fileInputRef} className="hidden" />
+        <input
+          multiple={multiple}
+          type="file"
+          accept={UPLOAD_ACCEPT}
+          onChange={handleFileInput}
+          ref={fileInputRef}
+          className="hidden"
+        />
       </Spin>
     </Modal>
   );
