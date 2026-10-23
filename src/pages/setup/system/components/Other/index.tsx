@@ -60,10 +60,6 @@ export default () => {
           <Input placeholder="e5bf799a3e49312141c8b677b7bec1c2" />
         </Form.Item>
 
-        <Form.Item label={<Label title="HCaptcha Key" url="https://docs.liuyuyang.net/docs/项目部署/API/人机验证.html" />} name="hcaptcha_key" rules={[{ required: true, message: 'HCaptcha Key 不能为空' }]} className="[&_label]:w-full">
-          <Input placeholder="bfb82d04-e46a-4da0-9b6e-9adc052672c8" />
-        </Form.Item>
-
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={loading} block>
             确定

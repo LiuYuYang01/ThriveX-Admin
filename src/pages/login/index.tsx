@@ -3,8 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'antd/es/form/Form';
 import { Button, Form, Input, notification } from 'antd';
 import { UserOutlined, LockOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
-import HCaptchaType from '@hcaptcha/react-hcaptcha';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 
 import { getUserDataAPI, loginDataAPI } from '@/api/user';
 import { getPublicConfigAPI } from '@/api/config';
@@ -23,7 +22,7 @@ export default () => {
   const [isPassVisible, setIsPassVisible] = useState(false);
 
   // 人机验证：sitekey 存在时才启用（后端 secret 未配置时不校验，这里同步放行）
-  const captchaRef = useRef<HCaptchaType>(null);
+  const captchaRef = useRef<TurnstileInstance>(null);
   const [sitekey, setSitekey] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaError, setCaptchaError] = useState('');
@@ -33,13 +32,13 @@ export default () => {
 
   useEffect(() => {
     getPublicConfigAPI()
-      .then(({ data }) => setSitekey(data?.hcaptcha_key?.key || ''))
+      .then(({ data }) => setSitekey(data?.turnstile_key?.key || ''))
       .catch(() => setSitekey(''));
   }, []);
 
   const resetCaptcha = () => {
     setCaptchaToken(null);
-    captchaRef.current?.resetCaptcha();
+    captchaRef.current?.reset();
   };
 
   const onSubmit = async () => {
@@ -54,7 +53,7 @@ export default () => {
       }
 
       setLoading(true);
-      const { data: loginData } = await loginDataAPI({ ...values, h_captcha_response: captchaToken });
+      const { data: loginData } = await loginDataAPI({ ...values, cf_turnstile_response: captchaToken });
       const { data: userData } = await getUserDataAPI(loginData.token);
 
       // 将用户信息和token保存起来
@@ -113,7 +112,7 @@ export default () => {
             {sitekey && (
               <Form.Item>
                 <div className="flex flex-col items-start">
-                  <HCaptcha sitekey={sitekey} onVerify={setCaptchaToken} ref={captchaRef} />
+                  <Turnstile siteKey={sitekey} onSuccess={setCaptchaToken} onExpire={() => setCaptchaToken(null)} ref={captchaRef} />
                   {captchaError && <span className="text-red-400 text-sm mt-1">{captchaError}</span>}
                 </div>
               </Form.Item>

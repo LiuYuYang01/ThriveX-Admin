@@ -66,7 +66,7 @@ export type EnvConfigName =
   | 'gaode_map_key'
   | 'gaode_coordinate'
   | 'qiniu_storage'
-  | 'hcaptcha_key';
+  | 'turnstile_key';
 
 export interface Config {
   id: string;

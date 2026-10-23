@@ -39,7 +39,7 @@ const INIT_STEPS: InitStep[] = [
   {
     key: 'security',
     title: '人机验证',
-    subtitle: '配置 hCaptcha 密钥，拦截机器人和恶意请求',
+    subtitle: '配置 Cloudflare Turnstile 密钥，拦截机器人和恶意请求',
   },
   {
     key: 'follow_up',

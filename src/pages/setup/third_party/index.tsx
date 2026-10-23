@@ -15,7 +15,7 @@ import {
   EmailForm,
   GaodeCoordinateForm,
   GaodeMapForm,
-  HcaptchaForm,
+  TurnstileForm,
   StorageForm,
 } from './components';
 
@@ -72,9 +72,9 @@ const MENU_LIST: MenuItem[] = [
     icon: <BiArchive />,
   },
   {
-    key: 'hcaptcha_key',
-    title: 'hCaptcha',
-    description: '拦截机器人与恶意请求验证',
+    key: 'turnstile_key',
+    title: 'Cloudflare Turnstile',
+    description: 'Cloudflare 人机验证，拦截机器人请求',
     icon: <BiShield />,
   },
 ];
@@ -205,7 +205,7 @@ export default function ThirdPartyConfigPage() {
             {activeKey === 'backup_storage' && (
               <BackupStorageForm row={byName[activeKey]} qiniuRow={byName['qiniu_storage']} onSaved={reload} />
             )}
-            {activeKey === 'hcaptcha_key' && <HcaptchaForm row={byName[activeKey]} onSaved={reload} />}
+            {activeKey === 'turnstile_key' && <TurnstileForm row={byName[activeKey]} onSaved={reload} />}
           </div>
         </div>
       </div>

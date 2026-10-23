@@ -115,7 +115,7 @@ export type EnvConfigName =
   | 'qiniu_storage'
   | 'local_storage'
   | 'backup_storage'
-  | 'hcaptcha_key';
+  | 'turnstile_key';
 
 /** 在项目配置「环境配置」表格中隐藏、改由「第三方配置」页表单维护的 name */
 export const THIRD_PARTY_ENV_NAMES = [
@@ -127,7 +127,7 @@ export const THIRD_PARTY_ENV_NAMES = [
   'qiniu_storage',
   'local_storage',
   'backup_storage',
-  'hcaptcha_key',
+  'turnstile_key',
 ] as const;
 export type ThirdPartyEnvName = (typeof THIRD_PARTY_ENV_NAMES)[number];
 
@@ -147,8 +147,8 @@ export interface BaiduStatisKeyEnvValue {
   key: string;
 }
 
-/** hCaptcha 人机验证 */
-export interface HcaptchaEnvValue {
+/** Cloudflare Turnstile 人机验证 */
+export interface TurnstileEnvValue {
   /** 功能开关：开启后前端渲染验证码、后端强制校验 */
   enabled: boolean;
   /** 站点密钥（公钥），下发前端渲染验证组件 */
