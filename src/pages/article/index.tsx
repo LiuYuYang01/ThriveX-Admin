@@ -108,6 +108,8 @@ function renderArticleStatusCell(config: Config) {
 
 const IMPORT_ARTICLE_CONCURRENCY = 5;
 
+const DEFAULT_PAGE_SIZE = 10;
+
 const articleCoverCellClass =
   '[&_.ant-image]:block! [&_.ant-image]:size-full! [&_.ant-image-img]:size-full! [&_.ant-image-img]:object-cover! [&_.ant-image-mask]:size-full!';
 
@@ -123,17 +125,43 @@ export default function ArticlePage() {
   const web = useWebStore((state) => state.web);
   const [articleList, setArticleList] = useState<Article[]>([]);
   const [total, setTotal] = useState(0);
-  const [filter, setFilter] = useState<ArticleFilterQueryParams>();
+  // 分页信息始终带上，避免服务端因缺少分页参数而返回全量数据
+  const [filter, setFilter] = useState<ArticleFilterQueryParams>({
+    pageNum: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+  });
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [cateList, setCateList] = useState<ArticleCate[]>([]);
   const [tagList, setTagList] = useState<ArticleTag[]>([]);
 
   const selectedCount = selectedRowKeys.length;
 
+  const { onValuesChange: onFilterChange, cancelPending } = useDebouncedChange<ArticleFilterDataForm>({
+    debouncedKeys: ['title'],
+    debounceMs: 400,
+    getValues: () => form.getFieldsValue() as ArticleFilterDataForm,
+    onApply: (values) => {
+      setFilter((prev) => ({
+        ...prev,
+        pageNum: 1,
+        title: values.title,
+        cateIds: resolveCateIdsFromPaths(values.cateIds),
+        tagId: values.tagId,
+        startDate: values.createTime?.[0] ? values.createTime[0].valueOf() : undefined,
+        endDate: values.createTime?.[1] ? values.createTime[1].valueOf() : undefined,
+      }));
+    },
+  });
+
   const getArticleList = useCallback(async () => {
     try {
       setLoading(true);
       const { data } = await getArticlePagingAPI(filter);
+      // 当前页被删空时回退到上一页，避免停留在空白页
+      if (data.result.length === 0 && (filter.pageNum ?? 1) > 1) {
+        setFilter((prev) => ({ ...prev, pageNum: (prev.pageNum ?? 1) - 1 }));
+        return;
+      }
       setTotal(data.total);
       setArticleList(data.result);
     } catch (error) {
@@ -148,6 +176,8 @@ export default function ArticlePage() {
     async (id: number) => {
       try {
         setBtnLoading(true);
+        // 丢弃尚未生效的筛选，避免删除后被重置回第一页
+        cancelPending();
         await delArticleDataAPI(id, true);
         await getArticleList();
         notification.success({ message: '删除成功' });
@@ -157,7 +187,7 @@ export default function ArticlePage() {
         setBtnLoading(false);
       }
     },
-    [getArticleList],
+    [cancelPending, getArticleList],
   );
 
   const columns: ColumnsType<Article> = useMemo(
@@ -367,23 +397,6 @@ export default function ArticlePage() {
     [web.url, btnLoading, delArticleData],
   );
 
-  const { onValuesChange: onFilterChange } = useDebouncedChange<ArticleFilterDataForm>({
-    debouncedKeys: ['title'],
-    debounceMs: 400,
-    getValues: () => form.getFieldsValue() as ArticleFilterDataForm,
-    onApply: (values) => {
-      setFilter((prev) => ({
-        ...prev,
-        pageNum: 1,
-        title: values.title,
-        cateIds: resolveCateIdsFromPaths(values.cateIds),
-        tagId: values.tagId,
-        startDate: values.createTime?.[0] ? values.createTime[0].valueOf() : undefined,
-        endDate: values.createTime?.[1] ? values.createTime[1].valueOf() : undefined,
-      }));
-    },
-  });
-
   const getCateList = async () => {
     const { data } = await getCateListAPI();
     setCateList(data.result.filter((item: ArticleCate) => item.type === 'cate'));
@@ -519,7 +532,9 @@ export default function ArticlePage() {
       if (code === 200) {
         message.success('删除成功');
         setSelectedRowKeys([]);
-        setFilter((prev) => ({ ...prev, pageNum: 1 }));
+        // 丢弃尚未生效的筛选，删除后保留当前页
+        cancelPending();
+        await getArticleList();
       } else {
         message.error('删除失败');
       }
@@ -542,10 +557,11 @@ export default function ArticlePage() {
   };
 
   const resetFilters = () => {
+    cancelPending();
     form.resetFields();
     setFilter((prev) => ({
       pageNum: 1,
-      pageSize: prev?.pageSize ?? 8,
+      pageSize: prev.pageSize ?? DEFAULT_PAGE_SIZE,
     }));
   };
 
@@ -702,12 +718,12 @@ export default function ArticlePage() {
             scroll={{ x: 1528 }}
             pagination={{
               position: ['bottomRight'],
-              current: filter?.pageNum,
-              pageSize: filter?.pageSize,
+              current: filter.pageNum,
+              pageSize: filter.pageSize,
               total,
               showTotal: (totalCount) => {
-                const pageSize = filter?.pageSize ?? 8;
-                const pageNum = filter?.pageNum ?? 1;
+                const pageSize = filter.pageSize ?? DEFAULT_PAGE_SIZE;
+                const pageNum = filter.pageNum ?? 1;
                 const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
                 return (
                   <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -715,10 +731,22 @@ export default function ArticlePage() {
                   </span>
                 );
               },
-              onChange: (page, size) =>
-                setFilter((prev) => ({ ...prev, pageNum: page, pageSize: size ?? prev?.pageSize ?? 8 })),
-              onShowSizeChange: (_, size) =>
-                setFilter((prev) => ({ ...prev, pageNum: 1, pageSize: size ?? prev?.pageSize ?? 8 })),
+              onChange: (page, size) => {
+                cancelPending();
+                setFilter((prev) => ({
+                  ...prev,
+                  pageNum: page,
+                  pageSize: size ?? prev.pageSize ?? DEFAULT_PAGE_SIZE,
+                }));
+              },
+              onShowSizeChange: (_, size) => {
+                cancelPending();
+                setFilter((prev) => ({
+                  ...prev,
+                  pageNum: 1,
+                  pageSize: size ?? prev.pageSize ?? DEFAULT_PAGE_SIZE,
+                }));
+              },
               className: 'px-5! py-3!',
             }}
             className="min-h-0 flex-1 [&_.ant-table-thead>tr>th]:bg-slate-50! [&_.ant-table-thead>tr>th]:font-medium! [&_.ant-table-thead>tr>th]:text-slate-500! dark:[&_.ant-table-thead>tr>th]:bg-[#1f2838]! dark:[&_.ant-table-thead>tr>th]:text-slate-400!"

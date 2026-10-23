@@ -188,6 +188,10 @@ const PublishForm = ({ data, closeModel }: Props) => {
         ...new Set((values.cateIds ?? []).map((path) => (Array.isArray(path) ? path[path.length - 1] : path))),
       ];
 
+      // 草稿标记要跟着按钮走：保存草稿时 isDraft 为 true，其余情况为 false
+      const config = { isDraft: Boolean(isDraft), isDel: false, ...values.config };
+      const successMsg = isDraft ? '已保存为草稿' : '发布成功';
+
       if (id && !isDraftParams) {
         await editArticleDataAPI({
           id,
@@ -196,33 +200,32 @@ const PublishForm = ({ data, closeModel }: Props) => {
           tagIds,
           cateIds,
           createTime,
-          config: { isDraft: false, isDel: false, ...values.config },
+          config,
         });
-        message.success('编辑成功');
+        message.success(isDraft ? successMsg : '编辑成功');
+      } else if (!isDraftParams) {
+        await addArticleDataAPI({
+          id,
+          ...values,
+          content: data.content,
+          tagIds,
+          cateIds,
+          config,
+          createTime,
+        });
+        message.success(successMsg);
       } else {
-        if (!isDraftParams) {
-          await addArticleDataAPI({
-            id,
-            ...values,
-            content: data.content,
-            tagIds,
-            cateIds,
-            config: { isDraft: false, isDel: false, ...values.config },
-            createTime,
-          });
-          message.success(isDraft ? '已保存为草稿' : '发布成功');
-        } else {
-          await editArticleDataAPI({
-            id,
-            ...values,
-            content: data.content,
-            tagIds,
-            cateIds,
-            createTime,
-            config: { isDraft: false, isDel: false, ...values.config },
-          });
-          message.success('发布成功');
-        }
+        // 从草稿页进入：主按钮发布（isDraft 为 false），保存草稿则保持草稿状态
+        await editArticleDataAPI({
+          id,
+          ...values,
+          content: data.content,
+          tagIds,
+          cateIds,
+          createTime,
+          config,
+        });
+        message.success(successMsg);
       }
 
       closeModel();
