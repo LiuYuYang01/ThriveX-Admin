@@ -1,4 +1,4 @@
-import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug, BiBook, BiTrash, BiChip, BiMessageSquareDetail, BiCommentDetail, BiGlobe, BiImage, BiMapPin, BiCog, BiPlug, BiStar, BiHistory, BiData } from 'react-icons/bi';
+import { BiEditAlt, BiFolderOpen, BiHomeSmile, BiSliderAlt, BiCategoryAlt, BiBug, BiBook, BiBookOpen, BiTrash, BiChip, BiMessageSquareDetail, BiCommentDetail, BiGlobe, BiImage, BiMapPin, BiCog, BiPlug, BiStar, BiHistory, BiData } from 'react-icons/bi';
 import { FiActivity } from 'react-icons/fi';
 import { TbBrandAirtable, TbWriting } from 'react-icons/tb';
 import { FaRegComments, FaInstagram } from 'react-icons/fa';
@@ -42,6 +42,7 @@ export const sidebarRoutes: RouteGroupConfig[] = [
         subMenu: [
           { path: '/create', name: '谱写', title: '发挥灵感', icon: <TbWriting className="text-base" /> },
           { path: '/create_record', name: '闪念', icon: <FaInstagram className="text-base" /> },
+          { path: '/create_diary', name: '日记', title: '写一篇日记', icon: <BiBook className="text-base" /> },
           { path: '/draft', name: '草稿箱', icon: <BiBook className="text-base" /> },
           { path: '/recycle', name: '回收站', icon: <BiTrash className="text-base" /> },
         ],
@@ -54,6 +55,7 @@ export const sidebarRoutes: RouteGroupConfig[] = [
           { path: '/article', name: '文章管理', icon: <MdOutlineArticle className="text-base" /> },
           { path: '/assistant', name: '助手管理', icon: <BiChip className="text-base" /> },
           { path: '/record', name: '闪念管理', icon: <BiMessageSquareDetail className="text-base" /> },
+          { path: '/diary', name: '日记管理', icon: <BiBookOpen className="text-base" /> },
           { path: '/tag', name: '标签管理', icon: <AiOutlineTags className="text-base" /> },
           { path: '/comment', name: '评论管理', icon: <FaRegComments className="text-base" /> },
           { path: '/wall', name: '留言管理', icon: <BiCommentDetail className="text-base" /> },

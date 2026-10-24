@@ -3,6 +3,7 @@ import React from 'react';
 import Home from '@/pages/dashboard';
 import Create from '@/pages/create';
 import CreateRecord from '@/pages/create_record';
+import CreateDiary from '@/pages/create_diary';
 import Cate from '@/pages/cate';
 import Article from '@/pages/article';
 import Comment from '@/pages/comment';
@@ -20,6 +21,7 @@ import Work from '@/pages/work';
 import Draft from '@/pages/draft';
 import Decycle from '@/pages/decycle';
 import Record from '@/pages/record';
+import Diary from '@/pages/diary';
 import Assistant from '@/pages/assistant';
 import PageConfig from '@/pages/page_config';
 import OperationLog from '@/pages/operation_log';
@@ -41,11 +43,13 @@ const componentMap: Record<string, React.ReactNode> = {
   '/': <Home />,
   '/create': <Create />,
   '/create_record': <CreateRecord />,
+  '/create_diary': <CreateDiary />,
   '/draft': <Draft />,
   '/recycle': <Decycle />,
   '/cate': <Cate />,
   '/article': <Article />,
   '/record': <Record />,
+  '/diary': <Diary />,
   '/tag': <Tag />,
   '/comment': <Comment />,
   '/wall': <Wall />,
