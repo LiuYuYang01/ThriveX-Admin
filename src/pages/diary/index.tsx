@@ -8,8 +8,7 @@ import { FiEdit2, FiImage, FiLock, FiPlus, FiRotateCcw, FiSearch, FiTrash2 } fro
 import RangePicker from '@/components/RangePicker';
 import Title from '@/components/Title';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
-import { delDiaryDataAPI, getDiaryCredentialListAPI, getDiaryListAPI } from '@/api/diary';
-import { getWeatherMeta } from '@/constants/weather';
+import { delDiaryDataAPI, getDiaryListAPI } from '@/api/diary';
 import type { Diary, DiaryFilterQueryParams } from '@/types/app/diary';
 
 import DiaryCredentialDrawer from './DiaryCredentialDrawer';
@@ -17,6 +16,15 @@ import DiaryCredentialDrawer from './DiaryCredentialDrawer';
 const DEFAULT_PAGE_SIZE = 8;
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
+
+// 正文是 Markdown，列表里只给读者看字，去掉语法记号
+const plainText = (markdown: string) =>
+  markdown
+    .replace(/!\[[^\]]*]\([^)]*\)/g, '')
+    .replace(/\[([^\]]*)]\([^)]*\)/g, '$1')
+    .replace(/[`*_~#>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 interface DiaryFilterForm {
   keyword?: string;
@@ -29,7 +37,6 @@ export default function DiaryPage() {
   const [loading, setLoading] = useState(false);
   const [removingId, setRemovingId] = useState<number | null>(null);
   const [credentialOpen, setCredentialOpen] = useState(false);
-  const [credentialCount, setCredentialCount] = useState<number | null>(null);
 
   const [list, setList] = useState<Diary[]>([]);
   const [total, setTotal] = useState(0);
@@ -64,12 +71,6 @@ export default function DiaryPage() {
   useEffect(() => {
     void getList();
   }, [getList]);
-
-  useEffect(() => {
-    getDiaryCredentialListAPI()
-      .then(({ data }) => setCredentialCount(data?.length ?? 0))
-      .catch((error) => console.error('获取密语数量失败：', error));
-  }, [credentialOpen]);
 
   const { onValuesChange: onFilterChange, cancelPending } = useDebouncedChange<DiaryFilterForm>({
     debouncedKeys: ['keyword'],
@@ -109,10 +110,7 @@ export default function DiaryPage() {
   );
 
   const footnote = (diary: Diary) => {
-    const weather = getWeatherMeta(diary.weather);
     const chips: string[] = [];
-    if (diary.mood) chips.push(diary.mood);
-    if (weather) chips.push(`${weather.emoji} ${weather.label}`);
     if (diary.location) chips.push(diary.location);
     return chips;
   };
@@ -145,12 +143,12 @@ export default function DiaryPage() {
       title: '内容',
       key: 'content',
       render: (_: unknown, row: Diary) => (
-        <div className="max-w-xl">
-          <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
-            {row.title?.trim() || <span className="text-slate-400 dark:text-slate-500">无题</span>}
-          </p>
-          <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-            {row.content}
+        <div className="max-w-2xl">
+          {row.title?.trim() ? (
+            <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{row.title}</p>
+          ) : null}
+          <p className={`line-clamp-2 leading-relaxed text-slate-600 dark:text-slate-300 ${row.title?.trim() ? 'mt-1 text-sm' : 'text-sm'}`}>
+            {plainText(row.content)}
           </p>
         </div>
       ),
@@ -158,7 +156,7 @@ export default function DiaryPage() {
     {
       title: '注脚',
       key: 'footnote',
-      width: 240,
+      width: 200,
       render: (_: unknown, row: Diary) => {
         const chips = footnote(row);
         return (
@@ -233,7 +231,7 @@ export default function DiaryPage() {
             onClick={() => setCredentialOpen(true)}
             className="cursor-pointer rounded-xl"
           >
-            访问密语{credentialCount !== null ? `（${credentialCount}）` : ''}
+            访问密语
           </Button>
           <Button
             type="primary"
@@ -245,21 +243,6 @@ export default function DiaryPage() {
           </Button>
         </div>
       </Title>
-
-      <div className="mb-3 flex items-start gap-2.5 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-[13px] leading-6 text-slate-600 dark:border-blue-900/40 dark:bg-blue-950/25 dark:text-slate-300">
-        <FiLock className="mt-1 shrink-0 text-primary" size={15} />
-        <p>
-          日记不会出现在文章列表、RSS、站点地图或搜索里。访客必须先答对
-          <button
-            type="button"
-            onClick={() => setCredentialOpen(true)}
-            className="mx-1 cursor-pointer font-medium text-primary underline decoration-blue-300 underline-offset-2"
-          >
-            后台密语
-          </button>
-          才能翻开，解锁状态只保留 7 天。
-        </p>
-      </div>
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
         <header className="shrink-0 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
@@ -328,11 +311,7 @@ export default function DiaryPage() {
         </div>
       </section>
 
-      <DiaryCredentialDrawer
-        open={credentialOpen}
-        onClose={() => setCredentialOpen(false)}
-        onCountChange={setCredentialCount}
-      />
+      <DiaryCredentialDrawer open={credentialOpen} onClose={() => setCredentialOpen(false)} />
     </div>
   );
 }

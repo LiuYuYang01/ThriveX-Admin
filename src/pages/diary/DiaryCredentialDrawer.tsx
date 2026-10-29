@@ -25,11 +25,9 @@ const formatDay = (timestamp?: number) => {
 export default function DiaryCredentialDrawer({
   open,
   onClose,
-  onCountChange,
 }: {
   open: boolean;
   onClose: () => void;
-  onCountChange?: (count: number) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -44,13 +42,12 @@ export default function DiaryCredentialDrawer({
       setLoading(true);
       const { data } = await getDiaryCredentialListAPI();
       setList(data ?? []);
-      onCountChange?.(data?.length ?? 0);
     } catch (error) {
       console.error('获取密语列表失败：', error);
     } finally {
       setLoading(false);
     }
-  }, [onCountChange]);
+  }, []);
 
   useEffect(() => {
     if (open) void getList();
@@ -110,6 +107,7 @@ export default function DiaryCredentialDrawer({
       if (list.length <= 1) {
         Modal.confirm({
           title: '这是最后一条密语',
+          maskClosable: true,
           content: '删除后没有人能打开日记本，直到你再加一条密语。确定删除吗？',
           okText: '仍然删除',
           okButtonProps: { danger: true },

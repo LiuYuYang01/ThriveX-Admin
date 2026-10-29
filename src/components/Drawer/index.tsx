@@ -32,7 +32,8 @@ export default ({ title, children, open, onClose, loading, className }: Props) =
       title={<Title />}
       open={open}
       onClose={() => onClose?.(false)}
-      height="100vh"
+      // 从底部升起，留出顶部一条遮罩，点外面才关得掉
+      size="92vh"
       placement="bottom"
       closeIcon={null}
       className={`[&>.ant-drawer-header]:p-0! ${className}`}

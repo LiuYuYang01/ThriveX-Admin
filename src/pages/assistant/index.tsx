@@ -118,6 +118,7 @@ export default function AssistantPage() {
     (record: Assistant) => {
       Modal.confirm({
         title: '确认删除',
+        maskClosable: true,
         content: `确定要删除「${getAssistantDisplayLabel(record.model)}」吗？删除后不可恢复。`,
         okText: '删除',
         okType: 'danger',

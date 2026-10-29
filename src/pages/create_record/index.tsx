@@ -159,6 +159,7 @@ export default () => {
     let inputUrl = '';
     Modal.confirm({
       title: '添加网络图片',
+      maskClosable: true,
       content: (
         <Input
           className="mt-4"
@@ -187,6 +188,7 @@ export default () => {
     let inputUrl = '';
     Modal.confirm({
       title: '添加网络视频',
+      maskClosable: true,
       content: (
         <Input
           className="mt-4"
@@ -219,6 +221,7 @@ export default () => {
     let inputValue = '';
     Modal.confirm({
       title: '添加抖音视频',
+      maskClosable: true,
       content: (
         <Input
           className="mt-4"

@@ -8,12 +8,9 @@ import { getApiUrl } from '@/utils/config';
 import { useUserStore, useFileStore } from '@/stores';
 import { compressImageFile } from '@/utils/imageCompress';
 import Material from '@/components/Material';
-import WidgetPreview from '../WidgetPreview';
-
-import { WIDGET_TEMPLATES, type WidgetType } from '../WidgetMenu';
 
 import 'katex/dist/katex.css';
-import './theme.scss';
+import './index.scss';
 
 export interface MuyaEditorHandle {
   /** 在光标处插入图片（素材库选择后调用） */
@@ -22,20 +19,26 @@ export interface MuyaEditorHandle {
   openMaterial: () => void;
   /** 切换专注模式（打字机式高亮当前块） */
   setFocusMode: (enabled: boolean) => void;
-  /** 在光标处插入小组件（tx-widget 代码块，博客端渲染成组件） */
-  insertWidget: (type: WidgetType) => void;
+  /** 在光标处插入一个代码块 */
+  insertCodeBlock: (lang: string, text: string) => void;
+  /** 按 DOM 元素删除代码块（走 json1 op，可撤销） */
+  removeBlockByDom: (pre: HTMLElement) => void;
 }
 
 interface Props {
   value: string;
   onChange: (value: string) => void;
+  /** 编辑器根节点就绪后回调，外部据此挂载自己的预览层 */
+  onMount?: (el: HTMLElement) => void;
+  /** 附加到编辑器根节点的 class，用于按场景调整版心与内边距 */
+  className?: string;
 }
 
 // 与 marktext 桌面端一致：`Muya.use` 是进程级全局注册，HMR / 组件重挂载时只注册一次，
 // 否则会生成重复的浮动 UI 插件实例。
 let muyaPluginsRegistered = false;
 
-const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref) => {
+const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange, onMount, className }, ref) => {
   const store = useUserStore();
   const uploadCompressMode = useFileStore((state) => state.file.upload_compress_mode);
 
@@ -46,11 +49,11 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
   const lastEmittedRef = useRef<string>(value);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onMountRef = useRef(onMount);
+  onMountRef.current = onMount;
 
   const [uploading, setUploading] = useState(false);
   const [materialOpen, setMaterialOpen] = useState(false);
-  // Muya 初始化时会把传入容器替换成新的根节点，这里保存替换后的 domNode 供预览层挂载
-  const [editorEl, setEditorEl] = useState<HTMLElement | null>(null);
 
   const uploadImageFile = async (file: File): Promise<string> => {
     const compressed = await compressImageFile(file, uploadCompressMode);
@@ -156,7 +159,7 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
     muya.init();
     muyaRef.current = muya;
     // getContainer 会替换掉原容器，domNode 才是真正挂在页面上的编辑器根节点
-    setEditorEl(muya.domNode);
+    onMountRef.current?.(muya.domNode);
 
     // 文档任何变更（打字、删除、粘贴）都会派发 json-change，
     // 与 marktext 桌面端一致，从引擎序列化回 markdown。
@@ -186,7 +189,6 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
       observer.disconnect();
       muya.destroy();
       muyaRef.current = null;
-      setEditorEl(null);
     };
   }, []);
 
@@ -206,37 +208,25 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
     urls.forEach((url) => muya.insertImage({ src: url, alt: '' }));
   };
 
-  // 小组件以 tx-widget 代码块形式写入 markdown，博客端解析渲染
-  const insertWidget = (type: WidgetType) => {
-    const muya = muyaRef.current;
-    if (!muya) return;
-    muya.focus();
-    const payload = WIDGET_TEMPLATES[type];
-    muya.insertCodeBlock({ lang: 'tx-widget', text: payload ? JSON.stringify(payload, null, 2) : '' });
-  };
-
-  // 从编辑器文档树中删除 tx-widget 代码块（走 json1 op，可撤销）
-  const removeWidgetBlock = (pre: HTMLElement) => {
-    muyaRef.current?.removeBlockByDom(pre);
-  };
-
   useImperativeHandle(ref, () => ({
     insertImages: insertImagesAtCursor,
     openMaterial: () => setMaterialOpen(true),
     setFocusMode: (enabled: boolean) => muyaRef.current?.setFocusMode(enabled),
-    insertWidget,
+    insertCodeBlock: (lang: string, text: string) => {
+      const muya = muyaRef.current;
+      if (!muya) return;
+      muya.focus();
+      muya.insertCodeBlock({ lang, text });
+    },
+    removeBlockByDom: (pre: HTMLElement) => muyaRef.current?.removeBlockByDom(pre),
   }));
 
   return (
-    <>
-      <Spin spinning={uploading} className="h-full [&_.ant-spin-nested-loading]:h-full [&_.ant-spin-container]:h-full">
-        <div
-          ref={containerRef}
-          className="create-muya-editor"
-        />
-      </Spin>
-
-      {editorEl && <WidgetPreview container={editorEl} onDelete={removeWidgetBlock} />}
+    <Spin spinning={uploading} className="h-full [&_.ant-spin-nested-loading]:h-full [&_.ant-spin-container]:h-full">
+      <div
+        ref={containerRef}
+        className={`muya-editor ${className ?? ''}`}
+      />
 
       <Material
         open={materialOpen}
@@ -246,7 +236,7 @@ const MuyaEditor = forwardRef<MuyaEditorHandle, Props>(({ value, onChange }, ref
           insertImagesAtCursor(urls);
         }}
       />
-    </>
+    </Spin>
   );
 });
 

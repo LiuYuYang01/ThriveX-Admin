@@ -19,9 +19,12 @@ import useAssistant from '@/hooks/useAssistant';
 import { Article } from '@/types/app/article';
 import { getArticleDataAPI } from '@/api/article';
 
-import Editor, { type MuyaEditorHandle } from './components/Editor';
+import Editor, { type MuyaEditorHandle } from '@/components/MuyaEditor';
 import PublishForm from './components/PublishForm';
-import WidgetMenu from './components/WidgetMenu';
+import WidgetMenu, { WIDGET_TEMPLATES } from './components/WidgetMenu';
+import WidgetPreview from './components/WidgetPreview';
+
+import './index.scss';
 
 function countChars(text: string) {
   return text.replace(/\s/g, '').length;
@@ -42,6 +45,8 @@ export default function CreatePage() {
   const [loading, setLoading] = useState(false);
   const editorRef = useRef<MuyaEditorHandle>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  // 编辑器根节点就绪后挂载小组件预览层
+  const [editorEl, setEditorEl] = useState<HTMLElement | null>(null);
   const [focusMode, setFocusMode] = useState(false);
 
   const toggleFocusMode = () => {
@@ -299,7 +304,12 @@ export default function CreatePage() {
                 <FiImage size={14} />
               </button>
             </Tooltip>
-            <WidgetMenu onSelect={(type) => editorRef.current?.insertWidget(type)} />
+            <WidgetMenu
+              onSelect={(type) => {
+                const payload = WIDGET_TEMPLATES[type];
+                editorRef.current?.insertCodeBlock('tx-widget', payload ? JSON.stringify(payload, null, 2) : '');
+              }}
+            />
             <Tooltip title={focusMode ? '退出专注模式' : '专注模式'}>
               <button
                 type="button"
@@ -353,16 +363,19 @@ export default function CreatePage() {
           </div>
         </header>
 
-        <div className="create-editor-shell min-h-0 flex-1">
+        <div className="muya-editor-shell min-h-0 flex-1">
           <Spin spinning={loading} className="h-full [&_.ant-spin-container]:h-full">
             <Editor
               ref={editorRef}
               value={content}
               onChange={(value) => setContent(value)}
+              onMount={setEditorEl}
             />
           </Spin>
         </div>
       </section>
+
+      {editorEl ? <WidgetPreview container={editorEl} onDelete={(pre) => editorRef.current?.removeBlockByDom(pre)} /> : null}
 
       <Drawer
         title={id && !isDraftParams ? '编辑文章' : '发布文章'}

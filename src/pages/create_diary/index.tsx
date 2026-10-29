@@ -1,21 +1,38 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, DatePicker, Dropdown, Image, Input, Modal, Tooltip, message } from 'antd';
-import type { MenuProps } from 'antd';
+import { Button, Calendar, Image, Input, Modal, Popover, Skeleton, message } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/zh-cn';
 import { BiLink } from 'react-icons/bi';
-import { FiCamera, FiLock, FiNavigation } from 'react-icons/fi';
+import { FiCalendar, FiCheck, FiImage, FiMapPin, FiNavigation, FiSend } from 'react-icons/fi';
 import { LuImagePlus } from 'react-icons/lu';
 import { RiDeleteBinLine, RiLoader4Line } from 'react-icons/ri';
 
 import Material from '@/components/Material';
+import MuyaEditor from '@/components/MuyaEditor';
 import { addDiaryDataAPI, editDiaryDataAPI, getDiaryDataAPI } from '@/api/diary';
-import { MOOD_OPTIONS } from '@/constants/mood';
-import { WEATHER_OPTIONS } from '@/constants/weather';
 import { loadGaodeWebKey, resolveLocationAddress } from '@/utils/location';
+import errorImg from '@/pages/file/image/error.png';
 import type { Diary } from '@/types/app/diary';
 
+
 const MAX_IMAGES = 9;
+
+// 正文是 Markdown，字数要按读者看到的文字算，不能把语法记号算进去
+const countWords = (markdown: string) =>
+  markdown
+    .replace(/!\[[^\]]*]\([^)]*\)/g, '')
+    .replace(/\[([^\]]*)]\([^)]*\)/g, '$1')
+    .replace(/[`*_~#>|]/g, '')
+    .replace(/\s+/g, '')
+    .length;
+
+// 工具栏上的小按钮，跟文章编辑页那排图标按钮同一套长相：
+// 默认没有底色，鼠标经过才浮出浅底；「已设置」用主色表示，不铺底色
+const toolBtnClass =
+  'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100 hover:text-primary dark:hover:bg-boxdark-2';
+const toolBtnIdle = 'text-slate-500 dark:text-slate-400';
+const toolBtnOn = 'text-primary';
 
 export default function CreateDiaryPage() {
   const navigate = useNavigate();
@@ -31,8 +48,11 @@ export default function CreateDiaryPage() {
   const [images, setImages] = useState<string[]>([]);
 
   const [saving, setSaving] = useState(false);
-  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(Boolean(id));
   const [materialOpen, setMaterialOpen] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const [locating, setLocating] = useState(false);
   const [gaodeKey, setGaodeKey] = useState('');
 
@@ -130,6 +150,7 @@ export default function CreateDiaryPage() {
     let inputUrl = '';
     Modal.confirm({
       title: '添加网络图片',
+      maskClosable: true,
       content: (
         <Input
           className="mt-4"
@@ -152,205 +173,193 @@ export default function CreateDiaryPage() {
     });
   };
 
-  const imageMenuItems: MenuProps['items'] = [
-    {
-      key: 'material',
-      label: <span>从素材库选择</span>,
-      icon: <LuImagePlus className="text-base!" />,
-      onClick: () => {
-        if (images.length >= MAX_IMAGES) {
-          message.warning(`最多 ${MAX_IMAGES} 张`);
-          return;
-        }
-        setMaterialOpen(true);
-      },
-    },
-    {
-      key: 'link',
-      label: <span>输入图片链接</span>,
-      icon: <BiLink className="text-base!" />,
-      onClick: addFromLink,
-    },
-  ];
+  const weekday = diaryDate.locale('zh-cn').format('ddd');
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col px-4 pb-6 pt-5 text-slate-600 dark:text-slate-300">
-      <header className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
-          <DatePicker
-            value={diaryDate}
-            onChange={(value) => value && setDiaryDate(value)}
-            allowClear={false}
-            className="w-40!"
-            suffixIcon={<FiCamera size={14} className="text-slate-400" />}
-          />
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="给这一天起个名字（也可以不）"
-            maxLength={120}
-            variant="borderless"
-            className="max-w-sm text-lg font-medium! placeholder:text-slate-300 dark:placeholder:text-slate-600"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-[11px] text-slate-500 dark:bg-boxdark-2 dark:text-slate-400">
-            <FiLock size={12} />
-            只有答对密语的人能看到
-          </span>
-          <Button
-            type="primary"
-            size="large"
-            loading={saving}
-            onClick={() => void onSubmit()}
-            className="cursor-pointer rounded-2xl"
-          >
-            {id ? '更新这一页' : '收进本子'}
-          </Button>
-        </div>
-      </header>
-
-      <div className="grid min-h-0 flex-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <section className="flex min-h-0 flex-col rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-strokedark dark:bg-boxdark md:p-8">
-          <div className="mb-4 flex items-baseline justify-between">
-            <div className="font-mono text-xs tracking-[0.2em] text-slate-400 uppercase dark:text-slate-500">
-              {diaryDate.format('YYYY / MM / DD')}
-            </div>
-            <div className="text-xs text-slate-400 dark:text-slate-500">{content.trim().length} 字</div>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-clip rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        {/* 单行工具栏：左侧标题/字数，右侧当天注脚与主操作 */}
+        <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-100 px-4 py-2.5 dark:border-strokedark sm:px-5">
+          <div className="flex items-baseline gap-2.5">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">{id ? '改写这一页' : '写一页日记'}</h2>
+            <span className="text-xs tabular-nums text-slate-400 dark:text-slate-500">{countWords(content)} 字</span>
           </div>
-          <Input.TextArea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="今天发生了什么，想了什么，值得留下的那句话……"
-            maxLength={10000}
-            disabled={loadingDetail}
-            variant="borderless"
-            className="min-h-[420px] flex-1 resize-none !bg-transparent !p-0 text-lg leading-9 placeholder:text-slate-300 focus:!shadow-none dark:placeholder:text-slate-600"
-          />
-        </section>
 
-        <aside className="space-y-4">
-          <section className="rounded-3xl border border-slate-200/80 bg-white p-5 dark:border-strokedark dark:bg-boxdark">
-            <div className="mb-3 text-xs font-medium tracking-[0.16em] text-slate-400 uppercase dark:text-slate-500">
-              当天心情
-            </div>
-            <div className="grid grid-cols-7 gap-1.5">
-              {MOOD_OPTIONS.map((item) => (
-                <Tooltip key={item.emoji} title={item.label}>
-                  <button
-                    type="button"
-                    onClick={() => setMood(mood === item.emoji ? '' : item.emoji)}
-                    className={`grid size-9 cursor-pointer place-items-center rounded-xl text-lg transition-transform ${
-                      mood === item.emoji
-                        ? 'scale-105 bg-primary text-white shadow-md shadow-blue-500/25'
-                        : 'bg-slate-100 hover:scale-105 dark:bg-boxdark-2'
-                    }`}
-                  >
-                    {item.emoji}
-                  </button>
-                </Tooltip>
-              ))}
-            </div>
-
-            <div className="mb-3 mt-5 text-xs font-medium tracking-[0.16em] text-slate-400 uppercase dark:text-slate-500">
-              当天天气
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {WEATHER_OPTIONS.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => setWeather(weather === item.value ? '' : item.value)}
-                  className={`inline-flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors ${
-                    weather === item.value
-                      ? 'bg-primary text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-boxdark-2 dark:text-slate-300 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  <span>{item.emoji}</span>
-                  <span>{item.label}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="mb-2 mt-5 flex items-center justify-between">
-              <span className="text-xs font-medium tracking-[0.16em] text-slate-400 uppercase dark:text-slate-500">
-                在哪里
-              </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Popover
+              open={dateOpen}
+              onOpenChange={setDateOpen}
+              trigger="click"
+              placement="bottomLeft"
+              arrow={false}
+              content={
+                <div className="w-64">
+                  <Calendar
+                    value={diaryDate}
+                    onSelect={(value) => {
+                      setDiaryDate(value);
+                      setDateOpen(false);
+                    }}
+                    fullscreen={false}
+                  />
+                </div>
+              }
+            >
               <button
                 type="button"
-                onClick={handleLocate}
-                disabled={locating}
-                className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-500 disabled:opacity-50 dark:bg-boxdark-2 dark:text-slate-400"
+                title={`${diaryDate.format('YYYY年M月D日')} ${weekday}`}
+                aria-label="日记日期"
+                className={`${toolBtnClass} ${toolBtnIdle}`}
               >
-                {locating ? <RiLoader4Line className="animate-spin" size={12} /> : <FiNavigation size={12} />}
-                {locating ? '定位中' : '定位'}
+                <FiCalendar size={16} />
               </button>
-            </div>
-            <Input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="如：厦门市 · 环岛路"
-              maxLength={255}
-              allowClear
-              className="rounded-xl"
-            />
-          </section>
+            </Popover>
 
-          <section className="rounded-3xl border border-slate-200/80 bg-white p-5 dark:border-strokedark dark:bg-boxdark">
-            <div className="mb-1 flex items-center justify-between">
-              <span className="text-xs font-medium tracking-[0.16em] text-slate-400 uppercase dark:text-slate-500">
-                照片
-              </span>
-              <span className="text-[11px] text-slate-400 dark:text-slate-500">{images.length}/{MAX_IMAGES}</span>
-            </div>
-            <p className="mb-3 text-[11px] text-slate-400 dark:text-slate-500">最多 {MAX_IMAGES} 张，前台按格子铺开</p>
-
-            {images.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {images.map((url, index) => (
-                  <div
-                    key={`${url}-${index}`}
-                    className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100 dark:border-strokedark dark:bg-boxdark-2"
+            <Popover
+              open={locationOpen}
+              onOpenChange={setLocationOpen}
+              trigger="click"
+              placement="bottomLeft"
+              arrow={false}
+              content={
+                <div className="w-72">
+                  <Input
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="如：厦门市 · 环岛路"
+                    maxLength={255}
+                    allowClear
+                    autoFocus
+                    aria-label="所在位置"
+                    prefix={<FiMapPin size={14} className="text-slate-400" />}
+                    className="rounded-xl! placeholder:text-slate-500!"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleLocate}
+                    disabled={locating}
+                    className="mt-2 inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-slate-100 px-3 text-xs text-slate-500 transition-colors hover:bg-slate-200 disabled:opacity-50 dark:bg-boxdark-2 dark:text-slate-400"
                   >
-                    <Image src={url} alt="" className="size-full object-cover" classNames={{ root: '!size-full' }} />
+                    {locating ? <RiLoader4Line className="animate-spin" size={13} /> : <FiNavigation size={13} />}
+                    {locating ? '定位中' : '定位'}
+                  </button>
+                </div>
+              }
+            >
+              <button
+                type="button"
+                title={location ? `所在位置 · ${location}` : '在哪里'}
+                aria-label={location ? `所在位置 ${location}` : '在哪里'}
+                className={`${toolBtnClass} ${location ? toolBtnOn : toolBtnIdle}`}
+              >
+                <FiMapPin size={16} />
+              </button>
+            </Popover>
+
+            <Popover
+              open={photoOpen}
+              onOpenChange={setPhotoOpen}
+              trigger="click"
+              placement="bottomLeft"
+              arrow={false}
+              content={
+                <div className="w-64">
+                  <div className="grid grid-cols-3 gap-2">
+                    {images.map((url, index) => (
+                      <div
+                        key={`${url}-${index}`}
+                        className="group relative aspect-square overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200/80 dark:bg-boxdark-2 dark:ring-white/10"
+                      >
+                        <Image
+                          src={url}
+                          alt=""
+                          fallback={errorImg}
+                          className="size-full object-cover"
+                          classNames={{ root: '!size-full' }}
+                          preview={{ mask: '查看' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setImages((prev) => prev.filter((_, i) => i !== index))}
+                          className="absolute inset-0 grid cursor-pointer place-items-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100 max-sm:opacity-100"
+                          title="移除这张"
+                          aria-label="移除这张照片"
+                        >
+                          <RiDeleteBinLine size={18} className="text-white" />
+                        </button>
+                      </div>
+                    ))}
+                    {images.length < MAX_IMAGES ? (
+                      <button
+                        type="button"
+                        className="grid aspect-square cursor-pointer place-items-center rounded-xl border border-dashed border-slate-300 text-slate-400 transition-colors hover:border-blue-400 hover:text-blue-500 dark:border-white/15 dark:text-slate-500"
+                        title="添加照片"
+                        aria-label="添加照片"
+                      >
+                        <LuImagePlus size={18} />
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-3 flex gap-2">
                     <button
                       type="button"
-                      onClick={() => setImages((prev) => prev.filter((_, i) => i !== index))}
-                      className="absolute inset-0 grid cursor-pointer place-items-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100"
-                      title="移除这张"
+                      onClick={() => {
+                        setPhotoOpen(false);
+                        setMaterialOpen(true);
+                      }}
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-200 dark:bg-boxdark-2 dark:text-slate-300"
                     >
-                      <RiDeleteBinLine size={18} className="text-white" />
+                      <LuImagePlus size={14} />
+                      从素材库选择
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPhotoOpen(false);
+                        addFromLink();
+                      }}
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:bg-slate-200 dark:bg-boxdark-2 dark:text-slate-300"
+                    >
+                      <BiLink size={14} />
+                      输入图片链接
                     </button>
                   </div>
-                ))}
-                {images.length < MAX_IMAGES ? (
-                  <Dropdown menu={{ items: imageMenuItems }} trigger={['click']} placement="bottomLeft">
-                    <button
-                      type="button"
-                      className="grid aspect-square cursor-pointer place-items-center rounded-xl border border-dashed border-slate-200 text-slate-400 hover:border-primary hover:text-primary dark:border-strokedark dark:text-slate-500"
-                      title="添加照片"
-                    >
-                      <LuImagePlus size={20} />
-                    </button>
-                  </Dropdown>
-                ) : null}
-              </div>
-            ) : (
-              <Dropdown menu={{ items: imageMenuItems }} trigger={['click']} placement="bottomLeft">
-                <button
-                  type="button"
-                  className="flex min-h-24 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 bg-slate-50 text-center transition-colors hover:border-primary/60 dark:border-strokedark dark:bg-boxdark-2"
-                >
-                  <LuImagePlus size={22} className="mb-2 text-primary" />
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-300">为这一天加照片</span>
-                  <span className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">从素材库选择或输入链接</span>
-                </button>
-              </Dropdown>
-            )}
-          </section>
-        </aside>
-      </div>
+                </div>
+              }
+            >
+              <button
+                type="button"
+                title={`照片 ${images.length}/${MAX_IMAGES}`}
+                aria-label={`照片 ${images.length}/${MAX_IMAGES}`}
+                className={`${toolBtnClass} ${images.length ? toolBtnOn : toolBtnIdle}`}
+              >
+                <FiImage size={16} />
+              </button>
+            </Popover>
+
+            <span className="mx-1.5 h-4 w-px bg-slate-200 dark:bg-strokedark" aria-hidden />
+
+            <Button
+              type="primary"
+              loading={saving}
+              onClick={() => void onSubmit()}
+              icon={id ? <FiCheck size={15} /> : <FiSend size={15} />}
+              className="cursor-pointer rounded-xl"
+            >
+              {id ? '更新' : '发布'}
+            </Button>
+          </div>
+        </header>
+
+        <div className="min-h-0 flex-1 px-4 sm:px-5" aria-busy={loadingDetail}>
+          {loadingDetail ? (
+            <Skeleton active paragraph={{ rows: 8 }} title={false} />
+          ) : (
+            <MuyaEditor value={content} onChange={setContent} />
+          )}
+        </div>
+      </section>
 
       <Material
         multiple

@@ -1,28 +1,27 @@
 /**
- * MarkText 沉浸式编辑器主题（基于 muya 引擎的 CSS 变量体系）
+ * Muya 沉浸式编辑器主题（基于 muya 引擎的 CSS 变量体系）
  *
  * 亮色：直接使用引擎内置的 marktext 默认亮色主题；
  * 暗色：通过 body.dark 作用域覆盖引擎变量，色调对齐后台的暗色面板配色。
  */
 
 // ---------------------------------------------------------------- 容器高度链
-// 页面结构：.create-editor-shell > Spin(页面级) > Editor > Spin(上传) > .mu-editor
-.create-editor-shell {
-
-  .ant-spin-nested-loading,
-  .ant-spin-container {
-    height: 100%;
-  }
+// 页面结构：宿主容器 > Spin(页面级) > MuyaEditor > Spin(上传) > .mu-editor
+.muya-editor-shell {
+    .ant-spin-nested-loading,
+    .ant-spin-container {
+        height: 100%;
+    }
 }
 
 // getContainer 会把容器 div 替换为 .mu-editor 根节点并拷贝其 class，
-// 因此 .create-muya-editor 就是编辑器根节点本身。
-// 注意：不要设 min-height，否则小视口下会压过 height:100% 撑破 section。
-.create-muya-editor {
+// 因此 .muya-editor 就是编辑器根节点本身。
+// 注意：不要设 min-height，否则小视口下会压过 height:100% 撑破外层容器。
+.muya-editor {
     height: 100%;
 
     // 与 marktext 桌面端一致：muya 根节点自身滚动。
-    // 否则浏览器会把光标滚动委托给外层 overflow:hidden 的 section（overflow:hidden
+    // 否则浏览器会把光标滚动委托给外层 overflow:hidden 的容器（overflow:hidden
     // 仍是可编程滚动容器），把工具栏 header 顶出可视区。
     overflow-y: auto;
 
@@ -32,7 +31,7 @@
 // ---------------------------------------------------------------- 亮色主题
 // 引擎 :root 默认是 marktext 的绿色主题，这里对齐项目的蓝色主色。
 // 变量必须挂在 body 上：muya 的浮层 UI（前置菜单 / 快捷插入 / 格式工具栏等）
-// 直接挂在 body 下，不在 .create-muya-editor 子树内，子树作用域覆盖不到。
+// 直接挂在 body 下，不在 .muya-editor 子树内，子树作用域覆盖不到。
 // 图标是灰色 PNG，靠 drop-shadow + currentcolor 上色，颜色源即 --theme-color。
 body {
     --theme-color: var(--color-primary);
@@ -44,7 +43,7 @@ body {
 }
 
 // ---------------------------------------------------------------- 暗色主题
-// 作用域用 body.dark 而非 body.dark .create-muya-editor：浮层 UI 挂在 body 下，
+// 作用域用 body.dark 而非 body.dark .muya-editor：浮层 UI 挂在 body 下，
 // 只有 body 级变量才能同时作用到编辑器内容和所有浮层。
 body.dark {
     /* editor 基础 */
@@ -96,12 +95,12 @@ body.dark {
     --h4-color: var(--editor-color-80);
     --h5-color: var(--editor-color-80);
     --h6-color: var(--editor-color-80);
-    --button-font-color: #cbd5e1;
+    --button-font-color: var(--editor-color-80);
 }
 
 // ---------------------------------------------------------------- 暗色代码高亮
 // 引擎只内置了 prism 亮色 token 配色，暗色下覆盖为 one-dark 风格
-body.dark .create-muya-editor {
+body.dark .muya-editor {
 
     .token.comment,
     .token.prolog,
@@ -137,7 +136,7 @@ body.dark .create-muya-editor {
     }
 
     .token.deleted {
-        color: #e06c75;
+        color: #98c379;
         background: rgb(224 108 117 / 12%);
     }
 
@@ -172,17 +171,4 @@ body.dark .create-muya-editor {
 // getBoundingClientRect 含边距位移，前置菜单锚点仍与按钮视觉位置一致。
 .mu-front-button {
     margin-left: -12px;
-}
-
-// ---------------------------------------------------------------- 沉浸写作模式
-// 编辑卡片 fixed 铺满视口，直接盖住侧边栏 / 顶栏 / 页面标题，布局 DOM 不动。
-// theme.scss 未加入 @layer，未分层样式优先级高于 Tailwind utilities 层，
-// 因此可覆盖卡片上的 rounded-2xl / border 等工具类。
-body.immersive-writing .immersive-editor {
-    position: fixed;
-    inset: 0;
-    z-index: 1001;
-
-    border: none;
-    border-radius: 0;
 }

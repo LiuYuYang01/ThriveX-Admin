@@ -4,7 +4,7 @@
  * 预览层 / 切换按钮是编辑器专属 UI。
  */
 
-.create-muya-editor {
+.muya-editor {
   // ------------------------------------------------ 预览层挂载点与切换按钮
   pre.mu-code-block {
     position: relative;
@@ -475,7 +475,7 @@
     }
 
     // ------------------------------------------------ 网址卡片（link-card）：整卡可点击
-    // 注意：此处不能使用 #{&} 插值，嵌套在 .create-muya-editor 内会拼出错误选择器
+    // 注意：此处不能使用 #{&} 插值，嵌套在 .muya-editor 内会拼出错误选择器
     a.tx-widget__info {
       color: inherit;
       text-decoration: none;
