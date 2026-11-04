@@ -17,6 +17,21 @@ export interface DiaryFilterQueryParams extends Page {
   /** 日记日期范围，YYYY-MM-DD */
   startDate?: string;
   endDate?: string;
+  /** 归档筛选：年 / 月，逐级收窄 */
+  year?: number;
+  month?: number;
+}
+
+export interface DiaryArchiveMonth {
+  month: number;
+  name: string;
+  total: number;
+}
+
+export interface DiaryArchiveYear {
+  year: number;
+  total: number;
+  months: DiaryArchiveMonth[];
 }
 
 export interface DiaryCredential {

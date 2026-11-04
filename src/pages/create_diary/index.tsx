@@ -18,6 +18,8 @@ import type { Diary } from '@/types/app/diary';
 
 const MAX_IMAGES = 9;
 
+const CN_MONTHS = ['', '一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+
 // 正文是 Markdown，字数要按读者看到的文字算，不能把语法记号算进去
 const countWords = (markdown: string) =>
   markdown
@@ -174,6 +176,8 @@ export default function CreateDiaryPage() {
   };
 
   const weekday = diaryDate.locale('zh-cn').format('ddd');
+  // 和本地笔记一致：年 / 月 / MMDD.md
+  const archivePath = `${diaryDate.format('YYYY')} / ${CN_MONTHS[diaryDate.month() + 1]} / ${diaryDate.format('MMDD')}.md`;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -183,6 +187,9 @@ export default function CreateDiaryPage() {
           <div className="flex items-baseline gap-2.5">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">{id ? '改写这一页' : '写一页日记'}</h2>
             <span className="text-xs tabular-nums text-slate-400 dark:text-slate-500">{countWords(content)} 字</span>
+            <span className="hidden text-xs text-slate-400 dark:text-slate-500 sm:inline" title="归档位置">
+              归档到 {archivePath}
+            </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">

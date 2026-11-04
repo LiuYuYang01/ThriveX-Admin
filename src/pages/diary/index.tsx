@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Form, Input, Popconfirm, Table, Tooltip, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs, { Dayjs } from 'dayjs';
-import { FiEdit2, FiImage, FiLock, FiPlus, FiRotateCcw, FiSearch, FiTrash2 } from 'react-icons/fi';
+import { FiChevronRight, FiEdit2, FiImage, FiLock, FiPlus, FiRotateCcw, FiSearch, FiTrash2 } from 'react-icons/fi';
 
 import RangePicker from '@/components/RangePicker';
 import Title from '@/components/Title';
 import { useDebouncedChange } from '@/hooks/useDebouncedChange';
-import { delDiaryDataAPI, getDiaryListAPI } from '@/api/diary';
-import type { Diary, DiaryFilterQueryParams } from '@/types/app/diary';
+import { delDiaryDataAPI, getDiaryArchiveAPI, getDiaryListAPI } from '@/api/diary';
+import type { Diary, DiaryArchiveYear, DiaryFilterQueryParams } from '@/types/app/diary';
 
 import DiaryCredentialDrawer from './DiaryCredentialDrawer';
 
@@ -41,9 +41,31 @@ export default function DiaryPage() {
   const [list, setList] = useState<Diary[]>([]);
   const [total, setTotal] = useState(0);
   const [filter, setFilter] = useState<DiaryFilterQueryParams>({ pageNum: 1, pageSize: DEFAULT_PAGE_SIZE });
+  const [archive, setArchive] = useState<DiaryArchiveYear[]>([]);
+  const [archiveKey, setArchiveKey] = useState('archive:all');
+  const [expandedYears, setExpandedYears] = useState<number[]>([]);
 
   const [form] = Form.useForm<DiaryFilterForm>();
-  const hasActiveFilters = Boolean(filter.keyword?.trim() || filter.startDate || filter.endDate);
+  const hasActiveFilters = Boolean(filter.keyword?.trim() || filter.startDate || filter.endDate || filter.year);
+
+  const getArchive = useCallback(async () => {
+    try {
+      const { data } = await getDiaryArchiveAPI();
+      setArchive(data ?? []);
+    } catch (error) {
+      console.error('获取日记归档目录失败：', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    void getArchive();
+  }, [getArchive]);
+
+  // 首次拿到归档后默认展开最近一年
+  useEffect(() => {
+    if (!archive.length) return;
+    setExpandedYears((prev) => (prev.length ? prev : [archive[0].year]));
+  }, [archive]);
 
   const getList = useCallback(async () => {
     try {
@@ -52,6 +74,8 @@ export default function DiaryPage() {
         keyword: filter.keyword,
         startDate: filter.startDate,
         endDate: filter.endDate,
+        year: filter.year,
+        month: filter.month,
         pageNum: filter.pageNum ?? 1,
         pageSize: filter.pageSize ?? DEFAULT_PAGE_SIZE,
       });
@@ -77,12 +101,15 @@ export default function DiaryPage() {
     debounceMs: 400,
     getValues: () => form.getFieldsValue(),
     onApply: (values) => {
+      setArchiveKey('');
       setFilter((prev) => ({
         ...prev,
         pageNum: 1,
         keyword: values.keyword?.trim() || undefined,
         startDate: values.range?.[0] ? values.range[0].format('YYYY-MM-DD') : undefined,
         endDate: values.range?.[1] ? values.range[1].format('YYYY-MM-DD') : undefined,
+        year: undefined,
+        month: undefined,
       }));
     },
   });
@@ -90,8 +117,38 @@ export default function DiaryPage() {
   const resetFilters = useCallback(() => {
     cancelPending();
     form.resetFields();
+    setArchiveKey('archive:all');
     setFilter((prev) => ({ pageNum: 1, pageSize: prev.pageSize ?? DEFAULT_PAGE_SIZE }));
   }, [cancelPending, form]);
+
+  // 点目录里的年 / 月，逐级收窄列表
+  const selectArchive = useCallback((key: string) => {
+    if (!key) return;
+    setArchiveKey(key);
+
+    if (key === 'archive:all') {
+      setFilter((prev) => ({
+        ...prev,
+        pageNum: 1,
+        startDate: undefined,
+        endDate: undefined,
+        year: undefined,
+        month: undefined,
+      }));
+      return;
+    }
+
+    const [type, ...parts] = key.split('-');
+    const [year, month] = parts.map(Number);
+    setFilter((prev) => ({
+      ...prev,
+      pageNum: 1,
+      startDate: undefined,
+      endDate: undefined,
+      year,
+      month: type === 'y' ? undefined : month,
+    }));
+  }, []);
 
   const delDiaryData = useCallback(
     async (id: number) => {
@@ -99,14 +156,14 @@ export default function DiaryPage() {
         setRemovingId(id);
         await delDiaryDataAPI(id);
         message.success('这一页已经撕掉了');
-        await getList();
+        await Promise.all([getList(), getArchive()]);
       } catch (error) {
         console.error('删除日记失败：', error);
       } finally {
         setRemovingId(null);
       }
     },
-    [getList],
+    [getArchive, getList],
   );
 
   const footnote = (diary: Diary) => {
@@ -244,24 +301,138 @@ export default function DiaryPage() {
         </div>
       </Title>
 
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
-        <header className="shrink-0 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
-          <Form form={form} layout="inline" onValuesChange={onFilterChange}>
-            <Form.Item name="keyword" className="mb-0! min-w-[200px] flex-1">
-              <Input prefix={<FiSearch className="text-slate-400" />} placeholder="搜索标题或正文" allowClear />
-            </Form.Item>
-            <Form.Item name="range" className="mb-0!">
-              <RangePicker />
-            </Form.Item>
-            {hasActiveFilters ? (
-              <Button icon={<FiRotateCcw />} onClick={resetFilters} className="cursor-pointer">
-                重置
-              </Button>
-            ) : null}
-          </Form>
-        </header>
+      <section className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-strokedark dark:bg-boxdark">
+        <aside className="hidden w-[228px] shrink-0 flex-col border-r border-slate-100 bg-slate-50/70 dark:border-strokedark dark:bg-boxdark-2/40 md:flex">
+          <header className="shrink-0 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">归档目录</p>
+            <p className="mt-0.5 text-[11px] tracking-wide text-slate-400 dark:text-slate-500">年 / 月</p>
+          </header>
+          <div className="min-h-0 flex-1 overflow-y-auto p-2">
+            {archive.length ? (
+              <nav className="flex flex-col gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => selectArchive('archive:all')}
+                  className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left transition-colors ${
+                    archiveKey === 'archive:all'
+                      ? 'bg-primary/10 text-primary dark:bg-primary/15'
+                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5'
+                  }`}
+                >
+                  <span className="text-sm font-medium">全部日记</span>
+                  <span className="text-[11px] tabular-nums text-slate-400 dark:text-slate-500">
+                    {archive.reduce((sum, year) => sum + year.total, 0)}
+                  </span>
+                </button>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
+                {archive.map((year) => {
+                  const open = expandedYears.includes(year.year);
+                  const yearActive = archiveKey === `y-${year.year}`;
+                  return (
+                    <div key={year.year} className="mt-0.5">
+                      <div
+                        className={`group flex items-center rounded-lg transition-colors ${
+                          yearActive ? 'bg-primary/10 dark:bg-primary/15' : 'hover:bg-slate-100 dark:hover:bg-white/5'
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          aria-label={open ? `收起 ${year.year} 年` : `展开 ${year.year} 年`}
+                          aria-expanded={open}
+                          onClick={() =>
+                            setExpandedYears((prev) =>
+                              prev.includes(year.year)
+                                ? prev.filter((item) => item !== year.year)
+                                : [...prev, year.year],
+                            )
+                          }
+                          className="ml-0.5 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-200"
+                        >
+                          <FiChevronRight
+                            size={13}
+                            className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+                          />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => selectArchive(`y-${year.year}`)}
+                          className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 py-1.5 pr-2.5 text-left"
+                        >
+                          <span
+                            className={`truncate text-sm font-medium ${
+                              yearActive ? 'text-primary' : 'text-slate-700 dark:text-slate-200'
+                            }`}
+                          >
+                            {year.year} 年
+                          </span>
+                          <span className="text-[11px] tabular-nums text-slate-400 dark:text-slate-500">
+                            {year.total}
+                          </span>
+                        </button>
+                      </div>
+
+                      <div
+                        className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+                          open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                        }`}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="relative mt-0.5 flex flex-col gap-0.5 pb-1 pl-7">
+                            <span
+                              aria-hidden
+                              className="absolute bottom-3 left-4 top-1 w-px bg-slate-200 dark:bg-strokedark"
+                            />
+                            {year.months.map((month) => {
+                              const active = archiveKey === `m-${year.year}-${month.month}`;
+                              return (
+                                <button
+                                  key={month.month}
+                                  type="button"
+                                  onClick={() => selectArchive(`m-${year.year}-${month.month}`)}
+                                  className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] transition-colors ${
+                                    active
+                                      ? 'bg-primary/10 text-primary dark:bg-primary/15'
+                                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5'
+                                  }`}
+                                >
+                                  <span className="truncate">{month.name}</span>
+                                  <span className="text-[11px] tabular-nums text-slate-400 dark:text-slate-500">
+                                    {month.total}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </nav>
+            ) : (
+              <p className="px-2 py-6 text-center text-xs text-slate-400 dark:text-slate-500">还没有可归档的日记</p>
+            )}
+          </div>
+        </aside>
+
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <header className="shrink-0 border-b border-slate-100 px-4 py-3 dark:border-strokedark">
+            <Form form={form} layout="inline" onValuesChange={onFilterChange}>
+              <Form.Item name="keyword" className="mb-0! min-w-[200px] flex-1">
+                <Input prefix={<FiSearch className="text-slate-400" />} placeholder="搜索标题或正文" allowClear />
+              </Form.Item>
+              <Form.Item name="range" className="mb-0!">
+                <RangePicker />
+              </Form.Item>
+              {hasActiveFilters ? (
+                <Button icon={<FiRotateCcw />} onClick={resetFilters} className="cursor-pointer">
+                  重置
+                </Button>
+              ) : null}
+            </Form>
+          </header>
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
           <Table
             rowKey="id"
             loading={loading}
@@ -308,6 +479,7 @@ export default function DiaryPage() {
               className: 'px-5! py-3!',
             }}
           />
+          </div>
         </div>
       </section>
 

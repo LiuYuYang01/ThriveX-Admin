@@ -1,5 +1,5 @@
 import Request from '@/utils/request'
-import type { Diary, DiaryCredential, DiaryFilterQueryParams } from '@/types/app/diary'
+import type { Diary, DiaryArchiveYear, DiaryCredential, DiaryFilterQueryParams } from '@/types/app/diary'
 
 // 服务端以 JSON 字符串保存图片列表，序列化收在 API 层，页面始终用 string[]
 const toDiaryPayload = ({ images, ...rest }: Diary) => ({ ...rest, images: JSON.stringify(images ?? []) })
@@ -20,6 +20,9 @@ export const getDiaryDataAPI = (id: number) => Request<Diary>('GET', `/diary/${i
 export const getDiaryListAPI = (params?: DiaryFilterQueryParams) => Request<Paginate<Diary[]>>('GET', '/diary', {
   params
 })
+
+// 获取年 / 月归档目录
+export const getDiaryArchiveAPI = () => Request<DiaryArchiveYear[]>('GET', '/diary/archive')
 
 // 获取密语问答列表
 export const getDiaryCredentialListAPI = () => Request<DiaryCredential[]>('GET', '/diary/credential')
