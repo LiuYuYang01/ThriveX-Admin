@@ -14,17 +14,25 @@ export default function header(
 ) {
     const { content } = token;
     const { start, end } = token.range;
-    const className = this.getClassName(
-        outerClass,
-        block,
-        {
-            range: {
-                start,
-                end: end - content.length,
-            },
-        } as BeginRuleToken,
-        cursor,
-    );
+    // 光标在标题行内时始终显示 `#` 标记（与 Typora 一致），而不是只在光标
+    // 紧挨标记时才显示。标题的可编辑文字从标记（含其后空格）之后开始，
+    // 但用户点击文字最左端时光标落在标记之后的 offset 上，旧的区间判断
+    // 会让标记保持隐藏，导致第一次退格只是删掉隐藏的空格、退格两次后才
+    // 能看到 `#`。
+    const className
+        = cursor.block === block
+            ? CLASS_NAMES.MU_GRAY
+            : this.getClassName(
+                outerClass,
+                block,
+                {
+                    range: {
+                        start,
+                        end: end - content.length,
+                    },
+                } as BeginRuleToken,
+                cursor,
+            );
     const markerVnode = this.highlight(
         h,
         block,

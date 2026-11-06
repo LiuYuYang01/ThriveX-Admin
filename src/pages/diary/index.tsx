@@ -331,7 +331,7 @@ export default function DiaryPage() {
                   return (
                     <div key={year.year} className="mt-0.5">
                       <div
-                        className={`group flex items-center rounded-lg transition-colors ${
+                        className={`flex items-center rounded-lg transition-colors ${
                           yearActive ? 'bg-primary/10 dark:bg-primary/15' : 'hover:bg-slate-100 dark:hover:bg-white/5'
                         }`}
                       >
@@ -380,7 +380,7 @@ export default function DiaryPage() {
                           <div className="relative mt-0.5 flex flex-col gap-0.5 pb-1 pl-7">
                             <span
                               aria-hidden
-                              className="absolute bottom-3 left-4 top-1 w-px bg-slate-200 dark:bg-strokedark"
+                              className="absolute bottom-3 left-3.5 top-1 w-px bg-slate-200 dark:bg-strokedark"
                             />
                             {year.months.map((month) => {
                               const active = archiveKey === `m-${year.year}-${month.month}`;
