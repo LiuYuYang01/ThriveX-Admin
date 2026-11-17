@@ -1,14 +1,11 @@
 import Request from '@/utils/request'
 import type { Diary, DiaryArchiveYear, DiaryCredential, DiaryFilterQueryParams } from '@/types/app/diary'
 
-// 服务端以 JSON 字符串保存图片列表，序列化收在 API 层，页面始终用 string[]
-const toDiaryPayload = ({ images, ...rest }: Diary) => ({ ...rest, images: JSON.stringify(images ?? []) })
-
 // 新增日记
-export const addDiaryDataAPI = (data: Diary) => Request('POST', '/diary', { data: toDiaryPayload(data) })
+export const addDiaryDataAPI = (data: Diary) => Request('POST', '/diary', { data })
 
 // 修改日记
-export const editDiaryDataAPI = (data: Diary) => Request('PATCH', '/diary', { data: toDiaryPayload(data) })
+export const editDiaryDataAPI = (data: Diary) => Request('PATCH', '/diary', { data })
 
 // 删除日记
 export const delDiaryDataAPI = (id: number) => Request('DELETE', `/diary/${id}`)

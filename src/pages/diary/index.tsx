@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Form, Input, Popconfirm, Table, Tooltip, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs, { Dayjs } from 'dayjs';
-import { FiChevronRight, FiEdit2, FiImage, FiLock, FiPlus, FiRotateCcw, FiSearch, FiTrash2 } from 'react-icons/fi';
+import { FiChevronRight, FiEdit2, FiLock, FiPlus, FiRotateCcw, FiSearch, FiTrash2 } from 'react-icons/fi';
 
 import RangePicker from '@/components/RangePicker';
 import Title from '@/components/Title';
@@ -226,15 +226,7 @@ export default function DiaryPage() {
                 {chip}
               </span>
             ))}
-            {row.images?.length ? (
-              <Tooltip title={row.images[0]}>
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500 dark:bg-boxdark-2 dark:text-slate-400">
-                  <FiImage size={11} />
-                  {row.images.length}
-                </span>
-              </Tooltip>
-            ) : null}
-            {chips.length === 0 && !row.images?.length ? <span className="text-slate-300">—</span> : null}
+            {chips.length === 0 ? <span className="text-slate-300">—</span> : null}
           </div>
         );
       },
